@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { Wallet, Menu } from "lucide-react";
+import { Wallet, Menu, LogOut } from "lucide-react";
 import { useState } from "react";
 import WalletModal from "./WalletModal";
+import logoUrl from "@assets/b2adcc9d-c081-49ed-96cc-a20f18ef5071_1759009768831.png";
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -17,6 +18,11 @@ export default function Header({ onMenuClick }: HeaderProps) {
     setShowWalletModal(false);
   };
 
+  const handleWalletDisconnect = () => {
+    console.log("Disconnecting wallet");
+    setIsConnected(false);
+  };
+
   return (
     <>
       <header className="flex items-center justify-between p-4 border-b bg-card">
@@ -30,24 +36,49 @@ export default function Header({ onMenuClick }: HeaderProps) {
           >
             <Menu />
           </Button>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">HR</span>
-            </div>
+          <div className="flex items-center gap-3">
+            <img 
+              src={logoUrl} 
+              alt="HODL Racing DAO" 
+              className="w-10 h-10 object-contain"
+            />
             <span className="font-bold text-lg">HODL Racing DAO</span>
           </div>
         </div>
         
-        <div className="flex items-center gap-4">
-          <Button
-            variant={isConnected ? "secondary" : "default"}
-            onClick={() => setShowWalletModal(true)}
-            className="gap-2"
-            data-testid="button-wallet"
-          >
-            <Wallet size={16} />
-            {isConnected ? "0x1234...5678" : "Connect Wallet"}
-          </Button>
+        <div className="flex items-center gap-2">
+          {isConnected ? (
+            <>
+              <Button
+                variant="secondary"
+                onClick={() => setShowWalletModal(true)}
+                className="gap-2"
+                data-testid="button-wallet-connected"
+              >
+                <Wallet size={16} />
+                0x1234...5678
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleWalletDisconnect}
+                data-testid="button-disconnect"
+                title="Disconnect Wallet"
+              >
+                <LogOut size={16} />
+              </Button>
+            </>
+          ) : (
+            <Button
+              variant="default"
+              onClick={() => setShowWalletModal(true)}
+              className="gap-2"
+              data-testid="button-wallet"
+            >
+              <Wallet size={16} />
+              Connect Wallet
+            </Button>
+          )}
         </div>
       </header>
 

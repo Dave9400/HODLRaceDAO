@@ -46,9 +46,6 @@ export default function NavigationHub({ onNavigate }: NavigationHubProps) {
     <div className="container mx-auto p-6">
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold mb-2">HODL Racing DAO</h1>
-        <p className="text-lg text-muted-foreground">
-          The future of decentralized racing is here. Trade, race, and earn with the community.
-        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
