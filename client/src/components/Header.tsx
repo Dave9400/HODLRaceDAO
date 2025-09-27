@@ -2,6 +2,8 @@ import { Button } from "@/components/ui/button";
 import { Wallet, Menu, LogOut } from "lucide-react";
 import { useState } from "react";
 import WalletModal from "./WalletModal";
+import { useAccount, useDisconnect } from 'wagmi';
+import { shortenAddress } from '@/lib/web3';
 import logoUrl from "@assets/b2adcc9d-c081-49ed-96cc-a20f18ef5071_1759009768831.png";
 
 interface HeaderProps {
@@ -10,17 +12,11 @@ interface HeaderProps {
 
 export default function Header({ onMenuClick }: HeaderProps) {
   const [showWalletModal, setShowWalletModal] = useState(false);
-  const [isConnected, setIsConnected] = useState(false);
-
-  const handleWalletConnect = (walletType: string) => {
-    console.log(`Connecting to ${walletType}`);
-    setIsConnected(true);
-    setShowWalletModal(false);
-  };
+  const { address, isConnected } = useAccount();
+  const { disconnect } = useDisconnect();
 
   const handleWalletDisconnect = () => {
-    console.log("Disconnecting wallet");
-    setIsConnected(false);
+    disconnect();
   };
 
   return (
@@ -47,7 +43,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
         </div>
         
         <div className="flex items-center gap-2">
-          {isConnected ? (
+          {isConnected && address ? (
             <>
               <Button
                 variant="secondary"
@@ -56,7 +52,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
                 data-testid="button-wallet-connected"
               >
                 <Wallet size={16} />
-                0x1234...5678
+                {shortenAddress(address)}
               </Button>
               <Button
                 variant="ghost"
@@ -85,7 +81,6 @@ export default function Header({ onMenuClick }: HeaderProps) {
       <WalletModal
         isOpen={showWalletModal}
         onClose={() => setShowWalletModal(false)}
-        onConnect={handleWalletConnect}
       />
     </>
   );

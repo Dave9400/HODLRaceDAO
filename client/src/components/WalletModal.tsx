@@ -1,34 +1,31 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Wallet, ExternalLink } from "lucide-react";
+import { useConnect, useAccount } from 'wagmi';
 
 interface WalletModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConnect: (walletType: string) => void;
 }
 
-export default function WalletModal({ isOpen, onClose, onConnect }: WalletModalProps) {
-  const wallets = [
-    {
-      name: "Farcaster Wallet",
-      description: "Connect with your Farcaster account",
-      icon: "💜",
-      id: "farcaster"
-    },
-    {
-      name: "MetaMask",
-      description: "Connect using MetaMask wallet",
-      icon: "🦊",
-      id: "metamask"
-    },
-    {
-      name: "Base Smart Wallet",
-      description: "Use Base's smart wallet solution",
-      icon: "🔵",
-      id: "base"
+export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
+  const { connect, connectors, isPending } = useConnect();
+  const { isConnected } = useAccount();
+
+  const walletIcons: Record<string, string> = {
+    'MetaMask': '🦊',
+    'Coinbase Wallet': '🔵', 
+    'WalletConnect': '💜'
+  };
+
+  const handleConnect = async (connector: any) => {
+    try {
+      await connect({ connector });
+      onClose();
+    } catch (error) {
+      console.error('Failed to connect wallet:', error);
     }
-  ];
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -46,18 +43,24 @@ export default function WalletModal({ isOpen, onClose, onConnect }: WalletModalP
         <div className="space-y-4">
           
           <div className="space-y-2">
-            {wallets.map((wallet) => (
+            {connectors.map((connector) => (
               <Button
-                key={wallet.id}
+                key={connector.id}
                 variant="outline"
                 className="w-full justify-start gap-3 h-auto p-4 hover-elevate"
-                onClick={() => onConnect(wallet.id)}
-                data-testid={`button-wallet-${wallet.id}`}
+                onClick={() => handleConnect(connector)}
+                disabled={isPending}
+                data-testid={`button-wallet-${connector.name.toLowerCase().replace(' ', '-')}`}
               >
-                <span className="text-xl">{wallet.icon}</span>
+                <span className="text-xl">{walletIcons[connector.name] || '💳'}</span>
                 <div className="text-left">
-                  <div className="font-medium">{wallet.name}</div>
-                  <div className="text-sm text-muted-foreground">{wallet.description}</div>
+                  <div className="font-medium">{connector.name}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {connector.name === 'MetaMask' && 'Connect using MetaMask wallet'}
+                    {connector.name === 'Coinbase Wallet' && 'Use Coinbase\'s smart wallet solution'}
+                    {connector.name === 'WalletConnect' && 'Connect with WalletConnect protocol'}
+                    {!['MetaMask', 'Coinbase Wallet', 'WalletConnect'].includes(connector.name) && 'Connect with this wallet'}
+                  </div>
                 </div>
                 <ExternalLink size={16} className="ml-auto opacity-50" />
               </Button>

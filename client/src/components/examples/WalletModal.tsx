@@ -11,10 +11,6 @@ export default function WalletModalExample() {
       <WalletModal
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
-        onConnect={(wallet) => {
-          console.log('Connected to:', wallet)
-          setIsOpen(false)
-        }}
       />
     </div>
   )
