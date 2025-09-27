@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Wallet, ExternalLink } from "lucide-react";
 
 interface WalletModalProps {
@@ -38,12 +38,12 @@ export default function WalletModal({ isOpen, onClose, onConnect }: WalletModalP
             <Wallet size={20} />
             Connect Wallet
           </DialogTitle>
+          <DialogDescription>
+            Choose your preferred wallet to connect to HODL Racing DAO on Base network.
+          </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4">
-          <p className="text-muted-foreground text-sm">
-            Choose your preferred wallet to connect to HODL Racing DAO on Base network.
-          </p>
           
           <div className="space-y-2">
             {wallets.map((wallet) => (
