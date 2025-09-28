@@ -1,33 +1,17 @@
-import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { 
   DollarSign,
   BarChart3,
-  TrendingUp,
-  TrendingDown,
   ExternalLink,
   Copy
 } from "lucide-react";
 import { useAccount } from "wagmi";
 
-interface TokenData {
-  price_usd: string;
-  price_change_percentage: {
-    h24: string;
-  };
-  volume_usd: {
-    h24: string;
-  };
-}
-
 export default function TradingInterface() {
   const { address, isConnected } = useAccount();
   const { toast } = useToast();
-  const [tokenData, setTokenData] = useState<TokenData | null>(null);
-  const [loading, setLoading] = useState(true);
 
   // NASCORN token address on Base network
   const NASCORN_ADDRESS = "0x9a5F9cafE10C107C95a7CaE8b85Fbea2dCc8cb07";
@@ -36,30 +20,6 @@ export default function TradingInterface() {
   const uniswapUrl = `https://app.uniswap.org/#/swap?outputCurrency=${NASCORN_ADDRESS}&chain=base`;
   const clankerUrl = `https://clanker.world/clanker/${NASCORN_ADDRESS}`;
   const geckoterminalUrl = `https://www.geckoterminal.com/base/pools/0x9b350d0188b6a90655633e5bdfc07d0fc91507a994efa82bfcf544d5acdaff3f`;
-
-  // Fetch token data from GeckoTerminal API
-  useEffect(() => {
-    const fetchTokenData = async () => {
-      try {
-        const response = await fetch(`https://api.geckoterminal.com/api/v2/networks/base/tokens/${NASCORN_ADDRESS}`);
-        if (response.ok) {
-          const data = await response.json();
-          if (data.data && data.data.attributes) {
-            setTokenData(data.data.attributes);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching token data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTokenData();
-    // Refresh every 30 seconds
-    const interval = setInterval(fetchTokenData, 30000);
-    return () => clearInterval(interval);
-  }, []);
 
   const copyToClipboard = async () => {
     try {
@@ -75,29 +35,6 @@ export default function TradingInterface() {
         variant: "destructive"
       });
     }
-  };
-
-  const formatPrice = (price: string) => {
-    const num = parseFloat(price);
-    // Always show at least 8 significant digits
-    if (num < 0.00000001) {
-      return `$${num.toExponential(8)}`;
-    } else if (num < 0.01) {
-      return `$${num.toFixed(10)}`;
-    } else if (num < 1) {
-      return `$${num.toFixed(8)}`;
-    }
-    return `$${num.toFixed(8)}`;
-  };
-
-  const formatVolume = (volume: string) => {
-    const num = parseFloat(volume);
-    if (num >= 1000000) {
-      return `$${(num / 1000000).toFixed(2)}M`;
-    } else if (num >= 1000) {
-      return `$${(num / 1000).toFixed(2)}K`;
-    }
-    return `$${num.toFixed(2)}`;
   };
 
   return (
@@ -148,58 +85,6 @@ export default function TradingInterface() {
           )}
         </CardContent>
       </Card>
-
-      {/* Token Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <DollarSign className="h-4 w-4 text-green-500" />
-                <span className="text-sm font-medium">Current Price</span>
-              </div>
-              <Badge variant="secondary" data-testid="badge-current-price">
-                {loading ? "Loading..." : tokenData?.price_usd ? formatPrice(tokenData.price_usd) : "$0.00000000"}
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {tokenData?.price_change_percentage?.h24 && parseFloat(tokenData.price_change_percentage.h24) >= 0 ? (
-                  <TrendingUp className="h-4 w-4 text-green-500" />
-                ) : (
-                  <TrendingDown className="h-4 w-4 text-red-500" />
-                )}
-                <span className="text-sm font-medium">24h Change</span>
-              </div>
-              <Badge 
-                variant={tokenData?.price_change_percentage?.h24 && parseFloat(tokenData.price_change_percentage.h24) >= 0 ? "default" : "destructive"}
-                data-testid="badge-price-change"
-              >
-                {loading ? "Loading..." : tokenData?.price_change_percentage?.h24 ? `${parseFloat(tokenData.price_change_percentage.h24).toFixed(2)}%` : "-"}
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <BarChart3 className="h-4 w-4 text-purple-500" />
-                <span className="text-sm font-medium">24h Volume</span>
-              </div>
-              <Badge variant="secondary" data-testid="badge-volume">
-                {loading ? "Loading..." : tokenData?.volume_usd?.h24 ? formatVolume(tokenData.volume_usd.h24) : "$0"}
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* GeckoTerminal Chart */}
       <Card>
