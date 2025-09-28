@@ -79,10 +79,15 @@ export default function TradingInterface() {
 
   const formatPrice = (price: string) => {
     const num = parseFloat(price);
-    if (num < 0.01) {
-      return `$${num.toFixed(6)}`;
+    // Always show at least 8 significant digits
+    if (num < 0.00000001) {
+      return `$${num.toExponential(8)}`;
+    } else if (num < 0.01) {
+      return `$${num.toFixed(10)}`;
+    } else if (num < 1) {
+      return `$${num.toFixed(8)}`;
     }
-    return `$${num.toFixed(4)}`;
+    return `$${num.toFixed(8)}`;
   };
 
   const formatVolume = (volume: string) => {
@@ -97,6 +102,53 @@ export default function TradingInterface() {
 
   return (
     <div className="space-y-6">
+      {/* Uniswap Trading Interface */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5 text-blue-600" />
+              Trade NASCORN
+            </div>
+            <a 
+              href={uniswapUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
+              data-testid="link-uniswap-external"
+            >
+              Open in new tab
+              <ExternalLink className="h-3 w-3" />
+            </a>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="relative">
+            <iframe
+              src={uniswapUrl}
+              height="660px"
+              width="100%"
+              style={{ 
+                border: 0, 
+                borderRadius: '10px', 
+                overflow: 'hidden',
+                minHeight: '660px'
+              }}
+              title="Uniswap NASCORN Trading"
+              data-testid="iframe-uniswap-trading"
+            />
+          </div>
+          
+          {!isConnected && (
+            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-700 text-center">
+                Connect your wallet in the Uniswap interface above to start trading NASCORN tokens on Base network
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Token Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
@@ -107,7 +159,7 @@ export default function TradingInterface() {
                 <span className="text-sm font-medium">Current Price</span>
               </div>
               <Badge variant="secondary" data-testid="badge-current-price">
-                {loading ? "Loading..." : tokenData?.price_usd ? formatPrice(tokenData.price_usd) : "$0.0000"}
+                {loading ? "Loading..." : tokenData?.price_usd ? formatPrice(tokenData.price_usd) : "$0.00000000"}
               </Badge>
             </div>
           </CardContent>
@@ -197,53 +249,6 @@ export default function TradingInterface() {
               data-testid="iframe-price-chart"
             />
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Uniswap Trading Interface */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-blue-600" />
-              Trade NASCORN
-            </div>
-            <a 
-              href={uniswapUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
-              data-testid="link-uniswap-external"
-            >
-              Open in new tab
-              <ExternalLink className="h-3 w-3" />
-            </a>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="relative">
-            <iframe
-              src={uniswapUrl}
-              height="660px"
-              width="100%"
-              style={{ 
-                border: 0, 
-                borderRadius: '10px', 
-                overflow: 'hidden',
-                minHeight: '660px'
-              }}
-              title="Uniswap NASCORN Trading"
-              data-testid="iframe-uniswap-trading"
-            />
-          </div>
-          
-          {!isConnected && (
-            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-700 text-center">
-                Connect your wallet in the Uniswap interface above to start trading NASCORN tokens on Base network
-              </p>
-            </div>
-          )}
         </CardContent>
       </Card>
 
