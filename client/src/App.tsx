@@ -12,7 +12,7 @@ import RaceToEarn from "@/components/RaceToEarn";
 import AboutPage from "@/components/AboutPage";
 import Leaderboard from "@/components/Leaderboard";
 import NotFound from "@/pages/not-found";
-import sdk from "@farcaster/frame-sdk";
+import { sdk } from "@farcaster/miniapp-sdk";
 
 function Router() {
   const [currentPage, setCurrentPage] = useState("home");
