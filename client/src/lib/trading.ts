@@ -8,10 +8,9 @@ import { NASCORN_TOKEN } from './web3';
 // WETH on Base
 export const WETH_BASE = '0x4200000000000000000000000000000000000006' as const;
 
-// Uniswap V4 Core Contracts on Base
-export const UNISWAP_V4_POOL_MANAGER = '0x498581ff718922c3f8e6a244956af099b2652b2b' as const;
-export const UNISWAP_V4_QUOTER = '0x0d5e0f971ed27fbff6c2837bf31316121532048d' as const;
-export const UNISWAP_V4_UNIVERSAL_ROUTER = '0x198EF79F1F515F02dFE9e3115eD9fC07183f02fC' as const;
+// Uniswap V3 Core Contracts on Base (more reliable than V4)
+export const UNISWAP_V3_QUOTER = '0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a' as const;
+export const UNISWAP_V3_ROUTER = '0x2626664c2603336E57B271c5C0b26F421741e481' as const;
 export const PERMIT2_ADDRESS = '0x000000000022D473030F116dDEE9F6B43aC78BA3' as const;
 
 // Create SDK Token instances
@@ -19,13 +18,11 @@ const BASE_CHAIN_ID = 8453;
 export const WETH_TOKEN = new Token(BASE_CHAIN_ID, WETH_BASE, 18, 'WETH', 'Wrapped Ether');
 export const NASCORN_SDK_TOKEN = new Token(BASE_CHAIN_ID, NASCORN_TOKEN.address, NASCORN_TOKEN.decimals, 'NASCORN', 'NASCORN');
 
-// V4 Pool Configuration for NASCORN/WETH
+// V3 Pool Configuration for NASCORN/WETH (using 0.3% fee tier)
 export const NASCORN_WETH_POOL_CONFIG = {
-  currency0: WETH_BASE,  // WETH (sorted first)
-  currency1: NASCORN_TOKEN.address,  // NASCORN (sorted second)
-  fee: 0,  // Dynamic fee
-  tickSpacing: 1,  // Standard for dynamic fee pools
-  hooks: '0x0000000000000000000000000000000000000000' as Address  // No hooks
+  token0: WETH_BASE,  // WETH (sorted first)
+  token1: NASCORN_TOKEN.address,  // NASCORN (sorted second) 
+  fee: 3000,  // 0.3% fee tier
 };
 
 // Swap configuration interface
@@ -37,32 +34,19 @@ export interface SwapConfig {
   hookData: string;
 }
 
-// V4 Quoter ABI
-export const UNISWAP_V4_QUOTER_ABI = [
+// V3 Quoter ABI - simpler and more reliable
+export const UNISWAP_V3_QUOTER_ABI = [
   {
     inputs: [
-      {
-        components: [
-          { name: 'currency0', type: 'address' },
-          { name: 'currency1', type: 'address' },
-          { name: 'fee', type: 'uint24' },
-          { name: 'tickSpacing', type: 'int24' },
-          { name: 'hooks', type: 'address' }
-        ],
-        name: 'poolKey',
-        type: 'tuple'
-      },
-      { name: 'zeroForOne', type: 'bool' },
-      { name: 'exactAmount', type: 'int128' },
+      { name: 'tokenIn', type: 'address' },
+      { name: 'tokenOut', type: 'address' },
+      { name: 'fee', type: 'uint24' },
+      { name: 'amountIn', type: 'uint256' },
       { name: 'sqrtPriceLimitX96', type: 'uint160' }
     ],
     name: 'quoteExactInputSingle',
-    outputs: [
-      { name: 'deltaAmounts', type: 'int128[2]' },
-      { name: 'sqrtPriceX96After', type: 'uint160' },
-      { name: 'initializedTicksCrossed', type: 'uint32' }
-    ],
-    stateMutability: 'view',
+    outputs: [{ name: 'amountOut', type: 'uint256' }],
+    stateMutability: 'nonpayable',
     type: 'function'
   }
 ] as const;

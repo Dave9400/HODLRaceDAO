@@ -11,17 +11,10 @@ import { useToast } from '@/hooks/use-toast';
 import { ExternalLink } from 'lucide-react';
 import { 
   WETH_BASE, 
-  UNISWAP_V4_QUOTER,
-  UNISWAP_V4_QUOTER_ABI,
-  UNISWAP_V4_UNIVERSAL_ROUTER,
-  NASCORN_WETH_POOL_CONFIG,
-  prepareV4QuoteParams,
-  formatV4SwapTransaction, 
-  calculateMinAmountOut,
-  getSwapGasEstimate,
-  needsApproval,
-  encodeApproveData,
-  extractOutputAmount
+  UNISWAP_V3_QUOTER,
+  UNISWAP_V3_QUOTER_ABI,
+  UNISWAP_V3_ROUTER,
+  NASCORN_WETH_POOL_CONFIG
 } from '@/lib/trading';
 
 export default function TradingInterface() {
@@ -32,7 +25,6 @@ export default function TradingInterface() {
   const [slippageTolerance, setSlippageTolerance] = useState(0.5);
   const [isApproving, setIsApproving] = useState(false);
   const [currentPrice, setCurrentPrice] = useState<number | null>(null);
-  const [quoteError, setQuoteError] = useState<string | null>(null);
   
   const { address, isConnected } = useAccount();
   const { toast } = useToast();
@@ -52,7 +44,7 @@ export default function TradingInterface() {
     query: { enabled: !!address }
   });
   
-  // Get NASCORN allowance for Uniswap V4 Universal Router
+  // Get NASCORN allowance for Uniswap V3 Router
   const { data: nascornAllowance, refetch: refetchAllowance } = useReadContract({
     address: NASCORN_TOKEN.address,
     abi: [
@@ -68,19 +60,22 @@ export default function TradingInterface() {
       }
     ],
     functionName: 'allowance',
-    args: address ? [address, UNISWAP_V4_UNIVERSAL_ROUTER] : undefined,
+    args: address ? [address, UNISWAP_V3_ROUTER] : undefined,
     query: { enabled: !!address }
   });
   
-  // Get quote from Uniswap V4 quoter
-  const { data: quoteData } = useReadContract({
-    address: UNISWAP_V4_QUOTER,
-    abi: UNISWAP_V4_QUOTER_ABI,
+  // Get quote from Uniswap V3 quoter
+  const { data: quoteData, error: quoteError } = useReadContract({
+    address: UNISWAP_V3_QUOTER,
+    abi: UNISWAP_V3_QUOTER_ABI,
     functionName: 'quoteExactInputSingle',
-    args: fromAmount && parseFloat(fromAmount) > 0 ? (() => {
-      const quoteParams = prepareV4QuoteParams(WETH_BASE, NASCORN_TOKEN.address, parseEther(fromAmount));
-      return [quoteParams.poolKey, quoteParams.zeroForOne, quoteParams.exactAmount, quoteParams.sqrtPriceLimitX96];
-    })() : undefined,
+    args: fromAmount && parseFloat(fromAmount) > 0 ? [
+      WETH_BASE, // tokenIn
+      NASCORN_TOKEN.address, // tokenOut  
+      NASCORN_WETH_POOL_CONFIG.fee, // fee (0.3%)
+      parseEther(fromAmount), // amountIn
+      0 // sqrtPriceLimitX96 (no limit)
+    ] : undefined,
     query: { 
       enabled: !!fromAmount && parseFloat(fromAmount) > 0,
       refetchInterval: 10000 // Refresh quote every 10 seconds
@@ -96,30 +91,25 @@ export default function TradingInterface() {
     hash: hash || txHash,
   });
   
-  // Mock data for display
-  const priceChange = 12.5;
-  const volume24h = "1,234,567";
+  // Remove mock data - will implement real price change tracking later
+  const [priceChange] = useState<number | null>(null);
+  const volume24h = "N/A";
   
-  // Calculate current price from V4 quote data
+  // Calculate current price from V3 quote data
   useEffect(() => {
     if (quoteData && fromAmount && parseFloat(fromAmount) > 0) {
       try {
-        const outputAmount = extractOutputAmount(quoteData);
+        // V3 quoter returns simple uint256 amountOut
+        const nascornOutputWei = quoteData as bigint;
         
-        if (outputAmount > 0) {
+        if (nascornOutputWei > 0) {
           const ethAmountWei = parseEther(fromAmount);
-          const nascornOutputWei = outputAmount;
           const pricePerToken = Number(ethAmountWei) / Number(nascornOutputWei);
           setCurrentPrice(pricePerToken);
-          setQuoteError(null);
-        } else {
-          setQuoteError("Invalid quote received");
         }
       } catch (error) {
-        setQuoteError("Error processing quote");
+        console.error("Error processing quote:", error);
       }
-    } else if (fromAmount && parseFloat(fromAmount) > 0) {
-      setQuoteError("Unable to get quote from Uniswap");
     }
   }, [quoteData, fromAmount]);
 
@@ -198,37 +188,55 @@ export default function TradingInterface() {
       });
       
       const ethAmount = parseEther(fromAmount);
-      // Extract output amount from V4 quote data using SDK helper
-      const expectedNascornAmount = extractOutputAmount(quoteData);
+      // V3 quoter returns the expected output amount directly
+      const expectedNascornAmount = quoteData as bigint;
       
-      // Calculate minimum amount out with slippage protection
-      const minAmountOut = calculateMinAmountOut(
-        expectedNascornAmount,
-        slippageTolerance
-      );
-      
-      // Check if this is an ETH->NASCORN swap (no approval needed) or NASCORN->ETH (approval may be needed)
-      const needsTokenApproval = false; // For ETH->NASCORN swaps, no approval needed
-      
-      // Format the transaction for Uniswap V4 Universal Router
-      const swapTransaction = formatV4SwapTransaction(
-        WETH_BASE,
-        NASCORN_TOKEN.address,
-        ethAmount,
-        minAmountOut,
-        address!
-      );
+      // Calculate minimum amount out with slippage protection (using basic calculation)
+      const slippageMultiplier = 1 - (slippageTolerance / 100);
+      const minAmountOut = BigInt(Math.floor(Number(expectedNascornAmount) * slippageMultiplier));
       
       toast({
-        title: "Transaction prepared",
-        description: "Submitting swap transaction to Uniswap V4 on Base...",
+        title: "Transaction prepared", 
+        description: `Submitting swap transaction to Uniswap V3 on Base...`,
       });
       
-      // Execute the swap transaction
-      await sendTransaction({
-        to: UNISWAP_V4_UNIVERSAL_ROUTER,
-        value: ethAmount,
-        data: swapTransaction.data
+      // Use Uniswap V3 Router for the swap
+      writeContract({
+        address: UNISWAP_V3_ROUTER,
+        abi: [{
+          inputs: [
+            {
+              components: [
+                { name: 'tokenIn', type: 'address' },
+                { name: 'tokenOut', type: 'address' },
+                { name: 'fee', type: 'uint24' },
+                { name: 'recipient', type: 'address' },
+                { name: 'deadline', type: 'uint256' },
+                { name: 'amountIn', type: 'uint256' },
+                { name: 'amountOutMinimum', type: 'uint256' },
+                { name: 'sqrtPriceLimitX96', type: 'uint160' }
+              ],
+              name: 'params',
+              type: 'tuple'
+            }
+          ],
+          name: 'exactInputSingle',
+          outputs: [{ name: 'amountOut', type: 'uint256' }],
+          stateMutability: 'payable',
+          type: 'function'
+        }],
+        functionName: 'exactInputSingle',
+        args: [{
+          tokenIn: WETH_BASE,
+          tokenOut: NASCORN_TOKEN.address,
+          fee: NASCORN_WETH_POOL_CONFIG.fee,
+          recipient: address!,
+          deadline: BigInt(Math.floor(Date.now() / 1000 + 1200)), // 20 minutes
+          amountIn: ethAmount,
+          amountOutMinimum: minAmountOut,
+          sqrtPriceLimitX96: 0
+        }],
+        value: ethAmount
       });
       
       toast({
@@ -263,9 +271,9 @@ export default function TradingInterface() {
   useEffect(() => {
     if (quoteData && fromAmount && parseFloat(fromAmount) > 0) {
       try {
-        // Extract output amount from V4 quote data using SDK helper
-        const outputAmount = extractOutputAmount(quoteData);
-        const expectedOutput = formatTokenAmount(outputAmount, NASCORN_TOKEN.decimals);
+        // V3 quoter returns simple uint256 amountOut
+        const nascornOutputWei = quoteData as bigint;
+        const expectedOutput = formatTokenAmount(nascornOutputWei, NASCORN_TOKEN.decimals);
         setToAmount(expectedOutput);
       } catch (error) {
         setToAmount("");
@@ -293,10 +301,16 @@ export default function TradingInterface() {
               </p>
             </div>
             <div className="text-right">
-              <div className={`flex items-center gap-1 ${priceChange > 0 ? 'text-destructive' : 'text-red-500'}`}>
-                {priceChange > 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
-                <span className="font-medium">+{priceChange}%</span>
-              </div>
+              {priceChange !== null ? (
+                <div className={`flex items-center gap-1 ${priceChange > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                  {priceChange > 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
+                  <span className="font-medium">{priceChange > 0 ? '+' : ''}{priceChange.toFixed(2)}%</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1 text-muted-foreground">
+                  <span className="text-sm">Price change: N/A</span>
+                </div>
+              )}
               <p className="text-sm text-muted-foreground">Live pricing from Uniswap V4</p>
             </div>
           </div>
