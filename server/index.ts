@@ -37,6 +37,11 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Wait for storage initialization before starting server
+  const { storagePromise } = await import("./storage");
+  await storagePromise;
+  console.log("[Server] Storage initialization complete");
+  
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

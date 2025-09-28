@@ -11,17 +11,17 @@ import { useToast } from '@/hooks/use-toast';
 import { ExternalLink } from 'lucide-react';
 import { 
   WETH_BASE, 
-  UNISWAP_V4_POOL_MANAGER,
   UNISWAP_V4_QUOTER,
   UNISWAP_V4_QUOTER_ABI,
   UNISWAP_V4_UNIVERSAL_ROUTER,
-  getNascornWethPoolKey,
+  NASCORN_WETH_POOL_CONFIG,
   prepareV4QuoteParams,
   formatV4SwapTransaction, 
   calculateMinAmountOut,
   getSwapGasEstimate,
   needsApproval,
-  encodeApproveData
+  encodeApproveData,
+  extractOutputAmount
 } from '@/lib/trading';
 
 export default function TradingInterface() {
@@ -78,7 +78,6 @@ export default function TradingInterface() {
     abi: UNISWAP_V4_QUOTER_ABI,
     functionName: 'quoteExactInputSingle',
     args: fromAmount && parseFloat(fromAmount) > 0 ? (() => {
-      const poolKey = getNascornWethPoolKey();
       const quoteParams = prepareV4QuoteParams(WETH_BASE, NASCORN_TOKEN.address, parseEther(fromAmount));
       return [quoteParams.poolKey, quoteParams.zeroForOne, quoteParams.exactAmount, quoteParams.sqrtPriceLimitX96];
     })() : undefined,
@@ -104,19 +103,20 @@ export default function TradingInterface() {
   // Calculate current price from V4 quote data
   useEffect(() => {
     if (quoteData && fromAmount && parseFloat(fromAmount) > 0) {
-      // V4 quoter returns [deltaAmounts, sqrtPriceX96After, initializedTicksCrossed]
-      // deltaAmounts is [inputDelta, outputDelta] where inputDelta is negative and outputDelta is positive
-      const [deltaAmounts] = quoteData;
-      const [inputDelta, outputDelta] = deltaAmounts;
-      
-      if (outputDelta > 0) {
-        const ethAmountWei = parseEther(fromAmount);
-        const nascornOutputWei = outputDelta;
-        const pricePerToken = Number(ethAmountWei) / Number(nascornOutputWei);
-        setCurrentPrice(pricePerToken);
-        setQuoteError(null);
-      } else {
-        setQuoteError("Invalid quote received");
+      try {
+        const outputAmount = extractOutputAmount(quoteData);
+        
+        if (outputAmount > 0) {
+          const ethAmountWei = parseEther(fromAmount);
+          const nascornOutputWei = outputAmount;
+          const pricePerToken = Number(ethAmountWei) / Number(nascornOutputWei);
+          setCurrentPrice(pricePerToken);
+          setQuoteError(null);
+        } else {
+          setQuoteError("Invalid quote received");
+        }
+      } catch (error) {
+        setQuoteError("Error processing quote");
       }
     } else if (fromAmount && parseFloat(fromAmount) > 0) {
       setQuoteError("Unable to get quote from Uniswap");
@@ -198,10 +198,8 @@ export default function TradingInterface() {
       });
       
       const ethAmount = parseEther(fromAmount);
-      // Extract output amount from V4 quote data
-      const [deltaAmounts] = quoteData;
-      const [inputDelta, outputDelta] = deltaAmounts;
-      const expectedNascornAmount = outputDelta;
+      // Extract output amount from V4 quote data using SDK helper
+      const expectedNascornAmount = extractOutputAmount(quoteData);
       
       // Calculate minimum amount out with slippage protection
       const minAmountOut = calculateMinAmountOut(
@@ -264,11 +262,14 @@ export default function TradingInterface() {
   // Update toAmount when quote data changes
   useEffect(() => {
     if (quoteData && fromAmount && parseFloat(fromAmount) > 0) {
-      // Extract output amount from V4 quote data
-      const [deltaAmounts] = quoteData;
-      const [inputDelta, outputDelta] = deltaAmounts;
-      const expectedOutput = formatTokenAmount(outputDelta, NASCORN_TOKEN.decimals);
-      setToAmount(expectedOutput);
+      try {
+        // Extract output amount from V4 quote data using SDK helper
+        const outputAmount = extractOutputAmount(quoteData);
+        const expectedOutput = formatTokenAmount(outputAmount, NASCORN_TOKEN.decimals);
+        setToAmount(expectedOutput);
+      } catch (error) {
+        setToAmount("");
+      }
     } else if (!fromAmount || parseFloat(fromAmount) === 0) {
       setToAmount("");
     }

@@ -2,15 +2,32 @@ import { users, racingProfiles, races, achievements, transactions, type User, ty
 import { eq, desc, sql } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
-// Conditional import of database connection
+// Database connection variable
 let db: any = null;
-try {
-  if (process.env.DATABASE_URL) {
-    db = require("./db").db;
+let dbInitialized = false;
+
+// Initialize database connection
+async function initializeDatabase() {
+  if (dbInitialized) return db;
+  
+  try {
+    if (process.env.DATABASE_URL) {
+      const dbModule = await import("./db");
+      db = dbModule.db;
+      console.log("[Storage] PostgreSQL database connection successful");
+    } else {
+      console.log("[Storage] DATABASE_URL not found, using in-memory storage");
+    }
+  } catch (error) {
+    console.warn("[Storage] Database connection failed, falling back to in-memory storage:", error instanceof Error ? error.message : String(error));
   }
-} catch (error) {
-  console.warn("Database connection unavailable, using in-memory storage");
+  
+  dbInitialized = true;
+  return db;
 }
+
+// Initialize database immediately
+initializeDatabase();
 
 // modify the interface with any CRUD methods
 // you might need
@@ -22,25 +39,30 @@ export interface IStorage {
   getUserByWallet(walletAddress: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, updates: Partial<InsertUser>): Promise<User | undefined>;
+  deleteUser(id: string): Promise<boolean>;
   
   // Racing profile methods
   getRacingProfile(userId: string): Promise<RacingProfile | undefined>;
   createRacingProfile(profile: InsertRacingProfile): Promise<RacingProfile>;
   updateRacingProfile(userId: string, updates: Partial<InsertRacingProfile>): Promise<RacingProfile | undefined>;
+  deleteRacingProfile(userId: string): Promise<boolean>;
   
   // Race methods
   createRace(race: InsertRace): Promise<Race>;
   getUserRaces(userId: string, limit?: number): Promise<Race[]>;
   getLeaderboard(limit?: number): Promise<Array<{ profile: RacingProfile; user: User }>>;
+  deleteRace(id: string): Promise<boolean>;
   
   // Achievement methods
   createAchievement(achievement: InsertAchievement): Promise<Achievement>;
   getUserAchievements(userId: string): Promise<Achievement[]>;
+  deleteAchievement(id: string): Promise<boolean>;
   
   // Transaction methods
   createTransaction(transaction: InsertTransaction): Promise<Transaction>;
   getUserTransactions(userId: string, limit?: number): Promise<Transaction[]>;
   updateTransaction(id: string, updates: Partial<InsertTransaction>): Promise<Transaction | undefined>;
+  deleteTransaction(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -77,6 +99,11 @@ export class DatabaseStorage implements IStorage {
     return user || undefined;
   }
   
+  async deleteUser(id: string): Promise<boolean> {
+    const result = await db.delete(users).where(eq(users.id, id));
+    return result.rowCount > 0;
+  }
+  
   // Racing profile methods
   async getRacingProfile(userId: string): Promise<RacingProfile | undefined> {
     const [profile] = await db.select().from(racingProfiles).where(eq(racingProfiles.userId, userId));
@@ -98,6 +125,11 @@ export class DatabaseStorage implements IStorage {
       .where(eq(racingProfiles.userId, userId))
       .returning();
     return profile || undefined;
+  }
+  
+  async deleteRacingProfile(userId: string): Promise<boolean> {
+    const result = await db.delete(racingProfiles).where(eq(racingProfiles.userId, userId));
+    return result.rowCount > 0;
   }
   
   // Race methods
@@ -131,6 +163,11 @@ export class DatabaseStorage implements IStorage {
     return results;
   }
   
+  async deleteRace(id: string): Promise<boolean> {
+    const result = await db.delete(races).where(eq(races.id, id));
+    return result.rowCount > 0;
+  }
+  
   // Achievement methods
   async createAchievement(achievement: InsertAchievement): Promise<Achievement> {
     const [newAchievement] = await db
@@ -146,6 +183,11 @@ export class DatabaseStorage implements IStorage {
       .from(achievements)
       .where(eq(achievements.userId, userId))
       .orderBy(desc(achievements.earnedAt));
+  }
+  
+  async deleteAchievement(id: string): Promise<boolean> {
+    const result = await db.delete(achievements).where(eq(achievements.id, id));
+    return result.rowCount > 0;
   }
   
   // Transaction methods
@@ -173,6 +215,11 @@ export class DatabaseStorage implements IStorage {
       .where(eq(transactions.id, id))
       .returning();
     return transaction || undefined;
+  }
+  
+  async deleteTransaction(id: string): Promise<boolean> {
+    const result = await db.delete(transactions).where(eq(transactions.id, id));
+    return result.rowCount > 0;
   }
 }
 
@@ -222,6 +269,10 @@ export class MemStorage implements IStorage {
     return updatedUser;
   }
   
+  async deleteUser(id: string): Promise<boolean> {
+    return this.users.delete(id);
+  }
+  
   // Racing profile methods
   async getRacingProfile(userId: string): Promise<RacingProfile | undefined> {
     return this.profiles.get(userId);
@@ -253,6 +304,10 @@ export class MemStorage implements IStorage {
     const updatedProfile = { ...profile, ...updates, updatedAt: new Date() };
     this.profiles.set(userId, updatedProfile);
     return updatedProfile;
+  }
+  
+  async deleteRacingProfile(userId: string): Promise<boolean> {
+    return this.profiles.delete(userId);
   }
   
   // Race methods
@@ -298,6 +353,13 @@ export class MemStorage implements IStorage {
       .slice(0, limit);
   }
   
+  async deleteRace(id: string): Promise<boolean> {
+    const index = this.racesList.findIndex(race => race.id === id);
+    if (index === -1) return false;
+    this.racesList.splice(index, 1);
+    return true;
+  }
+  
   // Achievement methods
   async createAchievement(achievement: InsertAchievement): Promise<Achievement> {
     const id = randomUUID();
@@ -319,6 +381,13 @@ export class MemStorage implements IStorage {
     return this.achievementsList
       .filter(achievement => achievement.userId === userId)
       .sort((a, b) => b.earnedAt.getTime() - a.earnedAt.getTime());
+  }
+  
+  async deleteAchievement(id: string): Promise<boolean> {
+    const index = this.achievementsList.findIndex(achievement => achievement.id === id);
+    if (index === -1) return false;
+    this.achievementsList.splice(index, 1);
+    return true;
   }
   
   // Transaction methods
@@ -354,16 +423,43 @@ export class MemStorage implements IStorage {
     this.transactionsList[index] = { ...this.transactionsList[index], ...updates };
     return this.transactionsList[index];
   }
+  
+  async deleteTransaction(id: string): Promise<boolean> {
+    const index = this.transactionsList.findIndex(transaction => transaction.id === id);
+    if (index === -1) return false;
+    this.transactionsList.splice(index, 1);
+    return true;
+  }
 }
 
-// Use database storage if available, fallback to memory storage
-export const storage = (db && process.env.DATABASE_URL) 
-  ? new DatabaseStorage() 
-  : new MemStorage();
-
-// Log which storage type is being used
-if (process.env.DATABASE_URL && db) {
-  console.log("[Storage] Using PostgreSQL database storage");
-} else {
-  console.log("[Storage] Using in-memory storage (no DATABASE_URL found)");
+// Create storage instance after database initialization
+function createStorage(): IStorage {
+  if (db && process.env.DATABASE_URL) {
+    console.log("[Storage] Using PostgreSQL database storage");
+    return new DatabaseStorage();
+  } else {
+    console.log("[Storage] Using in-memory storage");
+    return new MemStorage();
+  }
 }
+
+// Export storage promise to ensure initialization before use
+export const storagePromise = initializeDatabase().then(() => {
+  return createStorage();
+}).catch(() => {
+  console.log("[Storage] Using in-memory storage (fallback)");
+  return new MemStorage();
+});
+
+// Synchronous storage getter that throws if not initialized
+let _storage: IStorage | null = null;
+storagePromise.then(s => _storage = s);
+
+export const storage: IStorage = new Proxy({} as IStorage, {
+  get(target, prop) {
+    if (!_storage) {
+      throw new Error("Storage not initialized. Use storagePromise to wait for initialization.");
+    }
+    return (_storage as any)[prop];
+  }
+});

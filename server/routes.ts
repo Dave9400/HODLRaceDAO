@@ -59,6 +59,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/users/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteUser(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete user" });
+    }
+  });
+
   // Racing profile routes
   app.get("/api/racing-profiles/:userId", async (req, res) => {
     try {
@@ -101,6 +113,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/racing-profiles/:userId", async (req, res) => {
+    try {
+      const deleted = await storage.deleteRacingProfile(req.params.userId);
+      if (!deleted) {
+        return res.status(404).json({ error: "Racing profile not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete racing profile" });
+    }
+  });
+
   // Race routes
   app.post("/api/races", async (req, res) => {
     try {
@@ -110,10 +134,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update racing profile stats after race completion
       const profile = await storage.getRacingProfile(raceData.userId);
       if (profile) {
+        // Use precise BigInt arithmetic for earnings to avoid floating point errors
+        const PRECISION = 8;
+        const SCALE = BigInt(10 ** PRECISION);
+        
+        // Helper function to convert decimal string to BigInt (8 decimal places)
+        const decimalToBigInt = (decimalStr: string): bigint => {
+          const [integerPart, fractionalPart = ""] = decimalStr.split(".");
+          const paddedFractional = fractionalPart.padEnd(PRECISION, "0").slice(0, PRECISION);
+          return BigInt(integerPart) * SCALE + BigInt(paddedFractional);
+        };
+        
+        // Helper function to convert BigInt back to decimal string
+        const bigIntToDecimal = (value: bigint): string => {
+          const integerPart = value / SCALE;
+          const fractionalPart = value % SCALE;
+          return `${integerPart}.${fractionalPart.toString().padStart(PRECISION, "0")}`;
+        };
+        
+        const currentEarnings = decimalToBigInt(profile.totalEarnings);
+        const newEarnings = decimalToBigInt(raceData.earnings || "0");
+        const totalEarnings = currentEarnings + newEarnings;
+        const totalEarningsDecimal = bigIntToDecimal(totalEarnings);
+        
         const updates = {
           totalRaces: profile.totalRaces + 1,
           totalWins: raceData.position === 1 ? profile.totalWins + 1 : profile.totalWins,
-          totalEarnings: (parseFloat(profile.totalEarnings) + parseFloat(raceData.earnings || "0")).toString(),
+          totalEarnings: totalEarningsDecimal,
           currentStreak: raceData.position === 1 ? profile.currentStreak + 1 : 0,
           bestLapTime: raceData.lapTime && (!profile.bestLapTime || parseFloat(raceData.lapTime) < parseFloat(profile.bestLapTime)) 
             ? raceData.lapTime : profile.bestLapTime
@@ -137,6 +184,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(races);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch user races" });
+    }
+  });
+
+  app.delete("/api/races/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteRace(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Race not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete race" });
     }
   });
 
@@ -171,6 +230,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid achievement data", details: error.errors });
       }
       res.status(500).json({ error: "Failed to create achievement" });
+    }
+  });
+
+  app.delete("/api/achievements/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteAchievement(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Achievement not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete achievement" });
     }
   });
 
@@ -211,6 +282,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid update data", details: error.errors });
       }
       res.status(500).json({ error: "Failed to update transaction" });
+    }
+  });
+
+  app.delete("/api/transactions/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteTransaction(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Transaction not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete transaction" });
     }
   });
 
