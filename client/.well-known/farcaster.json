@@ -1,0 +1,18 @@
+{
+  "accountAssociation": {
+    "header": "eyJmaWQiOjEyMzQ1LCJ0eXBlIjoiY3VzdG9keSIsImtleSI6IjB4MDBBYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhIn0",
+    "payload": "eyJkb21haW4iOiJob2RscmFjaW5nLmZ1biJ9",
+    "signature": "MHhmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZg"
+  },
+  "miniapp": {
+    "manifestVersion": "1",
+    "name": "HODL Racing DAO",
+    "version": "1.0.0",
+    "description": "Join the HODL Racing DAO community. Trade NASCORN tokens, earn racing rewards, and compete in the ultimate decentralized racing experience.",
+    "homeUrl": "https://hodlracing.fun",
+    "iconUrl": "https://hodlracing.fun/logo.png",
+    "splashImageUrl": "https://hodlracing.fun/logo.png",
+    "splashBackgroundColor": "#F4D03F",
+    "webhookUrl": "https://hodlracing.fun/api/webhook"
+  }
+}
