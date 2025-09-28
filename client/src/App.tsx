@@ -4,7 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Web3Provider } from "@/lib/Web3Provider";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import NavigationHub from "@/components/NavigationHub";
 import TradingInterface from "@/components/TradingInterface";
@@ -12,6 +12,7 @@ import RaceToEarn from "@/components/RaceToEarn";
 import AboutPage from "@/components/AboutPage";
 import Leaderboard from "@/components/Leaderboard";
 import NotFound from "@/pages/not-found";
+import sdk from "@farcaster/frame-sdk";
 
 function Router() {
   const [currentPage, setCurrentPage] = useState("home");
@@ -60,6 +61,13 @@ function Router() {
 }
 
 function App() {
+  useEffect(() => {
+    // Signal to Farcaster that the mini app is ready
+    if (typeof window !== 'undefined' && sdk?.actions?.ready) {
+      sdk.actions.ready();
+    }
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <Web3Provider>
