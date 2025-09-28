@@ -4,17 +4,34 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowUpDown, TrendingUp, TrendingDown, RefreshCw, Wallet } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useAccount, useBalance, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { parseEther, formatEther } from 'viem';
+import { useAccount, useBalance, useReadContract, useWriteContract, useWaitForTransactionReceipt, useSendTransaction } from 'wagmi';
+import { parseEther, formatEther, parseUnits, formatUnits } from 'viem';
 import { NASCORN_TOKEN, formatTokenAmount, ERC20_ABI } from '@/lib/web3';
 import { useToast } from '@/hooks/use-toast';
+import { ExternalLink } from 'lucide-react';
+import { 
+  WETH_BASE, 
+  UNISWAP_V3_ROUTER, 
+  UNISWAP_V3_ROUTER_ABI, 
+  UNISWAP_V3_QUOTER,
+  UNISWAP_V3_QUOTER_ABI,
+  prepareSwapParams, 
+  formatSwapTransaction, 
+  calculateMinAmountOut,
+  getSwapGasEstimate,
+  needsApproval,
+  encodeApproveData
+} from '@/lib/trading';
 
 export default function TradingInterface() {
   const [fromAmount, setFromAmount] = useState("");
   const [toAmount, setToAmount] = useState("");
-  const [tokenPrice, setTokenPrice] = useState(0.0042);
   const [isSwapping, setIsSwapping] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [slippageTolerance, setSlippageTolerance] = useState(0.5);
+  const [isApproving, setIsApproving] = useState(false);
+  const [currentPrice, setCurrentPrice] = useState<number | null>(null);
+  const [quoteError, setQuoteError] = useState<string | null>(null);
   
   const { address, isConnected } = useAccount();
   const { toast } = useToast();
@@ -34,39 +51,88 @@ export default function TradingInterface() {
     query: { enabled: !!address }
   });
   
+  // Get NASCORN allowance for Uniswap router
+  const { data: nascornAllowance, refetch: refetchAllowance } = useReadContract({
+    address: NASCORN_TOKEN.address,
+    abi: [
+      {
+        inputs: [
+          { name: 'owner', type: 'address' },
+          { name: 'spender', type: 'address' }
+        ],
+        name: 'allowance',
+        outputs: [{ name: '', type: 'uint256' }],
+        stateMutability: 'view',
+        type: 'function'
+      }
+    ],
+    functionName: 'allowance',
+    args: address ? [address, UNISWAP_V3_ROUTER] : undefined,
+    query: { enabled: !!address }
+  });
+  
+  // Get quote from Uniswap quoter
+  const { data: quoteData } = useReadContract({
+    address: UNISWAP_V3_QUOTER,
+    abi: UNISWAP_V3_QUOTER_ABI,
+    functionName: 'quoteExactInputSingle',
+    args: fromAmount && parseFloat(fromAmount) > 0 ? [
+      WETH_BASE,
+      NASCORN_TOKEN.address,
+      3000, // 0.3% fee tier
+      parseEther(fromAmount),
+      BigInt(0) // No price limit
+    ] : undefined,
+    query: { 
+      enabled: !!fromAmount && parseFloat(fromAmount) > 0,
+      refetchInterval: 10000 // Refresh quote every 10 seconds
+    }
+  });
+  
   // Contract write functionality
   const { writeContract, data: hash, isPending } = useWriteContract();
+  const { sendTransaction, data: txHash } = useSendTransaction();
   
   // Wait for transaction
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
-    hash,
+    hash: hash || txHash,
   });
   
   // Mock data for display
   const priceChange = 12.5;
   const volume24h = "1,234,567";
   
-  // Refresh price and balances
+  // Calculate current price from quote data
+  useEffect(() => {
+    if (quoteData && fromAmount && parseFloat(fromAmount) > 0) {
+      const ethAmountWei = parseEther(fromAmount);
+      const nascornOutputWei = quoteData;
+      const pricePerToken = Number(ethAmountWei) / Number(nascornOutputWei);
+      setCurrentPrice(pricePerToken);
+      setQuoteError(null);
+    } else if (fromAmount && parseFloat(fromAmount) > 0) {
+      setQuoteError("Unable to get quote from Uniswap");
+    }
+  }, [quoteData, fromAmount]);
+
+  // Refresh balances and quotes
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      // Simulate price fetch with slight variation
-      const variation = (Math.random() - 0.5) * 0.0002;
-      setTokenPrice(prev => Math.max(0.001, prev + variation));
-      
       // Refresh balances if wallet connected
       if (address) {
         await refetchBalance();
+        await refetchAllowance();
       }
       
       toast({
         title: "Refreshed",
-        description: "Price and balance data updated."
+        description: "Balance and quote data updated."
       });
     } catch (error) {
       toast({
         title: "Refresh failed",
-        description: "Failed to update price data.",
+        description: "Failed to update data.",
         variant: "destructive"
       });
     } finally {
@@ -108,40 +174,62 @@ export default function TradingInterface() {
     try {
       setIsSwapping(true);
       
-      toast({
-        title: "Demo swap initiated",
-        description: `Simulating swap of ${fromAmount} ETH for ${toAmount} NASCORN tokens.`,
-      });
-      
-      // In a production app, this would:
-      // 1. Check token allowances
-      // 2. Call approve() if needed
-      // 3. Call a DEX router contract (like Uniswap V3)
-      // 4. Handle slippage and routing
-      
-      // For now, demonstrate the transaction flow without actual DEX calls
-      // This would be replaced with actual writeContract calls
-      const mockTransactionHash = '0x' + Math.random().toString(16).substr(2, 64);
-      
-      toast({
-        title: "Demo transaction",
-        description: `Mock transaction hash: ${mockTransactionHash.slice(0, 10)}...`,
-      });
-      
-      // Simulate network confirmation time
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      toast({
-        title: "Demo swap completed!",
-        description: "Simulated token swap finished. In production, real tokens would be exchanged.",
-      });
-      
-      // Reset form and refresh balances
-      setFromAmount("");
-      setToAmount("");
-      if (address) {
-        await refetchBalance();
+      // Validate quote availability
+      if (!quoteData) {
+        toast({
+          title: "Quote unavailable",
+          description: "Unable to get price quote from Uniswap. Please try again.",
+          variant: "destructive"
+        });
+        return;
       }
+      
+      toast({
+        title: "Swap initiated",
+        description: `Preparing to swap ${fromAmount} ETH for ${toAmount} NASCORN tokens.`,
+      });
+      
+      const ethAmount = parseEther(fromAmount);
+      const expectedNascornAmount = quoteData;
+      
+      // Calculate minimum amount out with slippage protection
+      const minAmountOut = calculateMinAmountOut(
+        expectedNascornAmount,
+        slippageTolerance
+      );
+      
+      // Check if this is an ETH->NASCORN swap (no approval needed) or NASCORN->ETH (approval may be needed)
+      const needsTokenApproval = false; // For ETH->NASCORN swaps, no approval needed
+      
+      // Prepare swap parameters for Uniswap V3
+      const swapParams = prepareSwapParams(
+        WETH_BASE,
+        NASCORN_TOKEN.address,
+        ethAmount,
+        minAmountOut,
+        address!,
+        slippageTolerance
+      );
+      
+      // Format the transaction for Uniswap V3 Router
+      const swapTransaction = formatSwapTransaction(swapParams);
+      
+      toast({
+        title: "Transaction prepared",
+        description: "Submitting swap transaction to Uniswap V3 on Base...",
+      });
+      
+      // Execute the swap transaction
+      await sendTransaction({
+        to: UNISWAP_V3_ROUTER,
+        value: ethAmount,
+        data: swapTransaction.data
+      });
+      
+      toast({
+        title: "Transaction submitted!",
+        description: "Your swap has been submitted to the Base network. Waiting for confirmation...",
+      });
       
     } catch (error) {
       console.error('Swap failed:', error);
@@ -158,18 +246,27 @@ export default function TradingInterface() {
   const handleAmountChange = (value: string, isFrom: boolean) => {
     if (isFrom) {
       setFromAmount(value);
-      setToAmount((parseFloat(value || "0") * tokenPrice).toFixed(6));
+      // Let the quote hook handle the toAmount calculation
     } else {
       setToAmount(value);
-      setFromAmount((parseFloat(value || "0") / tokenPrice).toFixed(6));
+      // Reverse quotes would need additional implementation
+      setFromAmount("");
     }
   };
+  
+  // Update toAmount when quote data changes
+  useEffect(() => {
+    if (quoteData && fromAmount && parseFloat(fromAmount) > 0) {
+      const expectedOutput = formatTokenAmount(quoteData, NASCORN_TOKEN.decimals);
+      setToAmount(expectedOutput);
+    }
+  }, [quoteData, fromAmount]);
 
   return (
     <div className="container mx-auto p-6 max-w-md">
       <div className="text-center mb-6">
         <h1 className="text-3xl font-bold mb-2">Trade NASCORN</h1>
-        <p className="text-muted-foreground">Demo trading interface for Base network</p>
+        <p className="text-muted-foreground">Swap ETH for NASCORN tokens on Base network</p>
       </div>
 
       {/* Price Info */}
@@ -178,14 +275,16 @@ export default function TradingInterface() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">NASCORN Price</p>
-              <p className="text-2xl font-bold">${tokenPrice}</p>
+              <p className="text-2xl font-bold">
+                {currentPrice ? `$${currentPrice.toFixed(6)}` : "Getting price..."}
+              </p>
             </div>
             <div className="text-right">
               <div className={`flex items-center gap-1 ${priceChange > 0 ? 'text-destructive' : 'text-red-500'}`}>
                 {priceChange > 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
                 <span className="font-medium">+{priceChange}%</span>
               </div>
-              <p className="text-sm text-muted-foreground">24h Volume: ${volume24h}</p>
+              <p className="text-sm text-muted-foreground">Live pricing from Uniswap V3</p>
             </div>
           </div>
         </CardContent>
@@ -213,16 +312,7 @@ export default function TradingInterface() {
             <div className="p-4 bg-muted rounded-lg border border-border">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Wallet size={16} />
-                <span className="text-sm">Connect your wallet to explore demo trading</span>
-              </div>
-            </div>
-          )}
-          
-          {isConnected && (
-            <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
-              <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
-                <span className="text-sm font-medium">Demo Mode:</span>
-                <span className="text-sm">This simulates trading - no real transactions occur</span>
+                <span className="text-sm">Connect your wallet to start trading</span>
               </div>
             </div>
           )}
@@ -299,15 +389,17 @@ export default function TradingInterface() {
             data-testid="button-execute-swap"
           >
             {!isConnected ? "Connect Wallet" : 
-             isSwapping || isPending ? "Simulating Swap..." :
-             isConfirming ? "Confirming..." : "Demo Swap"}
+             isSwapping || isPending ? "Swapping..." :
+             isConfirming ? "Confirming..." : "Swap Tokens"}
           </Button>
 
           {/* Transaction Details */}
           <div className="pt-4 border-t space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Rate</span>
-              <span>1 ETH = {(1 / tokenPrice).toFixed(0)} NASCORN</span>
+              <span>
+                {currentPrice ? `1 ETH = ${(1 / currentPrice).toFixed(0)} NASCORN` : "Getting rate..."}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Network Fee</span>
@@ -315,19 +407,29 @@ export default function TradingInterface() {
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Slippage</span>
-              <span>0.5%</span>
+              <span>{slippageTolerance}%</span>
             </div>
             <div className="pt-2 text-xs text-muted-foreground">
-              <strong>Demo Interface:</strong> Real trading would require DEX integration (Uniswap V3, etc.), token approvals, and on-chain price feeds.
+              Trading powered by Uniswap V3 on Base network. Real swaps with slippage protection.
             </div>
           </div>
         </CardContent>
       </Card>
 
       <div className="mt-6 text-center">
-        <p className="text-xs text-muted-foreground">
-          Contract: 0x9a5F9cafE10C107C95a7CaE8b85Fbea2dCc8cb07
-        </p>
+        <div className="flex items-center justify-center gap-2">
+          <span className="text-xs text-muted-foreground">Contract:</span>
+          <a 
+            href="https://clanker.world/clanker/0x9a5F9cafE10C107C95a7CaE8b85Fbea2dCc8cb07"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-primary hover:underline flex items-center gap-1"
+            data-testid="link-contract"
+          >
+            0x9a5F9cafE10C107C95a7CaE8b85Fbea2dCc8cb07
+            <ExternalLink size={12} />
+          </a>
+        </div>
       </div>
     </div>
   );
