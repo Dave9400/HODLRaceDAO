@@ -3,164 +3,170 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, Medal, Award, TrendingUp, Calendar, Filter } from "lucide-react";
+import { Trophy, Medal, Award, TrendingUp, Calendar, Filter, Loader2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+
+interface LeaderboardEntry {
+  profile: {
+    totalRaces: number;
+    totalWins: number;
+    totalEarnings: string;
+    skillLevel: string;
+    bestLapTime?: string;
+    favoriteTrack?: string;
+  };
+  user: {
+    id: string;
+    username: string;
+    displayName?: string;
+    avatar?: string;
+  };
+}
 
 export default function Leaderboard() {
-  // Mock data - todo: remove mock functionality
-  const allTimeLeaders = [
-    {
-      rank: 1,
-      name: "SpeedDemon47",
-      avatar: "",
-      wins: 127,
-      topFives: 201,
-      earnings: "15,847",
-      iRating: 3247,
-      change: "+12"
+  // Fetch leaderboard data from the API
+  const { data: leaderboardData = [], isLoading, error } = useQuery({
+    queryKey: ["/api/leaderboard"],
+    queryFn: async (): Promise<LeaderboardEntry[]> => {
+      const response = await fetch("/api/leaderboard?limit=20");
+      if (!response.ok) {
+        throw new Error("Failed to fetch leaderboard");
+      }
+      return response.json();
     },
-    {
-      rank: 2,
-      name: "RacingQueen",
-      avatar: "",
-      wins: 98,
-      topFives: 189,
-      earnings: "12,456",
-      iRating: 3156,
-      change: "+7"
-    },
-    {
-      rank: 3,
-      name: "TurboMax",
-      avatar: "",
-      wins: 89,
-      topFives: 167,
-      earnings: "11,203",
-      iRating: 3089,
-      change: "-3"
-    },
-    {
-      rank: 4,
-      name: "ApexLegend",
-      avatar: "",
-      wins: 76,
-      topFives: 145,
-      earnings: "9,876",
-      iRating: 2987,
-      change: "+15"
-    },
-    {
-      rank: 5,
-      name: "NitroBoost",
-      avatar: "",
-      wins: 71,
-      topFives: 134,
-      earnings: "9,234",
-      iRating: 2934,
-      change: "+5"
-    }
-  ];
+    refetchInterval: 30000, // Refresh every 30 seconds for live updates
+  });
 
-  const monthlyLeaders = [
-    {
-      rank: 1,
-      name: "TurboMax",
-      avatar: "",
-      wins: 12,
-      topFives: 18,
-      earnings: "847",
-      iRating: 3089,
-      change: "+45"
-    },
-    {
-      rank: 2,
-      name: "RacingQueen",
-      avatar: "",
-      wins: 11,
-      topFives: 16,
-      earnings: "756",
-      iRating: 3156,
-      change: "+32"
-    },
-    {
-      rank: 3,
-      name: "SpeedDemon47",
-      avatar: "",
-      wins: 9,
-      topFives: 15,
-      earnings: "689",
-      iRating: 3247,
-      change: "+28"
-    }
-  ];
+  // Transform API data to match component expectations
+  const transformLeaderboardData = (data: LeaderboardEntry[]) => {
+    return data.map((entry, index) => ({
+      rank: index + 1,
+      name: entry.user.displayName || entry.user.username,
+      avatar: entry.user.avatar || "",
+      wins: entry.profile.totalWins,
+      totalRaces: entry.profile.totalRaces,
+      earnings: parseFloat(entry.profile.totalEarnings).toFixed(2),
+      skillLevel: entry.profile.skillLevel,
+      bestLapTime: entry.profile.bestLapTime,
+      favoriteTrack: entry.profile.favoriteTrack,
+      change: "+0" // TODO: Implement ranking change tracking
+    }));
+  };
 
-  const LeaderboardTable = ({ data, isMonthly = false }: { data: any[], isMonthly?: boolean }) => (
-    <div className="space-y-3">
-      {data.map((driver, index) => (
-        <Card key={index} className="hover-elevate transition-all">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-4">
-              {/* Rank */}
-              <div className="flex-shrink-0 w-12 text-center">
-                {driver.rank <= 3 ? (
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    driver.rank === 1 ? 'bg-accent text-accent-foreground' :
-                    driver.rank === 2 ? 'bg-secondary text-secondary-foreground' :
-                    'bg-destructive text-destructive-foreground'
-                  }`}>
-                    {driver.rank === 1 ? <Trophy size={16} /> :
-                     driver.rank === 2 ? <Medal size={16} /> :
-                     <Award size={16} />}
+  const allTimeLeaders = transformLeaderboardData(leaderboardData);
+  
+  // For now, show same data for monthly (could be enhanced with date filtering)
+  const monthlyLeaders = allTimeLeaders.slice(0, 10);
+
+  const LeaderboardTable = ({ data, isMonthly = false }: { data: any[], isMonthly?: boolean }) => {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="w-8 h-8 animate-spin" />
+          <span className="ml-2">Loading leaderboard...</span>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="text-center py-8 text-muted-foreground">
+          <p>Failed to load leaderboard data</p>
+          <Button variant="outline" onClick={() => window.location.reload()} className="mt-4">
+            Retry
+          </Button>
+        </div>
+      );
+    }
+
+    if (data.length === 0) {
+      return (
+        <div className="text-center py-8 text-muted-foreground">
+          <Trophy className="w-12 h-12 mx-auto mb-4 opacity-50" />
+          <p>No race data available yet</p>
+          <p className="text-sm">Be the first to set a record!</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-3">
+        {data.map((driver, index) => (
+          <Card key={index} className="hover-elevate transition-all" data-testid={`leaderboard-entry-${index}`}>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-4">
+                {/* Rank */}
+                <div className="flex-shrink-0 w-12 text-center">
+                  {driver.rank <= 3 ? (
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      driver.rank === 1 ? 'bg-accent text-accent-foreground' :
+                      driver.rank === 2 ? 'bg-secondary text-secondary-foreground' :
+                      'bg-destructive text-destructive-foreground'
+                    }`}>
+                      {driver.rank === 1 ? <Trophy size={16} /> :
+                       driver.rank === 2 ? <Medal size={16} /> :
+                       <Award size={16} />}
+                    </div>
+                  ) : (
+                    <span className="text-2xl font-bold text-muted-foreground">#{driver.rank}</span>
+                  )}
+                </div>
+
+                {/* Driver Info */}
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={driver.avatar} />
+                    <AvatarFallback>{driver.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-semibold text-sm truncate" data-testid={`driver-name-${index}`}>
+                      {driver.name}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      <Badge variant="secondary" className="text-xs">
+                        {driver.skillLevel}
+                      </Badge>
+                      {driver.favoriteTrack && (
+                        <span className="ml-2">{driver.favoriteTrack}</span>
+                      )}
+                    </div>
                   </div>
-                ) : (
-                  <span className="text-2xl font-bold text-muted-foreground">#{driver.rank}</span>
-                )}
-              </div>
+                  <div className={`flex items-center gap-1 text-xs ${
+                    driver.change.startsWith('+') ? 'text-destructive' : 'text-red-500'
+                  }`}>
+                    <TrendingUp size={12} />
+                    <span>{driver.change}</span>
+                  </div>
+                </div>
 
-              {/* Driver Info */}
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage src={driver.avatar} />
-                  <AvatarFallback>{driver.name.slice(0, 2).toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <div className="min-w-0 flex-1">
-                  <div className="font-semibold text-sm truncate">{driver.name}</div>
-                  <div className="text-xs text-muted-foreground">iRating: {driver.iRating}</div>
+                {/* Stats */}
+                <div className="hidden sm:flex gap-6 text-center">
+                  <div>
+                    <div className="font-bold text-lg" data-testid={`wins-${index}`}>{driver.wins}</div>
+                    <div className="text-xs text-muted-foreground">Wins</div>
+                  </div>
+                  <div>
+                    <div className="font-bold text-lg" data-testid={`races-${index}`}>{driver.totalRaces}</div>
+                    <div className="text-xs text-muted-foreground">Races</div>
+                  </div>
+                  <div>
+                    <div className="font-bold text-lg text-accent" data-testid={`earnings-${index}`}>{driver.earnings}</div>
+                    <div className="text-xs text-muted-foreground">NASCORN</div>
+                  </div>
                 </div>
-                <div className={`flex items-center gap-1 text-xs ${
-                  driver.change.startsWith('+') ? 'text-destructive' : 'text-red-500'
-                }`}>
-                  <TrendingUp size={12} />
-                  <span>{driver.change}</span>
-                </div>
-              </div>
 
-              {/* Stats */}
-              <div className="hidden sm:flex gap-6 text-center">
-                <div>
-                  <div className="font-bold text-lg">{driver.wins}</div>
-                  <div className="text-xs text-muted-foreground">Wins</div>
-                </div>
-                <div>
-                  <div className="font-bold text-lg">{driver.topFives}</div>
-                  <div className="text-xs text-muted-foreground">Top 5s</div>
-                </div>
-                <div>
-                  <div className="font-bold text-lg text-accent">{driver.earnings}</div>
-                  <div className="text-xs text-muted-foreground">NASCORN</div>
+                {/* Mobile Stats */}
+                <div className="sm:hidden text-right">
+                  <div className="font-bold text-accent">{driver.earnings}</div>
+                  <div className="text-xs text-muted-foreground">{driver.wins}W/{driver.totalRaces}R</div>
                 </div>
               </div>
-
-              {/* Mobile Stats */}
-              <div className="sm:hidden text-right">
-                <div className="font-bold text-accent">{driver.earnings}</div>
-                <div className="text-xs text-muted-foreground">{driver.wins}W/{driver.topFives}T5</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="container mx-auto p-6 max-w-4xl">
@@ -176,21 +182,29 @@ export default function Leaderboard() {
         <Card>
           <CardContent className="p-6 text-center">
             <Trophy className="w-8 h-8 text-accent mx-auto mb-3" />
-            <div className="text-2xl font-bold mb-1">2,847</div>
+            <div className="text-2xl font-bold mb-1" data-testid="stat-active-racers">
+              {isLoading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : allTimeLeaders.length}
+            </div>
             <div className="text-sm text-muted-foreground">Active Racers</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6 text-center">
             <TrendingUp className="w-8 h-8 text-primary mx-auto mb-3" />
-            <div className="text-2xl font-bold mb-1">15,293</div>
+            <div className="text-2xl font-bold mb-1" data-testid="stat-total-races">
+              {isLoading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : 
+               allTimeLeaders.reduce((sum, driver) => sum + driver.totalRaces, 0).toLocaleString()}
+            </div>
             <div className="text-sm text-muted-foreground">Total Races</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6 text-center">
             <Award className="w-8 h-8 text-destructive mx-auto mb-3" />
-            <div className="text-2xl font-bold mb-1">847K</div>
+            <div className="text-2xl font-bold mb-1" data-testid="stat-nascorn-distributed">
+              {isLoading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : 
+               allTimeLeaders.reduce((sum, driver) => sum + parseFloat(driver.earnings), 0).toFixed(0)}
+            </div>
             <div className="text-sm text-muted-foreground">NASCORN Distributed</div>
           </CardContent>
         </Card>
