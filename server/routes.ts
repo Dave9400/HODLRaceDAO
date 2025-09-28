@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema, insertRacingProfileSchema, insertRaceSchema, insertAchievementSchema, insertTransactionSchema } from "@shared/schema";
 import { z } from "zod";
+import { calculateRaceRewards, checkAndAwardAchievements, calculateSkillLevel, isiRacingAvailable, iRacingAPI } from "./race-to-earn";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // User routes
@@ -129,7 +130,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/races", async (req, res) => {
     try {
       const raceData = insertRaceSchema.parse(req.body);
-      const race = await storage.createRace(raceData);
+      
+      // Calculate race earnings based on performance
+      const calculatedEarnings = calculateRaceRewards(raceData.position, raceData.trackName, raceData.lapTime);
+      
+      // Create race with calculated earnings (override any provided earnings)
+      const raceWithEarnings = { ...raceData, earnings: calculatedEarnings };
+      const race = await storage.createRace(raceWithEarnings);
       
       // Update racing profile stats after race completion
       const profile = await storage.getRacingProfile(raceData.userId);
@@ -153,7 +160,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
         
         const currentEarnings = decimalToBigInt(profile.totalEarnings);
-        const newEarnings = decimalToBigInt(raceData.earnings || "0");
+        const newEarnings = decimalToBigInt(calculatedEarnings);
         const totalEarnings = currentEarnings + newEarnings;
         const totalEarningsDecimal = bigIntToDecimal(totalEarnings);
         
@@ -163,9 +170,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
           totalEarnings: totalEarningsDecimal,
           currentStreak: raceData.position === 1 ? profile.currentStreak + 1 : 0,
           bestLapTime: raceData.lapTime && (!profile.bestLapTime || parseFloat(raceData.lapTime) < parseFloat(profile.bestLapTime)) 
-            ? raceData.lapTime : profile.bestLapTime
+            ? raceData.lapTime : profile.bestLapTime,
+          favoriteTrack: raceData.trackName
         };
-        await storage.updateRacingProfile(raceData.userId, updates);
+        
+        // Update skill level based on performance
+        const newSkillLevel = calculateSkillLevel(
+          updates.totalRaces, 
+          updates.totalWins, 
+          updates.totalEarnings
+        );
+        updates.skillLevel = newSkillLevel;
+        
+        const updatedProfile = await storage.updateRacingProfile(raceData.userId, updates);
+        
+        // Check for achievements after profile update
+        if (updatedProfile) {
+          const newAchievements = await checkAndAwardAchievements(raceData.userId, race, updatedProfile);
+          
+          // Include achievements in response if any were earned
+          if (newAchievements.length > 0) {
+            return res.status(201).json({
+              race,
+              achievements: newAchievements
+            });
+          }
+        }
       }
       
       res.status(201).json(race);
@@ -294,6 +324,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ error: "Failed to delete transaction" });
+    }
+  });
+
+  // iRacing integration endpoints (placeholders for future OAuth integration)
+  app.get("/api/iracing/status", (req, res) => {
+    res.json({
+      available: isiRacingAvailable(),
+      message: isiRacingAvailable() 
+        ? "iRacing integration is available" 
+        : "iRacing OAuth credentials not configured - using manual race entry"
+    });
+  });
+
+  app.post("/api/iracing/oauth", async (req, res) => {
+    try {
+      const { authCode } = req.body;
+      
+      if (!authCode) {
+        return res.status(400).json({ error: "Authorization code required" });
+      }
+      
+      const accessToken = await iRacingAPI.authenticateUser(authCode);
+      
+      if (!accessToken) {
+        return res.status(503).json({ 
+          error: "iRacing OAuth not available", 
+          message: "OAuth credentials not configured" 
+        });
+      }
+      
+      res.json({ accessToken });
+    } catch (error) {
+      res.status(500).json({ error: "iRacing authentication failed" });
+    }
+  });
+
+  app.get("/api/iracing/profile/:userId", async (req, res) => {
+    try {
+      const { accessToken } = req.headers;
+      
+      if (!accessToken || typeof accessToken !== "string") {
+        return res.status(401).json({ error: "Access token required" });
+      }
+      
+      const profile = await iRacingAPI.getUserProfile(accessToken);
+      
+      if (!profile) {
+        return res.status(503).json({ 
+          error: "iRacing API not available", 
+          message: "Profile fetch not implemented - OAuth credentials required" 
+        });
+      }
+      
+      res.json(profile);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch iRacing profile" });
+    }
+  });
+
+  app.post("/api/iracing/sync/:userId", async (req, res) => {
+    try {
+      const { accessToken } = req.headers;
+      
+      if (!accessToken || typeof accessToken !== "string") {
+        return res.status(401).json({ error: "Access token required" });
+      }
+      
+      const syncedRaces = await iRacingAPI.syncRaceResults(req.params.userId, accessToken);
+      
+      res.json({
+        message: "Race sync placeholder - will sync with iRacing when OAuth is configured",
+        syncedRaces: syncedRaces.length,
+        races: syncedRaces
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to sync races from iRacing" });
     }
   });
 
