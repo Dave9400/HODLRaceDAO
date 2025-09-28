@@ -3,11 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
   Target, 
-  Users, 
-  Trophy, 
   Calendar, 
-  Car, 
-  Coins, 
   ExternalLink,
   CheckCircle 
 } from "lucide-react";
@@ -60,12 +56,6 @@ export default function AboutPage() {
     }
   ];
 
-  const stats = [
-    { label: "Community Members", value: "2,847", icon: Users },
-    { label: "Total Races", value: "15,293", icon: Trophy },
-    { label: "NASCORN Distributed", value: "847K", icon: Coins },
-    { label: "Average iRating", value: "2,156", icon: Car }
-  ];
 
   return (
     <div className="container mx-auto p-6 max-w-6xl">
@@ -130,21 +120,6 @@ export default function AboutPage() {
         </CardContent>
       </Card>
 
-      {/* Community Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-        {stats.map((stat, index) => {
-          const IconComponent = stat.icon;
-          return (
-            <Card key={index}>
-              <CardContent className="p-6 text-center">
-                <IconComponent className="w-8 h-8 text-primary mx-auto mb-3" />
-                <div className="text-3xl font-bold mb-1">{stat.value}</div>
-                <div className="text-sm text-muted-foreground">{stat.label}</div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
 
       {/* Roadmap */}
       <Card className="mb-12">
