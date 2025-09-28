@@ -49,6 +49,27 @@ export const UNISWAP_V3_ROUTER_ABI = [
 // Uniswap V3 Quoter on Base
 export const UNISWAP_V3_QUOTER = '0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a' as const;
 
+// Uniswap V3 Factory on Base for pool discovery
+export const UNISWAP_V3_FACTORY = '0x33128a8fC17869897dcE68Ed026d694621f6FDfD' as const;
+
+// Fee tiers to check for pool existence (500 = 0.05%, 3000 = 0.3%, 10000 = 1%)
+export const FEE_TIERS = [500, 3000, 10000] as const;
+
+// Factory ABI for pool discovery
+export const UNISWAP_V3_FACTORY_ABI = [
+  {
+    inputs: [
+      { name: 'tokenA', type: 'address' },
+      { name: 'tokenB', type: 'address' },
+      { name: 'fee', type: 'uint24' }
+    ],
+    name: 'getPool',
+    outputs: [{ name: 'pool', type: 'address' }],
+    stateMutability: 'view',
+    type: 'function'
+  }
+] as const;
+
 // Quoter ABI for getting swap quotes
 export const UNISWAP_V3_QUOTER_ABI = [
   {
@@ -89,7 +110,8 @@ export function prepareSwapParams(
   amountIn: bigint,
   minAmountOut: bigint,
   recipient: Address,
-  slippageTolerancePercent: number = 0.5
+  slippageTolerancePercent: number = 0.5,
+  feeTier: number = 3000
 ): SwapParams {
   const deadline = Math.floor(Date.now() / 1000) + 60 * 20; // 20 minutes from now
   
@@ -99,7 +121,7 @@ export function prepareSwapParams(
   return {
     tokenIn: fromToken,
     tokenOut: toToken,
-    fee: 3000, // 0.3% fee tier (most common)
+    fee: feeTier, // Use provided fee tier
     amountIn,
     amountOutMinimum: slippageAdjustedMinOut,
     recipient,
