@@ -190,17 +190,32 @@ export default function AboutPage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button variant="outline" className="gap-2" data-testid="button-discord">
+            <Button 
+              variant="outline" 
+              className="gap-2" 
+              data-testid="button-discord"
+              onClick={() => window.open('https://discord.gg/ANhcMvU488', '_blank')}
+            >
               <ExternalLink className="w-4 h-4" />
               Discord Community
             </Button>
-            <Button variant="outline" className="gap-2" data-testid="button-twitter">
+            <Button 
+              variant="outline" 
+              className="gap-2" 
+              data-testid="button-twitter"
+              onClick={() => window.open('https://x.com/MotorsportsDao', '_blank')}
+            >
               <ExternalLink className="w-4 h-4" />
-              Follow on Twitter
+              Follow on X
             </Button>
-            <Button variant="outline" className="gap-2" data-testid="button-github">
+            <Button 
+              variant="outline" 
+              className="gap-2" 
+              data-testid="button-farcaster"
+              onClick={() => window.open('https://farcaster.xyz/~/channel/hodl-racing/join?inviteCode=uGg3DDU2O_MKPMerctfumQ', '_blank')}
+            >
               <ExternalLink className="w-4 h-4" />
-              GitHub Repository
+              Farcaster Channel
             </Button>
           </div>
         </CardContent>
