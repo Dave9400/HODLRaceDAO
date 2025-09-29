@@ -6,6 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Web3Provider } from "@/lib/Web3Provider";
 import { useState, useEffect } from "react";
 import Header from "@/components/Header";
+import { Button } from "@/components/ui/button";
+import { X, Home, TrendingUp, Trophy, Info, Users } from "lucide-react";
 import NavigationHub from "@/components/NavigationHub";
 import TradingInterface from "@/components/TradingInterface";
 import RaceToEarn from "@/components/RaceToEarn";
@@ -16,6 +18,24 @@ import { sdk } from "@farcaster/miniapp-sdk";
 
 function Router() {
   const [currentPage, setCurrentPage] = useState("home");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const navigationItems = [
+    { id: "home", label: "Home", icon: Home },
+    { id: "trade", label: "Trade NASCORN", icon: TrendingUp },
+    { id: "race", label: "Race to Earn", icon: Trophy },
+    { id: "leaderboard", label: "Leaderboard", icon: Users },
+    { id: "about", label: "About DAO", icon: Info },
+  ];
+
+  const handleNavigate = (pageId: string) => {
+    setCurrentPage(pageId);
+    setIsMobileMenuOpen(false);
+  };
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
 
   const renderPage = () => {
     switch (currentPage) {
@@ -38,7 +58,53 @@ function Router() {
     <Switch>
       <Route path="/">
         <div className="min-h-screen bg-background">
-          <Header onMenuClick={() => console.log("Menu clicked")} />
+          <Header onMenuClick={toggleMobileMenu} />
+          
+          {/* Mobile Navigation Overlay */}
+          {isMobileMenuOpen && (
+            <div className="fixed inset-0 z-50 md:hidden">
+              {/* Backdrop */}
+              <div 
+                className="absolute inset-0 bg-black/50" 
+                onClick={() => setIsMobileMenuOpen(false)}
+              />
+              
+              {/* Navigation Panel */}
+              <div className="absolute left-0 top-0 h-full w-80 max-w-[80vw] bg-card border-r">
+                <div className="flex items-center justify-between p-4 border-b">
+                  <h2 className="text-lg font-semibold">Navigation</h2>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    data-testid="button-close-menu"
+                  >
+                    <X className="w-5 h-5" />
+                  </Button>
+                </div>
+                
+                <nav className="p-4">
+                  <div className="space-y-2">
+                    {navigationItems.map((item) => {
+                      const IconComponent = item.icon;
+                      return (
+                        <Button
+                          key={item.id}
+                          variant={currentPage === item.id ? "default" : "ghost"}
+                          className="w-full justify-start gap-3 h-12 text-left"
+                          onClick={() => handleNavigate(item.id)}
+                          data-testid={`nav-${item.id}`}
+                        >
+                          <IconComponent className="w-5 h-5" />
+                          {item.label}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </nav>
+              </div>
+            </div>
+          )}
           <main className="flex-1">
             {renderPage()}
           </main>
@@ -49,7 +115,7 @@ function Router() {
                 className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover-elevate"
                 data-testid="button-back-home"
               >
-                ← Back to Hub
+                ← Back to Home
               </button>
             </div>
           )}
