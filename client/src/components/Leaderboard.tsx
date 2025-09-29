@@ -3,60 +3,80 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, Medal, Award, TrendingUp, Calendar, Filter, Loader2 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { Trophy, Medal, Award, TrendingUp, Calendar, Filter, Loader2, Coins } from "lucide-react";
+import { useReadContract } from "wagmi";
+import { CLAIM_CONTRACT_ADDRESS, CLAIM_CONTRACT_ABI, formatNascornAmount } from "@/lib/contracts";
+import { formatEther } from "viem";
 
-interface LeaderboardEntry {
-  profile: {
-    totalRaces: number;
-    totalWins: number;
-    totalEarnings: string;
-    skillLevel: string;
-    bestLapTime?: string;
-    favoriteTrack?: string;
-  };
-  user: {
-    id: string;
-    username: string;
-    displayName?: string;
-    avatar?: string;
-  };
+interface ContractLeaderboardEntry {
+  userAddress: string;
+  iracingId: string;
+  totalClaimed: bigint;
+  weeklyEarned: bigint;
+  lastClaimTime: bigint;
+}
+
+interface DisplayLeaderboardEntry {
+  rank: number;
+  name: string;
+  iracingId: string;
+  address: string;
+  totalClaimed: string;
+  weeklyEarned: string;
+  lastClaimTime: Date;
 }
 
 export default function Leaderboard() {
-  // Fetch leaderboard data from the API
-  const { data: leaderboardData = [], isLoading, error } = useQuery({
-    queryKey: ["/api/leaderboard"],
-    queryFn: async (): Promise<LeaderboardEntry[]> => {
-      const response = await fetch("/api/leaderboard?limit=20");
-      if (!response.ok) {
-        throw new Error("Failed to fetch leaderboard");
-      }
-      return response.json();
-    },
-    refetchInterval: 30000, // Refresh every 30 seconds for live updates
+  // Fetch all-time top claimers from smart contract
+  const { data: topClaimersData, isLoading: loadingClaimers, error: claimersError } = useReadContract({
+    address: CLAIM_CONTRACT_ADDRESS as `0x${string}`,
+    abi: CLAIM_CONTRACT_ABI,
+    functionName: 'getTopClaimers',
+    query: { 
+      enabled: CLAIM_CONTRACT_ADDRESS !== "0x0000000000000000000000000000000000000000",
+      refetchInterval: 30000 // Refresh every 30 seconds
+    }
   });
 
-  // Transform API data to match component expectations
-  const transformLeaderboardData = (data: LeaderboardEntry[]) => {
+  // Fetch weekly top earners from smart contract
+  const { data: weeklyEarnersData, isLoading: loadingWeekly, error: weeklyError } = useReadContract({
+    address: CLAIM_CONTRACT_ADDRESS as `0x${string}`,
+    abi: CLAIM_CONTRACT_ABI,
+    functionName: 'getTopWeeklyEarners',
+    query: { 
+      enabled: CLAIM_CONTRACT_ADDRESS !== "0x0000000000000000000000000000000000000000",
+      refetchInterval: 30000
+    }
+  });
+
+  // Fetch total claimed from contract
+  const { data: totalClaimedData } = useReadContract({
+    address: CLAIM_CONTRACT_ADDRESS as `0x${string}`,
+    abi: CLAIM_CONTRACT_ABI,
+    functionName: 'totalClaimed',
+    query: { enabled: CLAIM_CONTRACT_ADDRESS !== "0x0000000000000000000000000000000000000000" }
+  });
+
+  // Transform contract data for display
+  const transformContractData = (data: any[]): DisplayLeaderboardEntry[] => {
+    if (!data) return [];
+    
     return data.map((entry, index) => ({
       rank: index + 1,
-      name: entry.user.displayName || entry.user.username,
-      avatar: entry.user.avatar || "",
-      wins: entry.profile.totalWins,
-      totalRaces: entry.profile.totalRaces,
-      earnings: parseFloat(entry.profile.totalEarnings).toFixed(2),
-      skillLevel: entry.profile.skillLevel,
-      bestLapTime: entry.profile.bestLapTime,
-      favoriteTrack: entry.profile.favoriteTrack,
-      change: "+0" // TODO: Implement ranking change tracking
+      name: `Racer ${entry.iracingId}`, // In production, resolve to actual names
+      iracingId: entry.iracingId,
+      address: entry.userAddress,
+      totalClaimed: formatNascornAmount(entry.totalClaimed),
+      weeklyEarned: formatNascornAmount(entry.weeklyEarned),
+      lastClaimTime: new Date(Number(entry.lastClaimTime) * 1000)
     }));
   };
 
-  const allTimeLeaders = transformLeaderboardData(leaderboardData);
+  const allTimeLeaders = transformContractData(topClaimersData as any[]);
+  const weeklyLeaders = transformContractData(weeklyEarnersData as any[]);
   
-  // For now, show same data for monthly (could be enhanced with date filtering)
-  const monthlyLeaders = allTimeLeaders.slice(0, 10);
+  const isLoading = loadingClaimers || loadingWeekly;
+  const error = claimersError || weeklyError;
 
   const LeaderboardTable = ({ data, isMonthly = false }: { data: any[], isMonthly?: boolean }) => {
     if (isLoading) {
@@ -83,8 +103,8 @@ export default function Leaderboard() {
       return (
         <div className="text-center py-8 text-muted-foreground">
           <Trophy className="w-12 h-12 mx-auto mb-4 opacity-50" />
-          <p>No race data available yet</p>
-          <p className="text-sm">Be the first to set a record!</p>
+          <p>No claims have been made yet</p>
+          <p className="text-sm">Be the first to claim NASCORN rewards!</p>
         </div>
       );
     }
@@ -115,7 +135,6 @@ export default function Leaderboard() {
                 {/* Driver Info */}
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src={driver.avatar} />
                     <AvatarFallback>{driver.name.slice(0, 2).toUpperCase()}</AvatarFallback>
                   </Avatar>
                   <div className="min-w-0 flex-1">
@@ -124,41 +143,40 @@ export default function Leaderboard() {
                     </div>
                     <div className="text-xs text-muted-foreground">
                       <Badge variant="secondary" className="text-xs">
-                        {driver.skillLevel}
+                        ID: {driver.iracingId}
                       </Badge>
-                      {driver.favoriteTrack && (
-                        <span className="ml-2">{driver.favoriteTrack}</span>
-                      )}
+                      <span className="ml-2 text-xs font-mono">
+                        {driver.address.slice(0, 6)}...{driver.address.slice(-4)}
+                      </span>
                     </div>
                   </div>
-                  <div className={`flex items-center gap-1 text-xs ${
-                    driver.change.startsWith('+') ? 'text-destructive' : 'text-red-500'
-                  }`}>
-                    <TrendingUp size={12} />
-                    <span>{driver.change}</span>
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <span title={driver.lastClaimTime.toLocaleString()}>
+                      {driver.lastClaimTime.toLocaleDateString()}
+                    </span>
                   </div>
                 </div>
 
                 {/* Stats */}
                 <div className="hidden sm:flex gap-6 text-center">
                   <div>
-                    <div className="font-bold text-lg" data-testid={`wins-${index}`}>{driver.wins}</div>
-                    <div className="text-xs text-muted-foreground">Wins</div>
+                    <div className="font-bold text-lg text-primary" data-testid={`total-claimed-${index}`}>{driver.totalClaimed}</div>
+                    <div className="text-xs text-muted-foreground">Total Claimed</div>
                   </div>
-                  <div>
-                    <div className="font-bold text-lg" data-testid={`races-${index}`}>{driver.totalRaces}</div>
-                    <div className="text-xs text-muted-foreground">Races</div>
-                  </div>
-                  <div>
-                    <div className="font-bold text-lg text-accent" data-testid={`earnings-${index}`}>{driver.earnings}</div>
-                    <div className="text-xs text-muted-foreground">NASCORN</div>
-                  </div>
+                  {isMonthly && (
+                    <div>
+                      <div className="font-bold text-lg text-accent" data-testid={`weekly-earned-${index}`}>{driver.weeklyEarned}</div>
+                      <div className="text-xs text-muted-foreground">This Week</div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Mobile Stats */}
                 <div className="sm:hidden text-right">
-                  <div className="font-bold text-accent">{driver.earnings}</div>
-                  <div className="text-xs text-muted-foreground">{driver.wins}W/{driver.totalRaces}R</div>
+                  <div className="font-bold text-primary">{driver.totalClaimed}</div>
+                  {isMonthly && (
+                    <div className="text-xs text-muted-foreground">Week: {driver.weeklyEarned}</div>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -182,30 +200,30 @@ export default function Leaderboard() {
         <Card>
           <CardContent className="p-6 text-center">
             <Trophy className="w-8 h-8 text-accent mx-auto mb-3" />
-            <div className="text-2xl font-bold mb-1" data-testid="stat-active-racers">
+            <div className="text-2xl font-bold mb-1" data-testid="stat-active-claimers">
               {isLoading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : allTimeLeaders.length}
             </div>
-            <div className="text-sm text-muted-foreground">Active Racers</div>
+            <div className="text-sm text-muted-foreground">Active Claimers</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6 text-center">
-            <TrendingUp className="w-8 h-8 text-primary mx-auto mb-3" />
-            <div className="text-2xl font-bold mb-1" data-testid="stat-total-races">
+            <Coins className="w-8 h-8 text-primary mx-auto mb-3" />
+            <div className="text-2xl font-bold mb-1" data-testid="stat-total-claimed">
               {isLoading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : 
-               allTimeLeaders.reduce((sum, driver) => sum + driver.totalRaces, 0).toLocaleString()}
+               totalClaimedData ? formatNascornAmount(totalClaimedData) : "0"}
             </div>
-            <div className="text-sm text-muted-foreground">Total Races</div>
+            <div className="text-sm text-muted-foreground">Total NASCORN Claimed</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6 text-center">
             <Award className="w-8 h-8 text-destructive mx-auto mb-3" />
-            <div className="text-2xl font-bold mb-1" data-testid="stat-nascorn-distributed">
+            <div className="text-2xl font-bold mb-1" data-testid="stat-weekly-earned">
               {isLoading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : 
-               allTimeLeaders.reduce((sum, driver) => sum + parseFloat(driver.earnings), 0).toFixed(0)}
+               weeklyLeaders.reduce((sum, driver) => sum + parseFloat(driver.weeklyEarned.replace(/,/g, '')), 0).toLocaleString()}
             </div>
-            <div className="text-sm text-muted-foreground">NASCORN Distributed</div>
+            <div className="text-sm text-muted-foreground">Weekly Earnings</div>
           </CardContent>
         </Card>
       </div>
@@ -231,9 +249,9 @@ export default function Leaderboard() {
                 <Trophy size={16} />
                 All Time
               </TabsTrigger>
-              <TabsTrigger value="monthly" className="gap-2" data-testid="tab-monthly">
+              <TabsTrigger value="weekly" className="gap-2" data-testid="tab-weekly">
                 <Calendar size={16} />
-                This Month
+                This Week
               </TabsTrigger>
             </TabsList>
             
@@ -241,11 +259,11 @@ export default function Leaderboard() {
               <LeaderboardTable data={allTimeLeaders} />
             </TabsContent>
             
-            <TabsContent value="monthly" className="mt-6">
-              <LeaderboardTable data={monthlyLeaders} isMonthly={true} />
+            <TabsContent value="weekly" className="mt-6">
+              <LeaderboardTable data={weeklyLeaders} isMonthly={true} />
               <div className="mt-4 text-center">
                 <Badge variant="secondary" className="text-sm">
-                  Monthly rankings reset on the 1st of each month
+                  Weekly rankings reset every Sunday
                 </Badge>
               </div>
             </TabsContent>
@@ -255,11 +273,13 @@ export default function Leaderboard() {
 
       <div className="mt-8 text-center">
         <p className="text-sm text-muted-foreground mb-4">
-          Rankings are updated every hour based on iRacing performance data
+          Rankings update automatically when users claim rewards from the smart contract
         </p>
-        <Button variant="outline" data-testid="button-view-profile">
-          View Your Profile
-        </Button>
+        {CLAIM_CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000" && (
+          <Badge variant="secondary" className="text-sm">
+            Smart contract not deployed - showing placeholder data
+          </Badge>
+        )}
       </div>
     </div>
   );

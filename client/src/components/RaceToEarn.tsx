@@ -3,12 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, Clock, Zap, Star, ArrowRight, Loader2, Plus, Calendar, Award, Wallet } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAccount } from "wagmi";
+import IRacingAuth from "./IRacingAuth";
+import RewardsClaiming from "./RewardsClaiming";
 
 interface UserProfile {
   totalRaces: number;
@@ -30,6 +32,15 @@ interface Achievement {
   earnedAt: string;
 }
 
+interface IRacingStats {
+  iracingId: string;
+  careerWins: number;
+  careerTop5s: number;
+  careerStarts: number;
+  irating: number;
+  licenseName: string;
+}
+
 export default function RaceToEarn() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -40,6 +51,22 @@ export default function RaceToEarn() {
     position: "",
     lapTime: ""
   });
+  const [iracingStats, setIracingStats] = useState<IRacingStats | null>(null);
+  const [authToken, setAuthToken] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Handle successful iRacing authentication
+  const handleAuthSuccess = (token: string, stats: IRacingStats) => {
+    setAuthToken(token);
+    setIracingStats(stats);
+    setIsAuthenticated(true);
+  };
+
+  // Handle authentication status changes
+  const handleAuthStatusChange = (status: 'idle' | 'authenticated' | 'error') => {
+    setIsAuthenticated(status === 'authenticated');
+  };
+
 
   // Get or create user based on wallet address
   const { data: user, isLoading: userLoading } = useQuery({
@@ -163,25 +190,49 @@ export default function RaceToEarn() {
         </p>
       </div>
 
-      {/* Coming Soon Banner */}
-      <Card className="mb-8 border-2 border-dashed border-primary">
-        <CardContent className="text-center p-8">
-          <div className="mb-4">
-            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Zap className="w-8 h-8 text-primary" />
-            </div>
-            <h2 className="text-2xl font-bold mb-2">Smart Contract Integration Coming Soon</h2>
-            <p className="text-muted-foreground mb-6">
-              We're building the infrastructure to automatically reward your iRacing achievements.
-              Connect your iRacing account and start earning NASCORN for every race, win, and milestone.
-            </p>
-            <Badge variant="secondary" className="text-lg px-4 py-2">
-              <Clock className="w-4 h-4 mr-2" />
-              Beta Launch Q2 2024
-            </Badge>
+      {/* iRacing Authentication and Rewards */}
+      <div className="mb-8 space-y-6" data-testid="section-iracing-auth">
+        <IRacingAuth 
+          onAuthSuccess={handleAuthSuccess}
+          onAuthStatusChange={handleAuthStatusChange}
+        />
+        
+        {isAuthenticated && iracingStats && (
+          <div data-testid="section-rewards-claiming">
+            <RewardsClaiming 
+              iracingStats={iracingStats}
+              authToken={authToken}
+              isAuthenticated={isAuthenticated}
+            />
           </div>
-        </CardContent>
-      </Card>
+        )}
+      </div>
+      
+      {/* Fallback Manual Entry for Development */}
+      {!isAuthenticated && (
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Plus className="w-6 h-6" />
+              Manual Race Entry
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground mb-4">
+              While we're building the automated iRacing integration, you can manually add races to test the interface.
+            </p>
+            <Button 
+              variant="outline" 
+              className="w-full" 
+              onClick={() => setShowAddRace(true)}
+              data-testid="button-add-race-manual"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Race Result Manually
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Current Stats Preview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -282,30 +333,11 @@ export default function RaceToEarn() {
           )}
 
           <div className="mt-6 pt-6 border-t">
-            <div className="flex flex-col gap-4">
-              <Button 
-                className="w-full" 
-                size="lg" 
-                disabled={!iRacingStatus?.available}
-                data-testid="button-connect-iracing"
-              >
-                <ArrowRight className="w-4 h-4 mr-2" />
-                {iRacingStatus?.available ? "Connect iRacing Account" : "iRacing Integration (Coming Soon)"}
-              </Button>
-              
-              <div className="text-center">
-                <span className="text-sm text-muted-foreground">or</span>
-              </div>
-              
-              <Button 
-                variant="outline" 
-                className="w-full" 
-                onClick={() => setShowAddRace(true)}
-                data-testid="button-add-race-manual"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Race Result Manually
-              </Button>
+            <div className="text-center text-muted-foreground">
+              <p className="text-sm">
+                Connect your iRacing account above to automatically sync your achievements 
+                and claim NASCORN rewards based on your racing performance.
+              </p>
             </div>
           </div>
         </CardContent>

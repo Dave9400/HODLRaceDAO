@@ -1,5 +1,17 @@
-import type { Express } from "express";
+import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
+import axios from "axios";
+import jwt from "jsonwebtoken";
+import crypto from "crypto";
+
+// Extend Request interface to include user property
+interface AuthenticatedRequest extends Request {
+  user?: {
+    iracingId: string;
+    walletAddress: string;
+    iracingToken: string;
+  };
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Farcaster manifest endpoint
@@ -58,34 +70,195 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // iRacing integration endpoints - placeholder for future API integration
+  // iRacing integration endpoints
   app.get("/api/iracing/status", (req, res) => {
+    const hasCredentials = process.env.IRACING_CLIENT_ID && process.env.IRACING_CLIENT_SECRET;
     res.json({
-      available: false,
-      message: "iRacing API integration pending - awaiting OAuth credentials"
+      available: !!hasCredentials,
+      message: hasCredentials ? "iRacing API ready" : "iRacing credentials not configured"
     });
   });
 
-  app.post("/api/iracing/oauth", (req, res) => {
-    res.status(503).json({ 
-      error: "iRacing OAuth not configured", 
-      message: "Awaiting iRacing API access and OAuth setup" 
+  // iRacing OAuth initialization
+  app.post("/api/iracing/auth/start", (req, res) => {
+    const { walletAddress } = req.body;
+    
+    if (!process.env.IRACING_CLIENT_ID) {
+      return res.status(503).json({ error: "iRacing OAuth not configured" });
+    }
+    
+    // Generate state parameter for security
+    const state = crypto.randomBytes(32).toString('hex');
+    
+    // Store state with wallet address for later verification
+    // In production, use Redis or database
+    const stateData = {
+      state,
+      walletAddress,
+      timestamp: Date.now()
+    };
+    
+    // Encode state data
+    const encodedState = Buffer.from(JSON.stringify(stateData)).toString('base64');
+    
+    const authUrl = `https://members.iracing.com/jforum/oauth/authorize?` +
+      `client_id=${process.env.IRACING_CLIENT_ID}&` +
+      `response_type=code&` +
+      `scope=read&` +
+      `state=${encodedState}&` +
+      `redirect_uri=${encodeURIComponent(process.env.IRACING_REDIRECT_URI || 'http://localhost:5000/api/iracing/auth/callback')}`;
+    
+    res.json({ authUrl, state: encodedState });
+  });
+  
+  // iRacing OAuth callback
+  app.get("/api/iracing/auth/callback", async (req, res) => {
+    const { code, state } = req.query;
+    
+    if (!code || !state) {
+      return res.status(400).json({ error: "Missing authorization code or state" });
+    }
+    
+    try {
+      // Decode and verify state
+      const stateData = JSON.parse(Buffer.from(state as string, 'base64').toString());
+      
+      // Check state timestamp (expire after 10 minutes)
+      if (Date.now() - stateData.timestamp > 10 * 60 * 1000) {
+        return res.status(400).json({ error: "Authorization expired" });
+      }
+      
+      // Exchange code for access token
+      const tokenResponse = await axios.post('https://members.iracing.com/jforum/oauth/token', {
+        grant_type: 'authorization_code',
+        client_id: process.env.IRACING_CLIENT_ID,
+        client_secret: process.env.IRACING_CLIENT_SECRET,
+        code: code,
+        redirect_uri: process.env.IRACING_REDIRECT_URI || 'http://localhost:5000/api/iracing/auth/callback'
+      });
+      
+      const { access_token } = tokenResponse.data;
+      
+      // Get user profile from iRacing
+      const profileResponse = await axios.get('https://members.iracing.com/membersite/member/GetDriverStatus', {
+        headers: {
+          'Authorization': `Bearer ${access_token}`
+        }
+      });
+      
+      const profile = profileResponse.data;
+      
+      // Create JWT token for our app
+      const appToken = jwt.sign(
+        {
+          iracingId: profile.cust_id.toString(),
+          walletAddress: stateData.walletAddress,
+          iracingToken: access_token
+        },
+        process.env.JWT_SECRET || 'development-secret',
+        { expiresIn: '24h' }
+      );
+      
+      // Redirect to frontend with token
+      res.redirect(`/?auth_token=${appToken}&success=true`);
+      
+    } catch (error) {
+      console.error('iRacing OAuth error:', error);
+      res.status(500).json({ error: "Authentication failed" });
+    }
+  });
+  
+  // Get user's iRacing profile and stats
+  app.get("/api/iracing/profile", authenticateToken, async (req: any, res: any) => {
+    try {
+      const { iracingToken, iracingId } = req.user;
+      
+      // Get career stats
+      const statsResponse = await axios.get(`https://members.iracing.com/membersite/member/GetCareerStats?custid=${iracingId}`, {
+        headers: {
+          'Authorization': `Bearer ${iracingToken}`
+        }
+      });
+      
+      const stats = statsResponse.data;
+      
+      // Extract relevant stats
+      const careerStats = {
+        iracingId: iracingId,
+        careerWins: stats.wins || 0,
+        careerTop5s: stats.top5 || 0,
+        careerStarts: stats.starts || 0,
+        irating: stats.irating || 0,
+        licenseName: stats.license?.group_name || "Unknown"
+      };
+      
+      res.json(careerStats);
+      
+    } catch (error) {
+      console.error('Error fetching iRacing profile:', error);
+      res.status(500).json({ error: "Failed to fetch profile" });
+    }
+  });
+  
+  // Update user stats in smart contract (called after OAuth verification)
+  app.post("/api/iracing/sync-stats", authenticateToken, async (req: any, res: any) => {
+    try {
+      const { iracingId } = req.user;
+      
+      // This endpoint will be called by the frontend after successful OAuth
+      // The frontend will handle the smart contract interaction
+      // This endpoint just confirms the user is authenticated
+      
+      res.json({ 
+        success: true,
+        message: "User authenticated and ready to sync stats",
+        iracingId: iracingId
+      });
+      
+    } catch (error) {
+      console.error('Error syncing stats:', error);
+      res.status(500).json({ error: "Failed to sync stats" });
+    }
+  });
+  
+  // Smart contract interaction endpoints
+  app.post("/api/contract/register-user", authenticateToken, (req: any, res: any) => {
+    const { iracingId, walletAddress } = req.user;
+    
+    res.json({
+      message: "Frontend should call smart contract registerUser function",
+      iracingId: iracingId,
+      walletAddress: walletAddress
+    });
+  });
+  
+  app.post("/api/contract/claim-rewards", authenticateToken, (req: any, res: any) => {
+    const { iracingId, walletAddress } = req.user;
+    
+    res.json({
+      message: "Frontend should call smart contract claimRewards function",
+      iracingId: iracingId,
+      walletAddress: walletAddress
     });
   });
 
-  app.get("/api/iracing/profile/:userId", (req, res) => {
-    res.status(503).json({ 
-      error: "iRacing API not available", 
-      message: "Profile sync will be implemented with iRacing API access" 
+  // Authentication middleware
+  function authenticateToken(req: any, res: any, next: any) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    
+    if (!token) {
+      return res.status(401).json({ error: 'Access token required' });
+    }
+    
+    jwt.verify(token, process.env.JWT_SECRET || 'development-secret', (err: any, user: any) => {
+      if (err) {
+        return res.status(403).json({ error: 'Invalid token' });
+      }
+      req.user = user;
+      next();
     });
-  });
-
-  app.post("/api/iracing/sync/:userId", (req, res) => {
-    res.status(503).json({
-      error: "iRacing sync not available",
-      message: "Race sync will be implemented with iRacing API and claim contract"
-    });
-  });
+  }
 
   const httpServer = createServer(app);
   return httpServer;
