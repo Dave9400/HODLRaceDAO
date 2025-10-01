@@ -38,7 +38,6 @@ export default function Header({ onMenuClick }: HeaderProps) {
               alt="HODL Racing DAO" 
               className="w-10 h-10 object-contain"
             />
-            <span className="font-bold text-lg">HODL Racing DAO</span>
           </div>
         </div>
         
