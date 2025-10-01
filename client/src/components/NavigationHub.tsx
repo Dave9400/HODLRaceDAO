@@ -1,4 +1,4 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { TrendingUp, Trophy, Info, Medal, ArrowRight } from "lucide-react";
 
@@ -65,7 +65,6 @@ export default function NavigationHub({ onNavigate }: NavigationHubProps) {
                   </div>
                   <div className="flex-1">
                     <CardTitle className="text-xl">{item.title}</CardTitle>
-                    <CardDescription className="mt-1">{item.description}</CardDescription>
                   </div>
                   <ArrowRight className="w-5 h-5 text-muted-foreground" />
                 </div>
