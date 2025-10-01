@@ -106,13 +106,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       `response_type=code&` +
       `scope=read&` +
       `state=${encodedState}&` +
-      `redirect_uri=${encodeURIComponent(process.env.IRACING_REDIRECT_URI || 'http://localhost:5000/api/iracing/auth/callback')}`;
+      `redirect_uri=${encodeURIComponent(process.env.IRACING_REDIRECT_URI || 'http://localhost:5000/auth/iracing/callback')}`;
     
     res.json({ authUrl, state: encodedState });
   });
   
   // iRacing OAuth callback
-  app.get("/api/iracing/auth/callback", async (req, res) => {
+  app.get("/auth/iracing/callback", async (req, res) => {
     const { code, state } = req.query;
     
     if (!code || !state) {
@@ -134,7 +134,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         client_id: process.env.IRACING_CLIENT_ID,
         client_secret: process.env.IRACING_CLIENT_SECRET,
         code: code,
-        redirect_uri: process.env.IRACING_REDIRECT_URI || 'http://localhost:5000/api/iracing/auth/callback'
+        redirect_uri: process.env.IRACING_REDIRECT_URI || 'http://localhost:5000/auth/iracing/callback'
       });
       
       const { access_token } = tokenResponse.data;
