@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import axios from "axios";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
+import { ethers } from "ethers";
 
 // Extend Request interface to include user property
 interface AuthenticatedRequest extends Request {
@@ -221,25 +222,121 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Smart contract interaction endpoints
-  app.post("/api/contract/register-user", authenticateToken, (req: any, res: any) => {
-    const { iracingId, walletAddress } = req.user;
-    
-    res.json({
-      message: "Frontend should call smart contract registerUser function",
-      iracingId: iracingId,
-      walletAddress: walletAddress
-    });
+  // Generate oracle signature for racing stats (called after iRacing auth)
+  app.post("/api/oracle/generate-signature", authenticateToken, async (req: any, res: any) => {
+    try {
+      const { iracingId, iracingToken } = req.user;
+      
+      if (!process.env.ORACLE_PRIVATE_KEY) {
+        return res.status(503).json({ error: "Oracle not configured" });
+      }
+      
+      // Fetch latest stats from iRacing
+      const statsResponse = await axios.get(`https://members.iracing.com/membersite/member/GetCareerStats?custid=${iracingId}`, {
+        headers: {
+          'Authorization': `Bearer ${iracingToken}`
+        }
+      });
+      
+      const stats = statsResponse.data;
+      const wins = stats.wins || 0;
+      const top5s = stats.top5 || 0;
+      const starts = stats.starts || 0;
+      
+      // Create expiry (10 minutes from now)
+      const expiry = Math.floor(Date.now() / 1000) + 600;
+      
+      // Create oracle signature: keccak256(abi.encodePacked(racerId, wins, top5s, starts, expiry))
+      const hash = ethers.utils.solidityKeccak256(
+        ['uint256', 'uint256', 'uint256', 'uint256', 'uint256'],
+        [iracingId, wins, top5s, starts, expiry]
+      );
+      
+      const oracleWallet = new ethers.Wallet(process.env.ORACLE_PRIVATE_KEY);
+      const oracleSignature = await oracleWallet.signMessage(ethers.utils.arrayify(hash));
+      
+      res.json({
+        racerId: iracingId,
+        wins,
+        top5s,
+        starts,
+        expiry,
+        oracleSignature
+      });
+      
+    } catch (error) {
+      console.error('Error generating oracle signature:', error);
+      res.status(500).json({ error: "Failed to generate oracle signature" });
+    }
   });
   
-  app.post("/api/contract/claim-rewards", authenticateToken, (req: any, res: any) => {
-    const { iracingId, walletAddress } = req.user;
-    
-    res.json({
-      message: "Frontend should call smart contract claimRewards function",
-      iracingId: iracingId,
-      walletAddress: walletAddress
-    });
+  // Relayer endpoint - accepts both signatures and submits claim tx (relayer pays gas)
+  app.post("/api/relayer/submit-claim", async (req, res) => {
+    try {
+      const {
+        racerId,
+        wallet,
+        wins,
+        top5s,
+        starts,
+        expiry,
+        oracleSignature,
+        userSignature
+      } = req.body;
+      
+      if (!process.env.RELAYER_PRIVATE_KEY || !process.env.CONTRACT_ADDRESS || !process.env.BASE_RPC_URL) {
+        return res.status(503).json({ error: "Relayer not configured" });
+      }
+      
+      // Verify expiry hasn't passed
+      if (Date.now() / 1000 > expiry) {
+        return res.status(400).json({ error: "Signatures expired" });
+      }
+      
+      // Setup provider and relayer wallet
+      const provider = new ethers.providers.JsonRpcProvider(process.env.BASE_RPC_URL);
+      const relayerWallet = new ethers.Wallet(process.env.RELAYER_PRIVATE_KEY, provider);
+      
+      // Contract ABI (minimal - just the claimOnBehalfWithWallet function)
+      const contractABI = [
+        "function claimOnBehalfWithWallet(uint256 racerId, address wallet, uint256 wins, uint256 top5s, uint256 starts, uint256 expiry, bytes calldata oracleSig, bytes calldata userSig) external"
+      ];
+      
+      const contract = new ethers.Contract(
+        process.env.CONTRACT_ADDRESS,
+        contractABI,
+        relayerWallet
+      );
+      
+      // Submit transaction (relayer pays gas)
+      const tx = await contract.claimOnBehalfWithWallet(
+        racerId,
+        wallet,
+        wins,
+        top5s,
+        starts,
+        expiry,
+        oracleSignature,
+        userSignature,
+        { gasLimit: 800000 }
+      );
+      
+      // Wait for confirmation
+      const receipt = await tx.wait();
+      
+      res.json({
+        success: true,
+        transactionHash: receipt.transactionHash,
+        blockNumber: receipt.blockNumber
+      });
+      
+    } catch (error: any) {
+      console.error('Relayer error:', error);
+      res.status(500).json({ 
+        error: "Failed to submit claim",
+        details: error.message
+      });
+    }
   });
 
   // Authentication middleware
