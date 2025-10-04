@@ -117,7 +117,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const { code, state } = req.query;
     
     if (!code || !state) {
-      return res.status(400).json({ error: "Missing authorization code or state" });
+      console.error('OAuth callback missing code or state:', { code: !!code, state: !!state });
+      return res.redirect('/?error=missing_params');
     }
     
     try {
@@ -126,7 +127,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check state timestamp (expire after 10 minutes)
       if (Date.now() - stateData.timestamp > 10 * 60 * 1000) {
-        return res.status(400).json({ error: "Authorization expired" });
+        console.error('OAuth state expired');
+        return res.redirect('/?error=expired');
       }
       
       // Exchange code for access token
@@ -163,9 +165,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Redirect to frontend with token
       res.redirect(`/?auth_token=${appToken}&success=true`);
       
-    } catch (error) {
-      console.error('iRacing OAuth error:', error);
-      res.status(500).json({ error: "Authentication failed" });
+    } catch (error: any) {
+      console.error('iRacing OAuth error:', error.response?.data || error.message || error);
+      const errorMsg = encodeURIComponent(error.response?.data?.error || error.message || 'Authentication failed');
+      return res.redirect(`/?error=${errorMsg}`);
     }
   });
   

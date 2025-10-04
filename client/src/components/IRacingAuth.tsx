@@ -44,8 +44,23 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('auth_token');
     const success = urlParams.get('success');
+    const error = urlParams.get('error');
     
-    if (token && success === 'true') {
+    if (error) {
+      setAuthStatus('error');
+      toast({
+        title: "Authentication Failed",
+        description: decodeURIComponent(error) || "Failed to authenticate with iRacing. Please try again.",
+        variant: "destructive",
+      });
+      
+      // Clean URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+      
+      if (onAuthStatusChange) {
+        onAuthStatusChange('error');
+      }
+    } else if (token && success === 'true') {
       setAuthToken(token);
       setAuthStatus('authenticated');
       fetchIRacingStats(token);
