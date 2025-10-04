@@ -106,26 +106,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(503).json({ error: "iRacing OAuth not configured" });
     }
     
-    // Generate secure random state
-    const state = crypto.randomBytes(32).toString('hex');
-    
-    // Store state with wallet address for CSRF validation
-    oauthStates.set(state, {
-      walletAddress,
-      timestamp: Date.now()
-    });
+    // Use wallet address as state (as specified in requirements)
+    const state = encodeURIComponent(walletAddress);
     
     const redirectUri = process.env.IRACING_REDIRECT_URI || 'http://localhost:5000/api/auth/callback';
     const authUrl = `https://members.iracing.com/oauth/authorize?` +
       `response_type=code&` +
       `client_id=${process.env.IRACING_CLIENT_ID}&` +
       `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-      `state=${encodeURIComponent(state)}`;
+      `state=${state}`;
     
     console.log('[iRacing OAuth] Starting auth flow:', {
       client_id: process.env.IRACING_CLIENT_ID,
       redirect_uri: redirectUri,
-      stateGenerated: true
+      state: walletAddress
     });
     
     res.json({ authUrl });
@@ -141,25 +135,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
-      // Validate state for CSRF protection
-      const stateData = oauthStates.get(state as string);
-      
-      if (!stateData) {
-        console.error('[iRacing OAuth] Invalid or expired state');
-        return res.redirect('/?error=invalid_state');
-      }
-      
-      // Check if state is expired (15 minutes)
-      if (Date.now() - stateData.timestamp > 15 * 60 * 1000) {
-        oauthStates.delete(state as string);
-        console.error('[iRacing OAuth] Expired state');
-        return res.redirect('/?error=expired');
-      }
-      
-      const walletAddress = stateData.walletAddress;
-      
-      // Remove used state
-      oauthStates.delete(state as string);
+      // State is the wallet address (as specified in requirements)
+      const walletAddress = decodeURIComponent(state as string);
       
       console.log('[iRacing OAuth] Callback received:', { 
         hasCode: !!code, 
@@ -184,18 +161,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log('[iRacing OAuth] Access token received');
       
-      // Create JWT token for our app that includes the iRacing access token
-      const appToken = jwt.sign(
-        {
-          walletAddress: walletAddress,
-          iracingToken: access_token
-        },
-        process.env.JWT_SECRET || 'development-secret',
-        { expiresIn: '24h' }
-      );
-      
-      // Redirect to frontend with token
-      res.redirect(`/?token=${appToken}&success=true`);
+      // Redirect to frontend with access token (as specified in requirements)
+      const baseUrl = process.env.NODE_ENV === 'production' 
+        ? 'https://hodlracing.fun' 
+        : '';
+      res.redirect(`${baseUrl}/?token=${access_token}&success=true`);
       
     } catch (error: any) {
       console.error('[iRacing OAuth] Error:', error.response?.data || error.message || error);
@@ -205,22 +175,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Get user's iRacing profile and stats
-  app.get("/api/iracing/profile", authenticateToken, async (req: any, res: any) => {
+  app.get("/api/iracing/profile", async (req, res) => {
     try {
-      const { iracingToken } = req.user;
+      // Extract token from Authorization header
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: "Missing or invalid authorization header" });
+      }
+      
+      const token = authHeader.substring(7); // Remove 'Bearer ' prefix
       
       console.log('[iRacing Profile] Fetching profile data');
       
-      // Get user profile from iRacing
+      // Get user profile from iRacing using the access token
       const profileResponse = await axios.get('https://members.iracing.com/api/member/profile', {
         headers: {
-          'Authorization': `Bearer ${iracingToken}`
+          'Authorization': `Bearer ${token}`
         }
       });
       
       const profile = profileResponse.data;
       
-      console.log('[iRacing Profile] Profile data received');
+      console.log('[iRacing Profile] Profile data received:', JSON.stringify(profile, null, 2));
       
       // Extract relevant stats
       const careerStats = {
@@ -234,9 +210,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(careerStats);
       
-    } catch (error) {
-      console.error('Error fetching iRacing profile:', error);
-      res.status(500).json({ error: "Failed to fetch profile" });
+    } catch (error: any) {
+      console.error('[iRacing Profile] Error:', error.response?.data || error.message || error);
+      res.status(error.response?.status || 500).json({ 
+        error: error.response?.data?.error || "Failed to fetch profile" 
+      });
     }
   });
   

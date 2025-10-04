@@ -1,0 +1,86 @@
+My app at hodlracing.fun still fails iRacing OAuth.
+Please create a working backend implementation in this Replit project that matches the frontend in IRacingAuth.tsx and uses my registered redirect URIs:
+
+https://hodlracing.fun/api/auth/callback
+
+https://hodlracing.fun/auth/iracing/callback
+
+I’m getting a 404 from iRacing when clicking “Connect iRacing Account”, so please build the proper Express.js OAuth flow using iRacing’s API endpoints and fix the redirect.
+
+Here’s exactly what I need:
+
+Add environment variables to .env:
+
+IRACING_CLIENT_ID=your_client_id
+IRACING_CLIENT_SECRET=your_client_secret
+IRACING_REDIRECT_URI=https://hodlracing.fun/api/auth/callback
+
+
+Create an Express backend with these routes:
+
+POST /api/iracing/auth/start
+
+Accepts { walletAddress } in JSON body.
+
+Responds with { authUrl } built like this:
+
+const redirectUri = process.env.IRACING_REDIRECT_URI;
+const state = encodeURIComponent(walletAddress);
+const authUrl = `https://members.iracing.com/oauth/authorize?response_type=code&client_id=${process.env.IRACING_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`;
+res.json({ authUrl });
+
+
+This should be the URL that iRacing expects.
+
+GET /api/auth/callback
+
+Reads code and state from the query.
+
+Exchanges the code for a token:
+
+const tokenRes = await fetch('https://members.iracing.com/oauth/token', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  body: new URLSearchParams({
+    grant_type: 'authorization_code',
+    code,
+    redirect_uri: process.env.IRACING_REDIRECT_URI,
+    client_id: process.env.IRACING_CLIENT_ID,
+    client_secret: process.env.IRACING_CLIENT_SECRET,
+  }),
+});
+const data = await tokenRes.json();
+
+
+Then redirect the user back to the frontend:
+
+res.redirect(`https://hodlracing.fun?token=${data.access_token}&success=true`);
+
+GET /api/iracing/profile
+
+Accepts Authorization: Bearer <token> header.
+
+Fetches user profile:
+
+const resp = await fetch('https://members.iracing.com/api/member/profile', {
+  headers: { Authorization: `Bearer ${token}` },
+});
+const profile = await resp.json();
+res.json({
+  iracingId: profile.custid,
+  careerWins: profile.stats.wins,
+  careerTop5s: profile.stats.top5s,
+  careerStarts: profile.stats.starts,
+  irating: profile.irating,
+  licenseName: profile.license.name,
+});
+
+
+Make sure startAuthentication() in IRacingAuth.tsx still works with this route — it will get back a proper authUrl and redirect the user to iRacing’s OAuth page.
+
+After the callback, the browser should come back to https://hodlracing.fun?token=<access_token>&success=true, and IRacingAuth.tsx will call /api/iracing/profile automatically.
+
+Test by running the Replit project and clicking Connect iRacing Account. It should open iRacing’s login, then return to my site with an access token.
+
+Please implement this backend and confirm the authorization URL includes all required parameters (response_type=code, client_id, redirect_uri, and state).
+Then make sure the /api/auth/callback route exchanges the code correctly and redirects back to the frontend.
