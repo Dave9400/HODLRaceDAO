@@ -5,6 +5,20 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { ethers } from "ethers";
 
+// Temporary in-memory store for OAuth state (use Redis in production)
+const oauthStates = new Map<string, { walletAddress: string; timestamp: number }>();
+
+// Clean up expired states every 15 minutes
+setInterval(() => {
+  const now = Date.now();
+  const entries = Array.from(oauthStates.entries());
+  for (const [state, data] of entries) {
+    if (now - data.timestamp > 15 * 60 * 1000) {
+      oauthStates.delete(state);
+    }
+  }
+}, 15 * 60 * 1000);
+
 // Extend Request interface to include user property
 interface AuthenticatedRequest extends Request {
   user?: {
@@ -84,85 +98,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/iracing/auth/start", (req, res) => {
     const { walletAddress } = req.body;
     
+    if (!walletAddress) {
+      return res.status(400).json({ error: "Wallet address is required" });
+    }
+    
     if (!process.env.IRACING_CLIENT_ID) {
       return res.status(503).json({ error: "iRacing OAuth not configured" });
     }
     
-    // Generate state parameter for security
+    // Generate secure random state
     const state = crypto.randomBytes(32).toString('hex');
     
-    // Store state with wallet address for later verification
-    // In production, use Redis or database
-    const stateData = {
-      state,
+    // Store state with wallet address for CSRF validation
+    oauthStates.set(state, {
       walletAddress,
       timestamp: Date.now()
-    };
+    });
     
-    // Encode state data
-    const encodedState = Buffer.from(JSON.stringify(stateData)).toString('base64');
-    
-    const redirectUri = process.env.IRACING_REDIRECT_URI || 'http://localhost:5000/auth/iracing/callback';
-    const authUrl = `https://members.iracing.com/jforum/oauth/authorize?` +
-      `client_id=${process.env.IRACING_CLIENT_ID}&` +
+    const redirectUri = process.env.IRACING_REDIRECT_URI || 'http://localhost:5000/api/auth/callback';
+    const authUrl = `https://members.iracing.com/oauth/authorize?` +
       `response_type=code&` +
-      `scope=read&` +
-      `state=${encodedState}&` +
-      `redirect_uri=${encodeURIComponent(redirectUri)}`;
+      `client_id=${process.env.IRACING_CLIENT_ID}&` +
+      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+      `state=${encodeURIComponent(state)}`;
     
     console.log('[iRacing OAuth] Starting auth flow:', {
       client_id: process.env.IRACING_CLIENT_ID,
       redirect_uri: redirectUri,
-      state_length: encodedState.length
+      stateGenerated: true
     });
     
-    res.json({ authUrl, state: encodedState });
+    res.json({ authUrl });
   });
   
   // iRacing OAuth callback
-  app.get("/auth/iracing/callback", async (req, res) => {
+  app.get("/api/auth/callback", async (req, res) => {
     const { code, state } = req.query;
     
     if (!code || !state) {
-      console.error('OAuth callback missing code or state:', { code: !!code, state: !!state });
+      console.error('[iRacing OAuth] Callback missing code or state:', { code: !!code, state: !!state });
       return res.redirect('/?error=missing_params');
     }
     
     try {
-      // Decode and verify state
-      const stateData = JSON.parse(Buffer.from(state as string, 'base64').toString());
+      // Validate state for CSRF protection
+      const stateData = oauthStates.get(state as string);
       
-      // Check state timestamp (expire after 10 minutes)
-      if (Date.now() - stateData.timestamp > 10 * 60 * 1000) {
-        console.error('OAuth state expired');
+      if (!stateData) {
+        console.error('[iRacing OAuth] Invalid or expired state');
+        return res.redirect('/?error=invalid_state');
+      }
+      
+      // Check if state is expired (15 minutes)
+      if (Date.now() - stateData.timestamp > 15 * 60 * 1000) {
+        oauthStates.delete(state as string);
+        console.error('[iRacing OAuth] Expired state');
         return res.redirect('/?error=expired');
       }
       
-      // Exchange code for access token
-      const tokenResponse = await axios.post('https://members.iracing.com/jforum/oauth/token', {
-        grant_type: 'authorization_code',
-        client_id: process.env.IRACING_CLIENT_ID,
-        client_secret: process.env.IRACING_CLIENT_SECRET,
-        code: code,
-        redirect_uri: process.env.IRACING_REDIRECT_URI || 'http://localhost:5000/auth/iracing/callback'
+      const walletAddress = stateData.walletAddress;
+      
+      // Remove used state
+      oauthStates.delete(state as string);
+      
+      console.log('[iRacing OAuth] Callback received:', { 
+        hasCode: !!code, 
+        walletAddress 
+      });
+      
+      // Exchange code for access token (form-encoded as required by iRacing)
+      const params = new URLSearchParams();
+      params.append('grant_type', 'authorization_code');
+      params.append('code', code as string);
+      params.append('redirect_uri', process.env.IRACING_REDIRECT_URI || 'http://localhost:5000/api/auth/callback');
+      params.append('client_id', process.env.IRACING_CLIENT_ID!);
+      params.append('client_secret', process.env.IRACING_CLIENT_SECRET!);
+      
+      const tokenResponse = await axios.post('https://members.iracing.com/oauth/token', params, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
       });
       
       const { access_token } = tokenResponse.data;
       
-      // Get user profile from iRacing
-      const profileResponse = await axios.get('https://members.iracing.com/membersite/member/GetDriverStatus', {
-        headers: {
-          'Authorization': `Bearer ${access_token}`
-        }
-      });
+      console.log('[iRacing OAuth] Access token received');
       
-      const profile = profileResponse.data;
-      
-      // Create JWT token for our app
+      // Create JWT token for our app that includes the iRacing access token
       const appToken = jwt.sign(
         {
-          iracingId: profile.cust_id.toString(),
-          walletAddress: stateData.walletAddress,
+          walletAddress: walletAddress,
           iracingToken: access_token
         },
         process.env.JWT_SECRET || 'development-secret',
@@ -170,10 +195,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       
       // Redirect to frontend with token
-      res.redirect(`/?auth_token=${appToken}&success=true`);
+      res.redirect(`/?token=${appToken}&success=true`);
       
     } catch (error: any) {
-      console.error('iRacing OAuth error:', error.response?.data || error.message || error);
+      console.error('[iRacing OAuth] Error:', error.response?.data || error.message || error);
       const errorMsg = encodeURIComponent(error.response?.data?.error || error.message || 'Authentication failed');
       return res.redirect(`/?error=${errorMsg}`);
     }
@@ -182,25 +207,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user's iRacing profile and stats
   app.get("/api/iracing/profile", authenticateToken, async (req: any, res: any) => {
     try {
-      const { iracingToken, iracingId } = req.user;
+      const { iracingToken } = req.user;
       
-      // Get career stats
-      const statsResponse = await axios.get(`https://members.iracing.com/membersite/member/GetCareerStats?custid=${iracingId}`, {
+      console.log('[iRacing Profile] Fetching profile data');
+      
+      // Get user profile from iRacing
+      const profileResponse = await axios.get('https://members.iracing.com/api/member/profile', {
         headers: {
           'Authorization': `Bearer ${iracingToken}`
         }
       });
       
-      const stats = statsResponse.data;
+      const profile = profileResponse.data;
+      
+      console.log('[iRacing Profile] Profile data received');
       
       // Extract relevant stats
       const careerStats = {
-        iracingId: iracingId,
-        careerWins: stats.wins || 0,
-        careerTop5s: stats.top5 || 0,
-        careerStarts: stats.starts || 0,
-        irating: stats.irating || 0,
-        licenseName: stats.license?.group_name || "Unknown"
+        iracingId: profile.custid?.toString() || profile.cust_id?.toString() || 'unknown',
+        careerWins: profile.stats?.wins || 0,
+        careerTop5s: profile.stats?.top5s || 0,
+        careerStarts: profile.stats?.starts || 0,
+        irating: profile.irating || 0,
+        licenseName: profile.license?.name || "Unknown"
       };
       
       res.json(careerStats);

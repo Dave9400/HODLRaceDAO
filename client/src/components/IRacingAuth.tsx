@@ -41,7 +41,7 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
   // Check for auth token from URL (OAuth redirect)
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('auth_token');
+    const token = urlParams.get('token');
     const success = urlParams.get('success');
     const error = urlParams.get('error');
     

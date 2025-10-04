@@ -1,0 +1,100 @@
+Please fix my iRacing OAuth authentication system in this Replit project for hodlracing.fun.
+The frontend component file is IRacingAuth.tsx. It currently calls /api/iracing/auth/start and /api/iracing/profile, but those routes don’t exist and authentication fails.
+
+I need a working backend OAuth flow using Express.js (TypeScript or JavaScript) that does the following:
+
+Environment variables
+Add these to .env and use them securely:
+
+IRACING_CLIENT_ID=your_client_id
+IRACING_CLIENT_SECRET=your_client_secret
+IRACING_REDIRECT_URI=https://hodlracing.fun/api/auth/callback
+
+
+Server routes to add (Express)
+
+POST /api/iracing/auth/start
+
+Accepts { walletAddress } in the request body.
+
+Generates a valid iRacing OAuth authorization URL:
+
+https://members.iracing.com/oauth/authorize
+?response_type=code
+&client_id=${IRACING_CLIENT_ID}
+&redirect_uri=${IRACING_REDIRECT_URI}
+&state=${walletAddress}
+
+
+Responds with { authUrl } for the frontend to redirect to.
+
+GET /api/auth/callback
+
+Receives the code and state query parameters from iRacing.
+
+Exchanges the code for an access token using:
+
+POST https://members.iracing.com/oauth/token
+{
+  grant_type: "authorization_code",
+  code,
+  redirect_uri: IRACING_REDIRECT_URI,
+  client_id: IRACING_CLIENT_ID,
+  client_secret: IRACING_CLIENT_SECRET
+}
+
+
+Returns { access_token } to the frontend, OR redirects to / with a query like:
+
+https://hodlracing.fun?token=<access_token>&success=true
+
+GET /api/iracing/profile
+
+Accepts an Authorization: Bearer <token> header.
+
+Fetches the iRacing user’s profile and stats from:
+
+https://members.iracing.com/api/member/profile
+
+
+Returns key info such as:
+
+{
+  "racerId": profile.custid,
+  "careerWins": profile.stats.wins,
+  "careerTop5s": profile.stats.top5s,
+  "careerStarts": profile.stats.starts,
+  "irating": profile.irating,
+  "licenseName": profile.license.name
+}
+
+
+Frontend adjustments (IRacingAuth.tsx)
+
+Change the redirect logic to check for code instead of auth_token.
+
+When the code is found in the URL, call /api/auth/callback?code=... to exchange it for a token, then call /api/iracing/profile with Authorization: Bearer <token> to get stats.
+
+Once stats are fetched, display them in the UI and continue to the claim process.
+
+Security
+
+Validate the state parameter (wallet address) when handling the callback.
+
+Store IRACING_CLIENT_SECRET only in .env, never in frontend code.
+
+Use HTTPS for all redirects (hodlracing.fun already is).
+
+Testing
+
+When I visit the site and click “Connect iRacing Account,” it should:
+
+Redirect me to iRacing’s login page.
+
+Redirect back to https://hodlracing.fun/api/auth/callback with a code.
+
+Retrieve an access token and profile.
+
+Show my iRacing name and stats on the frontend.
+
+Please implement the missing backend routes and make any necessary fixes in IRacingAuth.tsx so this flow works correctly on Replit.
