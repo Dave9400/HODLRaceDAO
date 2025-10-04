@@ -110,18 +110,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const state = encodeURIComponent(walletAddress);
     
     const redirectUri = process.env.IRACING_REDIRECT_URI || 'http://localhost:5000/api/auth/callback';
-    const authUrl = `https://members-ng.iracing.com/oauth2/authorize?` +
+    const authUrl = `https://oauth.iracing.com/oauth2/authorize?` +
       `response_type=code&` +
       `client_id=${process.env.IRACING_CLIENT_ID}&` +
       `redirect_uri=${encodeURIComponent(redirectUri)}&` +
       `state=${state}&` +
-      `audience=data-server`;
+      `scope=data-server`;
     
     console.log('[iRacing OAuth] Starting auth flow:', {
       client_id: process.env.IRACING_CLIENT_ID,
       redirect_uri: redirectUri,
       state: walletAddress,
-      audience: 'data-server'
+      scope: 'data-server'
     });
     
     res.json({ authUrl });
@@ -152,9 +152,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       params.append('redirect_uri', process.env.IRACING_REDIRECT_URI || 'http://localhost:5000/api/auth/callback');
       params.append('client_id', process.env.IRACING_CLIENT_ID!);
       params.append('client_secret', process.env.IRACING_CLIENT_SECRET!);
-      params.append('audience', 'data-server');
       
-      const tokenResponse = await axios.post('https://members-ng.iracing.com/oauth2/token', params, {
+      const tokenResponse = await axios.post('https://oauth.iracing.com/oauth2/token', params, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
