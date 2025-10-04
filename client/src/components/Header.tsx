@@ -36,7 +36,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
             <img 
               src={logoUrl} 
               alt="HODL Racing DAO" 
-              className="w-10 h-10 object-contain"
+              className="w-16 h-16 object-contain brightness-75 saturate-50"
             />
           </div>
         </div>

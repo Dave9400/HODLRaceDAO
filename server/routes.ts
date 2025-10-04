@@ -102,12 +102,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Encode state data
     const encodedState = Buffer.from(JSON.stringify(stateData)).toString('base64');
     
+    const redirectUri = process.env.IRACING_REDIRECT_URI || 'http://localhost:5000/auth/iracing/callback';
     const authUrl = `https://members.iracing.com/jforum/oauth/authorize?` +
       `client_id=${process.env.IRACING_CLIENT_ID}&` +
       `response_type=code&` +
       `scope=read&` +
       `state=${encodedState}&` +
-      `redirect_uri=${encodeURIComponent(process.env.IRACING_REDIRECT_URI || 'http://localhost:5000/auth/iracing/callback')}`;
+      `redirect_uri=${encodeURIComponent(redirectUri)}`;
+    
+    console.log('[iRacing OAuth] Starting auth flow:', {
+      client_id: process.env.IRACING_CLIENT_ID,
+      redirect_uri: redirectUri,
+      state_length: encodedState.length
+    });
     
     res.json({ authUrl, state: encodedState });
   });
