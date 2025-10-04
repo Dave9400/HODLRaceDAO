@@ -34,7 +34,6 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [authStatus, setAuthStatus] = useState<'idle' | 'authenticated' | 'error'>('idle');
   const [iracingStats, setIracingStats] = useState<IRacingStats | null>(null);
-  const [authToken, setAuthToken] = useState<string | null>(null);
   
   const { address, isConnected } = useAccount();
   const { toast } = useToast();
@@ -61,7 +60,6 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
         onAuthStatusChange('error');
       }
     } else if (token && success === 'true') {
-      setAuthToken(token);
       setAuthStatus('authenticated');
       fetchIRacingStats(token);
       
