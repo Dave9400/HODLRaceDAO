@@ -119,13 +119,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(503).json({ error: "iRacing OAuth not configured" });
     }
     
+    // Generate PKCE values
+    const codeVerifier = generateCodeVerifier();
+    const codeChallenge = generateCodeChallenge(codeVerifier);
+    
     // Generate secure state
     const state = crypto.randomBytes(32).toString('hex');
     
-    // Store state with wallet address (no PKCE for server-side client)
+    // Store state with wallet address and PKCE verifier
     oauthStates.set(state, {
       walletAddress,
-      codeVerifier: '', // Not using PKCE
+      codeVerifier,
       timestamp: Date.now()
     });
     
@@ -146,16 +150,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       `redirect_uri=${encodeURIComponent(redirectUri)}&` +
       `state=${encodeURIComponent(state)}&` +
       `scope=iracing.auth&` +
-      `audience=data-server`;
+      `audience=data-server&` +
+      `code_challenge=${encodeURIComponent(codeChallenge)}&` +
+      `code_challenge_method=S256`;
     
-    console.log('[iRacing OAuth] Starting auth flow:', {
+    console.log('[iRacing OAuth] Starting auth flow with PKCE:', {
       client_id: process.env.IRACING_CLIENT_ID,
       redirect_uri: redirectUri,
       walletAddress,
       scope: 'iracing.auth',
       audience: 'data-server',
-      env: process.env.NODE_ENV,
-      authUrl: authUrl
+      pkce: true,
+      env: process.env.NODE_ENV
     });
     
     res.json({ authUrl });
