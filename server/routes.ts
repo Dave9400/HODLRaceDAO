@@ -145,16 +145,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       `client_id=${process.env.IRACING_CLIENT_ID}&` +
       `redirect_uri=${encodeURIComponent(redirectUri)}&` +
       `state=${encodeURIComponent(state)}&` +
-      `scope=openid&` +
+      `scope=iracing.auth&` +
       `audience=data-server`;
     
     console.log('[iRacing OAuth] Starting auth flow:', {
       client_id: process.env.IRACING_CLIENT_ID,
       redirect_uri: redirectUri,
       walletAddress,
-      scope: 'openid',
+      scope: 'iracing.auth',
       audience: 'data-server',
-      env: process.env.NODE_ENV
+      env: process.env.NODE_ENV,
+      authUrl: authUrl
     });
     
     res.json({ authUrl });
