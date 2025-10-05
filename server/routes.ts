@@ -219,10 +219,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       params.append('redirect_uri', redirectUri);
       params.append('client_id', process.env.IRACING_CLIENT_ID!);
       params.append('client_secret', process.env.IRACING_CLIENT_SECRET!);
-      // Not using PKCE for server-side client
-      if (codeVerifier) {
-        params.append('code_verifier', codeVerifier);
-      }
+      params.append('code_verifier', codeVerifier);
+      params.append('audience', 'data-server');
       
       const tokenResponse = await axios.post('https://oauth.iracing.com/oauth2/token', params, {
         headers: {
