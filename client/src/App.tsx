@@ -28,6 +28,17 @@ function Router() {
     { id: "about", label: "About DAO", icon: Info },
   ];
 
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    const success = urlParams.get('success');
+    const error = urlParams.get('error');
+    
+    if ((token && success === 'true') || error) {
+      setCurrentPage('race');
+    }
+  }, []);
+
   const handleNavigate = (pageId: string) => {
     setCurrentPage(pageId);
     setIsMobileMenuOpen(false);
