@@ -133,7 +133,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       timestamp: Date.now()
     });
     
-    const redirectUri = process.env.IRACING_REDIRECT_URI || 'http://localhost:5000/api/auth/callback';
+    // Determine redirect URI based on environment
+    let redirectUri: string;
+    if (process.env.NODE_ENV === 'production' && process.env.IRACING_REDIRECT_URI) {
+      redirectUri = process.env.IRACING_REDIRECT_URI;
+    } else {
+      // In development, use the current host from the request
+      const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+      const host = req.headers['x-forwarded-host'] || req.headers['host'] || 'localhost:5000';
+      redirectUri = `${protocol}://${host}/api/auth/callback`;
+    }
+    
     const authUrl = `https://oauth.iracing.com/oauth2/authorize?` +
       `response_type=code&` +
       `client_id=${process.env.IRACING_CLIENT_ID}&` +
@@ -148,7 +158,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       redirect_uri: redirectUri,
       walletAddress,
       scope: 'iracing.auth',
-      pkce: true
+      pkce: true,
+      env: process.env.NODE_ENV
     });
     
     res.json({ authUrl });
@@ -189,11 +200,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         walletAddress 
       });
       
+      // Determine redirect URI (must match the one used in authorization request)
+      let redirectUri: string;
+      if (process.env.NODE_ENV === 'production' && process.env.IRACING_REDIRECT_URI) {
+        redirectUri = process.env.IRACING_REDIRECT_URI;
+      } else {
+        const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+        const host = req.headers['x-forwarded-host'] || req.headers['host'] || 'localhost:5000';
+        redirectUri = `${protocol}://${host}/api/auth/callback`;
+      }
+      
       // Exchange code for access token with PKCE (form-encoded as required by iRacing)
       const params = new URLSearchParams();
       params.append('grant_type', 'authorization_code');
       params.append('code', code as string);
-      params.append('redirect_uri', process.env.IRACING_REDIRECT_URI || 'http://localhost:5000/api/auth/callback');
+      params.append('redirect_uri', redirectUri);
       params.append('client_id', process.env.IRACING_CLIENT_ID!);
       params.append('client_secret', process.env.IRACING_CLIENT_SECRET!);
       params.append('code_verifier', codeVerifier);
@@ -208,16 +229,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log('[iRacing OAuth] Access token received');
       
-      // Redirect to frontend with access token (as specified in requirements)
-      const baseUrl = process.env.NODE_ENV === 'production' 
-        ? 'https://hodlracing.fun' 
-        : '';
+      // Redirect to frontend with access token
+      let baseUrl = '';
+      if (process.env.NODE_ENV === 'production') {
+        baseUrl = 'https://hodlracing.fun';
+      } else {
+        // In development, redirect to the same host
+        const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+        const host = req.headers['x-forwarded-host'] || req.headers['host'] || 'localhost:5000';
+        baseUrl = `${protocol}://${host}`;
+      }
+      
+      console.log('[iRacing OAuth] Redirecting to:', `${baseUrl}/?token=***&success=true`);
       res.redirect(`${baseUrl}/?token=${access_token}&success=true`);
       
     } catch (error: any) {
       console.error('[iRacing OAuth] Error:', error.response?.data || error.message || error);
       const errorMsg = encodeURIComponent(error.response?.data?.error || error.message || 'Authentication failed');
-      return res.redirect(`/?error=${errorMsg}`);
+      
+      // Redirect to frontend with error
+      let baseUrl = '';
+      if (process.env.NODE_ENV === 'production') {
+        baseUrl = 'https://hodlracing.fun';
+      } else {
+        const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+        const host = req.headers['x-forwarded-host'] || req.headers['host'] || 'localhost:5000';
+        baseUrl = `${protocol}://${host}`;
+      }
+      
+      return res.redirect(`${baseUrl}/?error=${errorMsg}`);
     }
   });
   

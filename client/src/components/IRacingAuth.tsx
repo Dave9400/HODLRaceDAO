@@ -34,18 +34,41 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [authStatus, setAuthStatus] = useState<'idle' | 'authenticated' | 'error'>('idle');
   const [iracingStats, setIracingStats] = useState<IRacingStats | null>(null);
+  const [searchParams, setSearchParams] = useState(window.location.search);
   
   const { address, isConnected } = useAccount();
   const { toast } = useToast();
 
+  // Update search params when URL changes
+  useEffect(() => {
+    const handleLocationChange = () => {
+      setSearchParams(window.location.search);
+    };
+
+    // Listen for popstate events (back/forward navigation)
+    window.addEventListener('popstate', handleLocationChange);
+    
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange);
+    };
+  }, []);
+
   // Check for auth token from URL (OAuth redirect)
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
+    const urlParams = new URLSearchParams(searchParams);
     const token = urlParams.get('token');
     const success = urlParams.get('success');
     const error = urlParams.get('error');
     
+    console.log('[IRacingAuth] Checking URL params:', { 
+      hasToken: !!token, 
+      success, 
+      error,
+      fullSearch: searchParams 
+    });
+    
     if (error) {
+      console.error('[IRacingAuth] OAuth error:', error);
       setAuthStatus('error');
       toast({
         title: "Authentication Failed",
@@ -55,11 +78,13 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
       
       // Clean URL
       window.history.replaceState({}, document.title, window.location.pathname);
+      setSearchParams('');
       
       if (onAuthStatusChange) {
         onAuthStatusChange('error');
       }
     } else if (token && success === 'true') {
+      console.log('[IRacingAuth] OAuth success, fetching stats...');
       setAuthStatus('authenticated');
       fetchIRacingStats(token);
       
@@ -70,8 +95,9 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
       
       // Clean URL
       window.history.replaceState({}, document.title, window.location.pathname);
+      setSearchParams('');
     }
-  }, []);
+  }, [searchParams]);
 
   const startAuthentication = async () => {
     if (!isConnected || !address) {
