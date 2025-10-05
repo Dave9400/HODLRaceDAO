@@ -1,0 +1,96 @@
+2025-10-05 15:48:06.98
+67fceea8
+User
+[iRacing OAuth] Starting auth flow with PKCE: {
+2025-10-05 15:48:06.98
+67fceea8
+User
+client_id: 'hodl-racing',
+2025-10-05 15:48:06.98
+67fceea8
+User
+redirect_uri: 'https://hodlracing.fun/api/auth/callback',
+2025-10-05 15:48:06.98
+67fceea8
+User
+walletAddress: '0xDdD5d97e6442e0A5372841b41421d90ffE712Ca2',
+2025-10-05 15:48:06.98
+67fceea8
+User
+scope: 'iracing.auth',
+2025-10-05 15:48:06.98
+67fceea8
+User
+audience: 'data-server',
+2025-10-05 15:48:06.98
+67fceea8
+User
+pkce: true,
+2025-10-05 15:48:06.98
+67fceea8
+User
+env: 'production'
+2025-10-05 15:48:06.98
+67fceea8
+User
+}
+2025-10-05 15:48:06.98
+67fceea8
+User
+7:48:06 PM [express] POST /api/iracing/auth/start 200 in 1ms :: {"authUrl":"https://oauth.iracing.co…
+2025-10-05 15:48:19.61
+67fceea8
+User
+[iRacing OAuth] Callback received: {
+2025-10-05 15:48:19.61
+67fceea8
+User
+hasCode: true,
+2025-10-05 15:48:19.61
+67fceea8
+User
+walletAddress: '0xDdD5d97e6442e0A5372841b41421d90ffE712Ca2'
+2025-10-05 15:48:19.61
+67fceea8
+User
+}
+2025-10-05 15:48:19.75
+67fceea8
+User
+[iRacing OAuth] Error: {
+2025-10-05 15:48:19.75
+67fceea8
+User
+status: 400,
+2025-10-05 15:48:19.75
+67fceea8
+User
+status_reason: 'Bad Request',
+2025-10-05 15:48:19.75
+67fceea8
+User
+error: 'invalid_request',
+2025-10-05 15:48:19.75
+67fceea8
+User
+error_description: "invalid client secret or password: URL-safe Base64? (contains '-' or '_')",
+2025-10-05 15:48:19.75
+67fceea8
+User
+error_uri: 'https://oauth.iracing.com/oauth2/book/error_invalid_request.html'
+2025-10-05 15:48:19.75
+67fceea8
+User
+}
+2025-10-05 15:48:19.75
+67fceea8
+User
+7:48:19 PM [express] GET /api/auth/callback 302 in 145ms
+2025-10-05 15:48:20.12
+67fceea8
+User
+7:48:20 PM [express] GET /api/iracing/status 304 in 0ms :: {"available":true,"message":"iRacing API …
+2025-10-05 15:48:20.13
+67fceea8
+User
+7:48:20 PM [express] GET /api/users/wallet/0xDdD5d97e6442e0A5372841b41421d90ffE712Ca2 304 in 1ms :: …
