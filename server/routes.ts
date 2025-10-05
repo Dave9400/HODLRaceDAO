@@ -145,12 +145,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       `client_id=${process.env.IRACING_CLIENT_ID}&` +
       `redirect_uri=${encodeURIComponent(redirectUri)}&` +
       `state=${encodeURIComponent(state)}&` +
+      `scope=openid&` +
       `audience=data-server`;
     
-    console.log('[iRacing OAuth] Starting auth flow (no PKCE for server-side):', {
+    console.log('[iRacing OAuth] Starting auth flow:', {
       client_id: process.env.IRACING_CLIENT_ID,
       redirect_uri: redirectUri,
       walletAddress,
+      scope: 'openid',
       audience: 'data-server',
       env: process.env.NODE_ENV
     });
