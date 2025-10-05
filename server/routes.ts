@@ -119,17 +119,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(503).json({ error: "iRacing OAuth not configured" });
     }
     
-    // Generate PKCE values
-    const codeVerifier = generateCodeVerifier();
-    const codeChallenge = generateCodeChallenge(codeVerifier);
-    
     // Generate secure state
     const state = crypto.randomBytes(32).toString('hex');
     
-    // Store state with wallet address and PKCE verifier
+    // Store state with wallet address (no PKCE for server-side client)
     oauthStates.set(state, {
       walletAddress,
-      codeVerifier,
+      codeVerifier: '', // Not using PKCE
       timestamp: Date.now()
     });
     
@@ -149,17 +145,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       `client_id=${process.env.IRACING_CLIENT_ID}&` +
       `redirect_uri=${encodeURIComponent(redirectUri)}&` +
       `state=${encodeURIComponent(state)}&` +
-      `scope=iracing.auth&` +
-      `audience=data-server&` +
-      `code_challenge=${encodeURIComponent(codeChallenge)}&` +
-      `code_challenge_method=S256`;
+      `audience=data-server`;
     
-    console.log('[iRacing OAuth] Starting auth flow with PKCE:', {
+    console.log('[iRacing OAuth] Starting auth flow (no PKCE for server-side):', {
       client_id: process.env.IRACING_CLIENT_ID,
       redirect_uri: redirectUri,
       walletAddress,
-      scope: 'iracing.auth',
-      pkce: true,
+      audience: 'data-server',
       env: process.env.NODE_ENV
     });
     
@@ -211,14 +203,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         redirectUri = `${protocol}://${host}/api/auth/callback`;
       }
       
-      // Exchange code for access token with PKCE (form-encoded as required by iRacing)
+      // Exchange code for access token (form-encoded as required by iRacing)
       const params = new URLSearchParams();
       params.append('grant_type', 'authorization_code');
       params.append('code', code as string);
       params.append('redirect_uri', redirectUri);
       params.append('client_id', process.env.IRACING_CLIENT_ID!);
       params.append('client_secret', process.env.IRACING_CLIENT_SECRET!);
-      params.append('code_verifier', codeVerifier);
+      // Not using PKCE for server-side client
+      if (codeVerifier) {
+        params.append('code_verifier', codeVerifier);
+      }
       
       const tokenResponse = await axios.post('https://oauth.iracing.com/oauth2/token', params, {
         headers: {
