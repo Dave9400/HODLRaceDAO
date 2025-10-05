@@ -150,6 +150,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       `redirect_uri=${encodeURIComponent(redirectUri)}&` +
       `state=${encodeURIComponent(state)}&` +
       `scope=iracing.auth&` +
+      `audience=data-server&` +
       `code_challenge=${encodeURIComponent(codeChallenge)}&` +
       `code_challenge_method=S256`;
     
