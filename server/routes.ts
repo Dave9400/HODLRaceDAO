@@ -5,11 +5,10 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { ethers } from "ethers";
 
-// Temporary in-memory store for OAuth state with PKCE (use Redis in production)
+// Temporary in-memory store for OAuth state (use Redis in production)
 const oauthStates = new Map<string, { 
   walletAddress: string; 
   timestamp: number;
-  codeVerifier: string;
 }>();
 
 // Clean up expired states every 15 minutes
@@ -119,17 +118,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(503).json({ error: "iRacing OAuth not configured" });
     }
     
-    // Generate PKCE values
-    const codeVerifier = generateCodeVerifier();
-    const codeChallenge = generateCodeChallenge(codeVerifier);
-    
-    // Generate secure state
+    // Generate secure state (no PKCE needed for server-side client with client_secret)
     const state = crypto.randomBytes(32).toString('hex');
     
-    // Store state with wallet address and PKCE verifier
+    // Store state with wallet address
     oauthStates.set(state, {
       walletAddress,
-      codeVerifier,
       timestamp: Date.now()
     });
     
@@ -150,17 +144,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       `redirect_uri=${encodeURIComponent(redirectUri)}&` +
       `state=${encodeURIComponent(state)}&` +
       `scope=iracing.auth&` +
-      `audience=data-server&` +
-      `code_challenge=${encodeURIComponent(codeChallenge)}&` +
-      `code_challenge_method=S256`;
+      `audience=data-server`;
     
-    console.log('[iRacing OAuth] Starting auth flow with PKCE:', {
+    console.log('[iRacing OAuth] Starting auth flow (server-side client):', {
       client_id: process.env.IRACING_CLIENT_ID,
       redirect_uri: redirectUri,
       walletAddress,
       scope: 'iracing.auth',
       audience: 'data-server',
-      pkce: true,
       env: process.env.NODE_ENV
     });
     
@@ -192,7 +183,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.redirect('/?error=expired');
       }
       
-      const { walletAddress, codeVerifier } = stateData;
+      const { walletAddress } = stateData;
       
       // Remove used state
       oauthStates.delete(state as string);
