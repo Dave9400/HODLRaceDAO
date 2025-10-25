@@ -1,0 +1,124 @@
+2025-10-25 19:01:42.41
+33edc14b
+System
+starting up user application
+2025-10-25 19:01:42.41
+33edc14b
+System
+forwarding local port 5000 to external port 80 (mapped as 1104)
+2025-10-25 19:01:43.35
+33edc14b
+User
+> rest-express@1.0.0 start
+2025-10-25 19:01:43.35
+33edc14b
+User
+> NODE_ENV=production node dist/index.js
+2025-10-25 19:01:44.66
+33edc14b
+User
+11:01:44 PM [express] serving on port 5000
+2025-10-25 19:02:20.44
+33edc14b
+User
+11:02:20 PM [express] GET /api/users/wallet/0xDdD5d97e6442e0A5372841b41421d90ffE712Ca2 304 in 2ms :: …
+2025-10-25 19:02:20.45
+33edc14b
+User
+11:02:20 PM [express] GET /api/iracing/status 304 in 1ms :: {"available":true,"message":"iRacing API …
+2025-10-25 19:02:21.34
+33edc14b
+User
+[iRacing OAuth] Starting auth flow with PKCE: {
+2025-10-25 19:02:21.34
+33edc14b
+User
+client_id: 'hodl-racing',
+2025-10-25 19:02:21.34
+33edc14b
+User
+redirect_uri: 'https://hodlracing.fun/api/auth/callback',
+2025-10-25 19:02:21.34
+33edc14b
+User
+walletAddress: '0xDdD5d97e6442e0A5372841b41421d90ffE712Ca2',
+2025-10-25 19:02:21.34
+33edc14b
+User
+scope: 'iracing.auth',
+2025-10-25 19:02:21.34
+33edc14b
+User
+audience: 'data-server',
+2025-10-25 19:02:21.34
+33edc14b
+User
+pkce: true,
+2025-10-25 19:02:21.34
+33edc14b
+User
+env: 'production'
+2025-10-25 19:02:21.34
+33edc14b
+User
+}
+2025-10-25 19:02:21.34
+33edc14b
+User
+11:02:21 PM [express] POST /api/iracing/auth/start 200 in 2ms :: {"authUrl":"https://oauth.iracing.co…
+2025-10-25 19:03:23.05
+33edc14b
+User
+[iRacing OAuth] Callback received: {
+2025-10-25 19:03:23.05
+33edc14b
+User
+hasCode: true,
+2025-10-25 19:03:23.05
+33edc14b
+User
+walletAddress: '0xDdD5d97e6442e0A5372841b41421d90ffE712Ca2'
+2025-10-25 19:03:23.05
+33edc14b
+User
+}
+2025-10-25 19:03:23.05
+33edc14b
+User
+[iRacing OAuth] Exchanging code for token with params: {
+2025-10-25 19:03:23.05
+33edc14b
+User
+grant_type: 'authorization_code',
+2025-10-25 19:03:23.05
+33edc14b
+User
+redirect_uri: 'https://hodlracing.fun/api/auth/callback',
+2025-10-25 19:03:23.05
+33edc14b
+User
+client_id: 'hodl-racing',
+2025-10-25 19:03:23.05
+33edc14b
+User
+audience: 'data-server',
+2025-10-25 19:03:23.05
+33edc14b
+User
+has_code: true,
+2025-10-25 19:03:23.05
+33edc14b
+User
+has_secret: true,
+2025-10-25 19:03:23.05
+33edc14b
+User
+secret_length: 40
+2025-10-25 19:03:23.05
+33edc14b
+User
+}
+2025-10-25 19:03:23.25
+33edc14b
+User
+[iRacing OAuth] Error: {

@@ -263,7 +263,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.redirect(`${baseUrl}/?token=${access_token}&success=true`);
       
     } catch (error: any) {
-      console.error('[iRacing OAuth] Error:', error.response?.data || error.message || error);
+      console.error('[iRacing OAuth] Error:', {
+        status: error.response?.status,
+        status_reason: error.response?.statusText,
+        error: error.response?.data?.error,
+        error_description: error.response?.data?.error_description,
+        error_uri: error.response?.data?.error_uri,
+        message: error.message
+      });
       const errorMsg = encodeURIComponent(error.response?.data?.error || error.message || 'Authentication failed');
       
       // Redirect to frontend with error
