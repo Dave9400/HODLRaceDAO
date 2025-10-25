@@ -1,0 +1,128 @@
+2025-10-25 18:50:31.09
+0d4e9370
+User
+[iRacing OAuth] Starting auth flow with PKCE: {
+2025-10-25 18:50:31.09
+0d4e9370
+User
+client_id: 'hodl-racing',
+2025-10-25 18:50:31.09
+0d4e9370
+User
+redirect_uri: 'https://hodlracing.fun/api/auth/callback',
+2025-10-25 18:50:31.09
+0d4e9370
+User
+walletAddress: '0xDdD5d97e6442e0A5372841b41421d90ffE712Ca2',
+2025-10-25 18:50:31.09
+0d4e9370
+User
+scope: 'iracing.auth',
+2025-10-25 18:50:31.09
+0d4e9370
+User
+audience: 'data-server',
+2025-10-25 18:50:31.09
+0d4e9370
+User
+pkce: true,
+2025-10-25 18:50:31.09
+0d4e9370
+User
+env: 'production'
+2025-10-25 18:50:31.09
+0d4e9370
+User
+}
+2025-10-25 18:50:31.09
+0d4e9370
+User
+10:50:31 PM [express] POST /api/iracing/auth/start 200 in 1ms :: {"authUrl":"https://oauth.iracing.co…
+2025-10-25 18:54:09.81
+0d4e9370
+User
+[iRacing OAuth] Callback received: {
+2025-10-25 18:54:09.81
+0d4e9370
+User
+hasCode: true,
+2025-10-25 18:54:09.81
+0d4e9370
+User
+walletAddress: '0xDdD5d97e6442e0A5372841b41421d90ffE712Ca2'
+2025-10-25 18:54:09.81
+0d4e9370
+User
+}
+2025-10-25 18:54:09.81
+0d4e9370
+User
+[iRacing OAuth] Exchanging code for token with params: {
+2025-10-25 18:54:09.81
+0d4e9370
+User
+grant_type: 'authorization_code',
+2025-10-25 18:54:09.81
+0d4e9370
+User
+redirect_uri: 'https://hodlracing.fun/api/auth/callback',
+2025-10-25 18:54:09.81
+0d4e9370
+User
+client_id: 'hodl-racing',
+2025-10-25 18:54:09.81
+0d4e9370
+User
+audience: 'data-server',
+2025-10-25 18:54:09.81
+0d4e9370
+User
+has_code: true,
+2025-10-25 18:54:09.81
+0d4e9370
+User
+has_secret: true
+2025-10-25 18:54:09.81
+0d4e9370
+User
+}
+2025-10-25 18:54:09.97
+0d4e9370
+User
+[iRacing OAuth] Error: {
+2025-10-25 18:54:09.97
+0d4e9370
+User
+status: 400,
+2025-10-25 18:54:09.97
+0d4e9370
+User
+status_reason: 'Bad Request',
+2025-10-25 18:54:09.97
+0d4e9370
+User
+error: 'invalid_request',
+2025-10-25 18:54:09.97
+0d4e9370
+User
+error_description: "invalid client secret or password: not URL encoded? (contains ' ')",
+2025-10-25 18:54:09.97
+0d4e9370
+User
+error_uri: 'https://oauth.iracing.com/oauth2/book/error_invalid_request.html'
+2025-10-25 18:54:09.97
+0d4e9370
+User
+}
+2025-10-25 18:54:09.97
+0d4e9370
+User
+10:54:09 PM [express] GET /api/auth/callback 302 in 159ms
+2025-10-25 18:54:10.38
+0d4e9370
+User
+10:54:10 PM [express] GET /api/users/wallet/0xDdD5d97e6442e0A5372841b41421d90ffE712Ca2 304 in 0ms :: …
+2025-10-25 18:54:10.38
+0d4e9370
+User
+10:54:10 PM [express] GET /api/iracing/status 304 in 0ms :: {"available":true,"message":"iRacing API …
