@@ -1,0 +1,152 @@
+2025-10-25 21:48:10.13
+061cd94e
+System
+starting up user application
+2025-10-25 21:48:10.13
+061cd94e
+System
+forwarding local port 5000 to external port 80 (mapped as 1104)
+2025-10-25 21:48:11.54
+061cd94e
+User
+> rest-express@1.0.0 start
+2025-10-25 21:48:11.54
+061cd94e
+User
+> NODE_ENV=production node dist/index.js
+2025-10-25 21:48:13.30
+061cd94e
+User
+1:48:13 AM [express] serving on port 5000
+2025-10-25 21:48:18.26
+061cd94e
+System
+starting up user application
+2025-10-25 21:48:18.26
+061cd94e
+System
+forwarding local port 5000 to external port 80 (mapped as 1104)
+2025-10-25 21:48:19.65
+061cd94e
+User
+> rest-express@1.0.0 start
+2025-10-25 21:48:19.65
+061cd94e
+User
+> NODE_ENV=production node dist/index.js
+2025-10-25 21:48:21.09
+061cd94e
+User
+1:48:21 AM [express] serving on port 5000
+2025-10-25 21:49:45.43
+061cd94e
+User
+1:49:45 AM [express] GET /api/users/wallet/0x0231074A5491f9658abd9e0630616F7fB6896228 304 in 3ms :: …
+2025-10-25 21:49:45.44
+061cd94e
+User
+1:49:45 AM [express] GET /api/iracing/status 304 in 1ms :: {"available":true,"message":"iRacing API …
+2025-10-25 21:49:46.62
+061cd94e
+User
+[iRacing OAuth] Starting auth flow with PKCE: {
+2025-10-25 21:49:46.62
+061cd94e
+User
+client_id: 'hodl-racing',
+2025-10-25 21:49:46.62
+061cd94e
+User
+redirect_uri: 'https://hodlracing.fun/api/auth/callback',
+2025-10-25 21:49:46.62
+061cd94e
+User
+walletAddress: '0x0231074A5491f9658abd9e0630616F7fB6896228',
+2025-10-25 21:49:46.62
+061cd94e
+User
+scope: 'iracing.auth',
+2025-10-25 21:49:46.62
+061cd94e
+User
+audience: 'data-server',
+2025-10-25 21:49:46.62
+061cd94e
+User
+pkce: true,
+2025-10-25 21:49:46.62
+061cd94e
+User
+env: 'production'
+2025-10-25 21:49:46.62
+061cd94e
+User
+}
+2025-10-25 21:49:46.62
+061cd94e
+User
+1:49:46 AM [express] POST /api/iracing/auth/start 200 in 3ms :: {"authUrl":"https://oauth.iracing.co…
+2025-10-25 21:49:55.44
+061cd94e
+User
+[iRacing OAuth] Callback received: {
+2025-10-25 21:49:55.44
+061cd94e
+User
+hasCode: true,
+2025-10-25 21:49:55.44
+061cd94e
+User
+walletAddress: '0x0231074A5491f9658abd9e0630616F7fB6896228'
+2025-10-25 21:49:55.44
+061cd94e
+User
+}
+2025-10-25 21:49:55.44
+061cd94e
+User
+[iRacing OAuth] Exchanging code for token with Basic Auth + PKCE
+2025-10-25 21:49:55.60
+061cd94e
+User
+[iRacing OAuth] Error: {
+2025-10-25 21:49:55.60
+061cd94e
+User
+status: 401,
+2025-10-25 21:49:55.60
+061cd94e
+User
+status_reason: 'Unauthorized',
+2025-10-25 21:49:55.60
+061cd94e
+User
+error: 'invalid_client',
+2025-10-25 21:49:55.60
+061cd94e
+User
+error_description: 'invalid client',
+2025-10-25 21:49:55.60
+061cd94e
+User
+error_uri: 'https://oauth.iracing.com/oauth2/book/error_invalid_client.html',
+2025-10-25 21:49:55.60
+061cd94e
+User
+message: 'Request failed with status code 401'
+2025-10-25 21:49:55.60
+061cd94e
+User
+}
+2025-10-25 21:49:55.61
+061cd94e
+User
+1:49:55 AM [express] GET /api/auth/callback 302 in 171ms
+2025-10-25 21:49:56.02
+061cd94e
+User
+1:49:56 AM [express] GET /api/users/wallet/0x0231074A5491f9658abd9e0630616F7fB6896228 304 in 1ms :: …
+2025-10-25 21:49:56.02
+061cd94e
+User
+1:49:56 AM [express] GET /api/iracing/status 304 in 1ms :: {"available":true,"message":"iRacing API …
