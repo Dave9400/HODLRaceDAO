@@ -212,15 +212,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         redirectUri = `${protocol}://${host}/api/auth/callback`;
       }
       
-      // Exchange code for access token (form-encoded as required by iRacing)
-      // Note: For server-side clients with client_secret, we don't send code_verifier
-      // Ensure all values are trimmed to remove any whitespace
+      // Exchange code for access token using PKCE code_verifier
+      // Since we're using PKCE, we use code_verifier instead of client_secret
       const tokenRequestBody = {
         grant_type: 'authorization_code',
         code: (code as string).trim(),
         redirect_uri: redirectUri.trim(),
         client_id: process.env.IRACING_CLIENT_ID!.trim(),
-        client_secret: process.env.IRACING_CLIENT_SECRET!.trim(),
+        code_verifier: codeVerifier,
         audience: 'data-server'
       };
       
@@ -229,15 +228,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
         .join('&');
       
-      console.log('[iRacing OAuth] Exchanging code for token');
-      console.log('[iRacing OAuth] Secret debug:', {
-        raw_length: process.env.IRACING_CLIENT_SECRET?.length,
-        trimmed_length: process.env.IRACING_CLIENT_SECRET?.trim().length,
-        has_space: process.env.IRACING_CLIENT_SECRET?.includes(' '),
-        first_3_chars: process.env.IRACING_CLIENT_SECRET?.substring(0, 3),
-        last_3_chars: process.env.IRACING_CLIENT_SECRET?.substring(process.env.IRACING_CLIENT_SECRET.length - 3)
-      });
-      console.log('[iRacing OAuth] Form body length:', formBody.length);
+      console.log('[iRacing OAuth] Exchanging code for token with PKCE code_verifier');
       
       const tokenResponse = await axios.post('https://oauth.iracing.com/oauth2/token', formBody, {
         headers: {

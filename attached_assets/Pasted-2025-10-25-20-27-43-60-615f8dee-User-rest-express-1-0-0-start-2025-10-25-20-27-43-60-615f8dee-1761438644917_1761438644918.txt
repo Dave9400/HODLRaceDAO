@@ -1,0 +1,164 @@
+2025-10-25 20:27:43.60
+615f8dee
+User
+> rest-express@1.0.0 start
+2025-10-25 20:27:43.60
+615f8dee
+User
+> NODE_ENV=production node dist/index.js
+2025-10-25 20:27:45.16
+615f8dee
+User
+12:27:45 AM [express] serving on port 5000
+2025-10-25 20:28:52.08
+f888fb42
+System
+system: received signal terminated
+2025-10-25 20:28:52.09
+f888fb42
+System
+system: received signal terminated
+2025-10-25 20:28:59.77
+615f8dee
+User
+12:28:59 AM [express] GET /api/users/wallet/0x0231074A5491f9658abd9e0630616F7fB6896228 304 in 3ms :: …
+2025-10-25 20:28:59.77
+615f8dee
+User
+12:28:59 AM [express] GET /api/iracing/status 304 in 1ms :: {"available":true,"message":"iRacing API …
+2025-10-25 20:29:00.84
+615f8dee
+User
+[iRacing OAuth] Starting auth flow with PKCE: {
+2025-10-25 20:29:00.84
+615f8dee
+User
+client_id: 'hodl-racing',
+2025-10-25 20:29:00.84
+615f8dee
+User
+redirect_uri: 'https://hodlracing.fun/api/auth/callback',
+2025-10-25 20:29:00.84
+615f8dee
+User
+walletAddress: '0x0231074A5491f9658abd9e0630616F7fB6896228',
+2025-10-25 20:29:00.84
+615f8dee
+User
+scope: 'iracing.auth',
+2025-10-25 20:29:00.84
+615f8dee
+User
+audience: 'data-server',
+2025-10-25 20:29:00.84
+615f8dee
+User
+pkce: true,
+2025-10-25 20:29:00.84
+615f8dee
+User
+env: 'production'
+2025-10-25 20:29:00.84
+615f8dee
+User
+}
+2025-10-25 20:29:00.84
+615f8dee
+User
+12:29:00 AM [express] POST /api/iracing/auth/start 200 in 4ms :: {"authUrl":"https://oauth.iracing.co…
+2025-10-25 20:29:11.69
+615f8dee
+User
+[iRacing OAuth] Callback received: {
+2025-10-25 20:29:11.69
+615f8dee
+User
+hasCode: true,
+2025-10-25 20:29:11.69
+615f8dee
+User
+walletAddress: '0x0231074A5491f9658abd9e0630616F7fB6896228'
+2025-10-25 20:29:11.69
+615f8dee
+User
+}
+2025-10-25 20:29:11.69
+615f8dee
+User
+[iRacing OAuth] Exchanging code for token
+2025-10-25 20:29:11.69
+615f8dee
+User
+[iRacing OAuth] Secret debug: {
+2025-10-25 20:29:11.69
+615f8dee
+User
+raw_length: 40,
+2025-10-25 20:29:11.69
+615f8dee
+User
+trimmed_length: 40,
+2025-10-25 20:29:11.69
+615f8dee
+User
+has_space: false,
+2025-10-25 20:29:11.69
+615f8dee
+User
+first_3_chars: 'PUL',
+2025-10-25 20:29:11.69
+615f8dee
+User
+last_3_chars: 'EEP'
+2025-10-25 20:29:11.69
+615f8dee
+User
+}
+2025-10-25 20:29:11.69
+615f8dee
+User
+[iRacing OAuth] Form body length: 235
+2025-10-25 20:29:11.90
+615f8dee
+User
+[iRacing OAuth] Error: {
+2025-10-25 20:29:11.90
+615f8dee
+User
+status: 400,
+2025-10-25 20:29:11.90
+615f8dee
+User
+status_reason: 'Bad Request',
+2025-10-25 20:29:11.90
+615f8dee
+User
+error: 'invalid_request',
+2025-10-25 20:29:11.90
+615f8dee
+User
+error_description: "invalid client secret or password: URL-safe Base64? (contains '-' or '_')",
+2025-10-25 20:29:11.90
+615f8dee
+User
+error_uri: 'https://oauth.iracing.com/oauth2/book/error_invalid_request.html',
+2025-10-25 20:29:11.90
+615f8dee
+User
+message: 'Request failed with status code 400'
+2025-10-25 20:29:11.90
+615f8dee
+User
+}
+2025-10-25 20:29:11.90
+615f8dee
+User
+12:29:11 AM [express] GET /api/auth/callback 302 in 211ms
+2025-10-25 20:29:12.29
+615f8dee
+User
+12:29:12 AM [express] GET /api/users/wallet/0x0231074A5491f9658abd9e0630616F7fB6896228 304 in 0ms :: …
+2025-10-25 20:29:12.29
+615f8dee
+User
+12:29:12 AM [express] GET /api/iracing/status 304 in 1ms :: {"available":true,"message":"iRacing API …
