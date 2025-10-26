@@ -214,10 +214,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Exchange code for access token
       // For server-side clients, use Basic Auth with client credentials in header
+      const clientId = process.env.IRACING_CLIENT_ID!.trim();
       const tokenRequestBody = {
         grant_type: 'authorization_code',
         code: (code as string).trim(),
         redirect_uri: redirectUri.trim(),
+        client_id: clientId,
         code_verifier: codeVerifier,
         audience: 'data-server'
       };
@@ -228,7 +230,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .join('&');
       
       // Create Basic Auth header with client credentials
-      const clientId = process.env.IRACING_CLIENT_ID!.trim();
       const clientSecret = process.env.IRACING_CLIENT_SECRET!.trim();
       const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
       
