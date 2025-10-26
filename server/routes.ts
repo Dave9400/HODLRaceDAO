@@ -212,13 +212,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         redirectUri = `${protocol}://${host}/api/auth/callback`;
       }
       
-      // Exchange code for access token using PKCE code_verifier
-      // Since we're using PKCE, we use code_verifier instead of client_secret
+      // Exchange code for access token
+      // For server-side clients, use Basic Auth with client credentials in header
       const tokenRequestBody = {
         grant_type: 'authorization_code',
         code: (code as string).trim(),
         redirect_uri: redirectUri.trim(),
-        client_id: process.env.IRACING_CLIENT_ID!.trim(),
         code_verifier: codeVerifier,
         audience: 'data-server'
       };
@@ -228,11 +227,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
         .join('&');
       
-      console.log('[iRacing OAuth] Exchanging code for token with PKCE code_verifier');
+      // Create Basic Auth header with client credentials
+      const clientId = process.env.IRACING_CLIENT_ID!.trim();
+      const clientSecret = process.env.IRACING_CLIENT_SECRET!.trim();
+      const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+      
+      console.log('[iRacing OAuth] Exchanging code for token with Basic Auth + PKCE');
       
       const tokenResponse = await axios.post('https://oauth.iracing.com/oauth2/token', formBody, {
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': `Basic ${basicAuth}`
         }
       });
       
