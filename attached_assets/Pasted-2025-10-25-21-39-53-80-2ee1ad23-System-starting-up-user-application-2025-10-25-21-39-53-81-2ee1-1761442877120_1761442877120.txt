@@ -1,0 +1,132 @@
+2025-10-25 21:39:53.80
+2ee1ad23
+System
+starting up user application
+2025-10-25 21:39:53.81
+2ee1ad23
+System
+forwarding local port 5000 to external port 80 (mapped as 1104)
+2025-10-25 21:39:54.94
+2ee1ad23
+User
+> rest-express@1.0.0 start
+2025-10-25 21:39:54.94
+2ee1ad23
+User
+> NODE_ENV=production node dist/index.js
+2025-10-25 21:39:56.23
+2ee1ad23
+User
+1:39:56 AM [express] serving on port 5000
+2025-10-25 21:40:10.04
+2ee1ad23
+User
+1:40:10 AM [express] GET /api/users/wallet/0x0231074A5491f9658abd9e0630616F7fB6896228 304 in 2ms :: …
+2025-10-25 21:40:10.04
+2ee1ad23
+User
+1:40:10 AM [express] GET /api/iracing/status 304 in 0ms :: {"available":true,"message":"iRacing API …
+2025-10-25 21:40:10.98
+2ee1ad23
+User
+[iRacing OAuth] Starting auth flow with PKCE: {
+2025-10-25 21:40:10.98
+2ee1ad23
+User
+client_id: 'hodl-racing',
+2025-10-25 21:40:10.98
+2ee1ad23
+User
+redirect_uri: 'https://hodlracing.fun/api/auth/callback',
+2025-10-25 21:40:10.98
+2ee1ad23
+User
+walletAddress: '0x0231074A5491f9658abd9e0630616F7fB6896228',
+2025-10-25 21:40:10.98
+2ee1ad23
+User
+scope: 'iracing.auth',
+2025-10-25 21:40:10.98
+2ee1ad23
+User
+audience: 'data-server',
+2025-10-25 21:40:10.98
+2ee1ad23
+User
+pkce: true,
+2025-10-25 21:40:10.98
+2ee1ad23
+User
+env: 'production'
+2025-10-25 21:40:10.98
+2ee1ad23
+User
+}
+2025-10-25 21:40:10.98
+2ee1ad23
+User
+1:40:10 AM [express] POST /api/iracing/auth/start 200 in 3ms :: {"authUrl":"https://oauth.iracing.co…
+2025-10-25 21:40:21.36
+2ee1ad23
+User
+[iRacing OAuth] Callback received: {
+2025-10-25 21:40:21.36
+2ee1ad23
+User
+hasCode: true,
+2025-10-25 21:40:21.36
+2ee1ad23
+User
+walletAddress: '0x0231074A5491f9658abd9e0630616F7fB6896228'
+2025-10-25 21:40:21.36
+2ee1ad23
+User
+}
+2025-10-25 21:40:21.36
+2ee1ad23
+User
+[iRacing OAuth] Exchanging code for token with Basic Auth + PKCE
+2025-10-25 21:40:21.56
+2ee1ad23
+User
+[iRacing OAuth] Error: {
+2025-10-25 21:40:21.56
+2ee1ad23
+User
+status: 400,
+2025-10-25 21:40:21.56
+2ee1ad23
+User
+status_reason: 'Bad Request',
+2025-10-25 21:40:21.56
+2ee1ad23
+User
+error: 'invalid_request',
+2025-10-25 21:40:21.56
+2ee1ad23
+User
+error_description: 'missing field `client_id`',
+2025-10-25 21:40:21.56
+2ee1ad23
+User
+error_uri: 'https://oauth.iracing.com/oauth2/book/error_invalid_request.html',
+2025-10-25 21:40:21.56
+2ee1ad23
+User
+message: 'Request failed with status code 400'
+2025-10-25 21:40:21.56
+2ee1ad23
+User
+}
+2025-10-25 21:40:21.57
+2ee1ad23
+User
+1:40:21 AM [express] GET /api/auth/callback 302 in 206ms
+2025-10-25 21:40:21.97
+2ee1ad23
+User
+1:40:21 AM [express] GET /api/users/wallet/0x0231074A5491f9658abd9e0630616F7fB6896228 304 in 1ms :: …
+2025-10-25 21:40:21.98
+2ee1ad23
+User
+1:40:21 AM [express] GET /api/iracing/status 304 in 1ms :: {"available":true,"message":"iRacing API …
