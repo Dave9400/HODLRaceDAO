@@ -1,0 +1,184 @@
+2025-10-25 21:57:24.52
+6052590d
+System
+starting up user application
+2025-10-25 21:57:24.53
+6052590d
+System
+forwarding local port 5000 to external port 80 (mapped as 1104)
+2025-10-25 21:57:25.68
+6052590d
+User
+> rest-express@1.0.0 start
+2025-10-25 21:57:25.68
+6052590d
+User
+> NODE_ENV=production node dist/index.js
+2025-10-25 21:57:27.00
+6052590d
+User
+1:57:26 AM [express] serving on port 5000
+2025-10-25 21:57:38.57
+6052590d
+User
+1:57:38 AM [express] GET /api/users/wallet/0x0231074A5491f9658abd9e0630616F7fB6896228 304 in 2ms :: …
+2025-10-25 21:57:38.57
+6052590d
+User
+1:57:38 AM [express] GET /api/iracing/status 304 in 1ms :: {"available":true,"message":"iRacing API …
+2025-10-25 21:57:39.53
+6052590d
+User
+[iRacing OAuth] Starting auth flow (confidential client): {
+2025-10-25 21:57:39.53
+6052590d
+User
+client_id: 'hodl-racing',
+2025-10-25 21:57:39.53
+6052590d
+User
+redirect_uri: 'https://hodlracing.fun/api/auth/callback',
+2025-10-25 21:57:39.53
+6052590d
+User
+walletAddress: '0x0231074A5491f9658abd9e0630616F7fB6896228',
+2025-10-25 21:57:39.53
+6052590d
+User
+scope: 'iracing.auth',
+2025-10-25 21:57:39.53
+6052590d
+User
+audience: 'data-server',
+2025-10-25 21:57:39.53
+6052590d
+User
+env: 'production'
+2025-10-25 21:57:39.53
+6052590d
+User
+}
+2025-10-25 21:57:39.54
+6052590d
+User
+1:57:39 AM [express] POST /api/iracing/auth/start 200 in 2ms :: {"authUrl":"https://oauth.iracing.co…
+2025-10-25 21:57:39.62
+6052590d
+User
+[iRacing OAuth] Callback missing code or state: { code: false, state: true }
+2025-10-25 21:57:39.62
+6052590d
+User
+1:57:39 AM [express] GET /api/auth/callback 302 in 3ms
+2025-10-25 21:57:40.06
+6052590d
+User
+1:57:40 AM [express] GET /api/users/wallet/0x0231074A5491f9658abd9e0630616F7fB6896228 304 in 0ms :: …
+2025-10-25 21:57:40.06
+6052590d
+User
+1:57:40 AM [express] GET /api/iracing/status 304 in 0ms :: {"available":true,"message":"iRacing API …
+2025-10-25 21:57:41.71
+6052590d
+User
+[iRacing OAuth] Starting auth flow (confidential client): {
+2025-10-25 21:57:41.71
+6052590d
+User
+client_id: 'hodl-racing',
+2025-10-25 21:57:41.71
+6052590d
+User
+redirect_uri: 'https://hodlracing.fun/api/auth/callback',
+2025-10-25 21:57:41.71
+6052590d
+User
+walletAddress: '0x0231074A5491f9658abd9e0630616F7fB6896228',
+2025-10-25 21:57:41.71
+6052590d
+User
+scope: 'iracing.auth',
+2025-10-25 21:57:41.71
+6052590d
+User
+audience: 'data-server',
+2025-10-25 21:57:41.71
+6052590d
+User
+env: 'production'
+2025-10-25 21:57:41.71
+6052590d
+User
+}
+2025-10-25 21:57:41.71
+6052590d
+User
+1:57:41 AM [express] POST /api/iracing/auth/start 200 in 1ms :: {"authUrl":"https://oauth.iracing.co…
+2025-10-25 21:57:41.80
+6052590d
+User
+[iRacing OAuth] Callback missing code or state: { code: false, state: true }
+2025-10-25 21:57:41.81
+6052590d
+User
+1:57:41 AM [express] GET /api/auth/callback 302 in 1ms
+2025-10-25 21:57:42.12
+6052590d
+User
+1:57:42 AM [express] GET /api/users/wallet/0x0231074A5491f9658abd9e0630616F7fB6896228 304 in 0ms :: …
+2025-10-25 21:57:42.12
+6052590d
+User
+1:57:42 AM [express] GET /api/iracing/status 304 in 0ms :: {"available":true,"message":"iRacing API …
+2025-10-25 21:57:59.14
+6052590d
+User
+[iRacing OAuth] Starting auth flow (confidential client): {
+2025-10-25 21:57:59.14
+6052590d
+User
+client_id: 'hodl-racing',
+2025-10-25 21:57:59.14
+6052590d
+User
+redirect_uri: 'https://hodlracing.fun/api/auth/callback',
+2025-10-25 21:57:59.14
+6052590d
+User
+walletAddress: '0x0231074A5491f9658abd9e0630616F7fB6896228',
+2025-10-25 21:57:59.14
+6052590d
+User
+scope: 'iracing.auth',
+2025-10-25 21:57:59.14
+6052590d
+User
+audience: 'data-server',
+2025-10-25 21:57:59.14
+6052590d
+User
+env: 'production'
+2025-10-25 21:57:59.14
+6052590d
+User
+}
+2025-10-25 21:57:59.14
+6052590d
+User
+1:57:59 AM [express] POST /api/iracing/auth/start 200 in 1ms :: {"authUrl":"https://oauth.iracing.co…
+2025-10-25 21:57:59.24
+6052590d
+User
+[iRacing OAuth] Callback missing code or state: { code: false, state: true }
+2025-10-25 21:57:59.24
+6052590d
+User
+1:57:59 AM [express] GET /api/auth/callback 302 in 1ms
+2025-10-25 21:57:59.61
+6052590d
+User
+1:57:59 AM [express] GET /api/users/wallet/0x0231074A5491f9658abd9e0630616F7fB6896228 304 in 0ms :: …
+2025-10-25 21:57:59.61
+6052590d
+User
+1:57:59 AM [express] GET /api/iracing/status 304 in 0ms :: {"available":true,"message":"iRacing API …

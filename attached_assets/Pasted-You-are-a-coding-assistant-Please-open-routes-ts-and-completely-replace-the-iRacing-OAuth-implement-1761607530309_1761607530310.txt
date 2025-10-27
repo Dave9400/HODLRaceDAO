@@ -1,0 +1,125 @@
+You are a coding assistant. Please open routes.ts and completely replace the iRacing OAuth implementation with the following fixed and upgraded version.  
+
+It should:
+1. Use PKCE (no client_secret, no Basic Auth header)
+2. Start auth with /api/iracing/auth/start
+3. Handle callback with /api/auth/callback
+4. Exchange code for token properly
+5. Call iRacing’s /data/stats/season/career or equivalent endpoint to fetch the user’s stats (career wins, top 5s, races completed)
+6. Return that data to the frontend at /api/iracing/stats
+
+Use this full working code for routes.ts:
+
+```ts
+import express from "express";
+import axios from "axios";
+import crypto from "crypto";
+
+const router = express.Router();
+const CLIENT_ID = "hodl-racing";
+const REDIRECT_URI = "https://hodlracing.fun/api/auth/callback";
+const IRACING_AUTH_URL = "https://members-ng.iracing.com/oauth2/authorize";
+const IRACING_TOKEN_URL = "https://members-ng.iracing.com/oauth2/token";
+const IRACING_API_BASE = "https://members-ng.iracing.com/data";
+
+// In-memory PKCE store (use Redis or DB in production)
+const pkceStore = new Map<string, string>();
+
+// Step 1: Start OAuth flow
+router.post("/api/iracing/auth/start", async (req, res) => {
+  try {
+    const walletAddress = req.body.walletAddress;
+    const codeVerifier = crypto.randomBytes(32).toString("hex");
+    const codeChallenge = crypto
+      .createHash("sha256")
+      .update(codeVerifier)
+      .digest("base64")
+      .replace(/=/g, "")
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_");
+
+    pkceStore.set(walletAddress, codeVerifier);
+
+    const authUrl =
+      `${IRACING_AUTH_URL}?response_type=code` +
+      `&client_id=${CLIENT_ID}` +
+      `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
+      `&scope=iracing.auth` +
+      `&audience=data-server` +
+      `&code_challenge=${codeChallenge}` +
+      `&code_challenge_method=S256`;
+
+    return res.json({ authUrl });
+  } catch (err) {
+    console.error("[OAuth Start Error]", err);
+    return res.status(500).json({ error: "OAuth start failed" });
+  }
+});
+
+// Step 2: Handle callback and exchange code for token
+router.get("/api/auth/callback", async (req, res) => {
+  try {
+    const { code, state } = req.query;
+    const walletAddress = state ? String(state) : undefined;
+
+    const codeVerifier = pkceStore.get(walletAddress || "");
+    if (!codeVerifier) {
+      throw new Error("Missing PKCE verifier for wallet");
+    }
+
+    const tokenRes = await axios.post(
+      IRACING_TOKEN_URL,
+      new URLSearchParams({
+        grant_type: "authorization_code",
+        client_id: CLIENT_ID,
+        code: String(code),
+        redirect_uri: REDIRECT_URI,
+        code_verifier: codeVerifier,
+        audience: "data-server",
+      }),
+      {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      }
+    );
+
+    const accessToken = tokenRes.data.access_token;
+    pkceStore.delete(walletAddress || "");
+
+    // Step 3: Fetch career stats
+    const statsRes = await axios.get(
+      `${IRACING_API_BASE}/stats/season/career`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    const stats = statsRes.data;
+
+    // Redirect back to frontend with stats (or save to session)
+    const redirectWithStats = `/dashboard?wins=${stats?.career_wins || 0}&top5=${stats?.career_top5s || 0}&races=${stats?.career_starts || 0}`;
+    return res.redirect(redirectWithStats);
+  } catch (err: any) {
+    console.error("[OAuth Callback Error]", err.response?.data || err);
+    return res.status(500).send("OAuth callback failed");
+  }
+});
+
+// Optional API endpoint for frontend to re-fetch stats later
+router.get("/api/iracing/stats", async (req, res) => {
+  try {
+    const { token } = req.query;
+    const statsRes = await axios.get(`${IRACING_API_BASE}/stats/season/career`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return res.json(statsRes.data);
+  } catch (err) {
+    console.error("[Stats Fetch Error]", err.response?.data || err);
+    return res.status(500).json({ error: "Failed to fetch stats" });
+  }
+});
+
+export default router;
