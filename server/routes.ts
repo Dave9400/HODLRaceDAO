@@ -211,13 +211,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         redirectUri = `${protocol}://${host}/api/auth/callback`;
       }
       
-      // Exchange code for access token using PKCE (no client_secret needed)
+      // Exchange code for access token using client_secret (not code_verifier)
       const tokenRequestBody = {
         grant_type: 'authorization_code',
         code: (code as string).trim(),
         redirect_uri: redirectUri.trim(),
         client_id: process.env.IRACING_CLIENT_ID!.trim(),
-        code_verifier: codeVerifier,
+        client_secret: process.env.IRACING_CLIENT_SECRET!.trim(),
         audience: 'data-server'
       };
       
@@ -226,7 +226,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
         .join('&');
       
-      console.log('[iRacing OAuth] Exchanging code for token with PKCE (no client_secret)');
+      console.log('[iRacing OAuth] Exchanging code for token with client_secret in body');
       
       const tokenResponse = await axios.post('https://oauth.iracing.com/oauth2/token', formBody, {
         headers: {
