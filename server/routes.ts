@@ -211,14 +211,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         redirectUri = `${protocol}://${host}/api/auth/callback`;
       }
       
-      // Exchange code for access token using client_secret (not code_verifier)
+      // Exchange code for access token using Basic Auth header
+      // Body contains only: grant_type, code, redirect_uri
       const tokenRequestBody = {
         grant_type: 'authorization_code',
         code: (code as string).trim(),
-        redirect_uri: redirectUri.trim(),
-        client_id: process.env.IRACING_CLIENT_ID!.trim(),
-        client_secret: process.env.IRACING_CLIENT_SECRET!.trim(),
-        audience: 'data-server'
+        redirect_uri: redirectUri.trim()
       };
       
       // Manually construct URL-encoded body to ensure proper encoding
@@ -226,11 +224,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
         .join('&');
       
-      console.log('[iRacing OAuth] Exchanging code for token with client_secret in body');
+      // Create Basic Auth header with client credentials
+      const basicAuth = Buffer.from(
+        `${process.env.IRACING_CLIENT_ID}:${process.env.IRACING_CLIENT_SECRET}`
+      ).toString('base64');
+      
+      console.log('[iRacing OAuth] Exchanging code for token with Basic Auth header (minimal body)');
       
       const tokenResponse = await axios.post('https://oauth.iracing.com/oauth2/token', formBody, {
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': `Basic ${basicAuth}`
         }
       });
       
