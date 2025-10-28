@@ -1,0 +1,108 @@
+2025-10-27 22:19:14.74
+4783a9d5
+User
+2:19:14 AM [express] GET /api/users/wallet/0xDdD5d97e6442e0A5372841b41421d90ffE712Ca2 304 in 2ms :: …
+2025-10-27 22:19:14.75
+4783a9d5
+User
+2:19:14 AM [express] GET /api/iracing/status 304 in 1ms :: {"available":true,"message":"iRacing API …
+2025-10-27 22:19:16.38
+4783a9d5
+User
+[iRacing OAuth] Starting auth flow with PKCE: {
+2025-10-27 22:19:16.38
+4783a9d5
+User
+client_id: 'hodl-racing',
+2025-10-27 22:19:16.38
+4783a9d5
+User
+redirect_uri: 'https://hodlracing.fun/api/auth/callback',
+2025-10-27 22:19:16.38
+4783a9d5
+User
+walletAddress: '0xDdD5d97e6442e0A5372841b41421d90ffE712Ca2',
+2025-10-27 22:19:16.38
+4783a9d5
+User
+scope: 'iracing.auth',
+2025-10-27 22:19:16.38
+4783a9d5
+User
+audience: 'data-server',
+2025-10-27 22:19:16.38
+4783a9d5
+User
+env: 'production'
+2025-10-27 22:19:16.38
+4783a9d5
+User
+}
+2025-10-27 22:19:16.39
+4783a9d5
+User
+2:19:16 AM [express] POST /api/iracing/auth/start 200 in 3ms :: {"authUrl":"https://oauth.iracing.co…
+2025-10-27 22:19:39.54
+4783a9d5
+User
+[iRacing OAuth] Callback received: {
+2025-10-27 22:19:39.54
+4783a9d5
+User
+hasCode: true,
+2025-10-27 22:19:39.54
+4783a9d5
+User
+walletAddress: '0xDdD5d97e6442e0A5372841b41421d90ffE712Ca2'
+2025-10-27 22:19:39.54
+4783a9d5
+User
+}
+2025-10-27 22:19:39.54
+4783a9d5
+User
+[iRacing OAuth] Exchanging code for token with Basic Auth header (minimal body)
+2025-10-27 22:19:39.75
+4783a9d5
+User
+[iRacing OAuth] Error: {
+2025-10-27 22:19:39.75
+4783a9d5
+User
+status: 400,
+2025-10-27 22:19:39.75
+4783a9d5
+User
+status_reason: 'Bad Request',
+2025-10-27 22:19:39.75
+4783a9d5
+User
+error: 'invalid_request',
+2025-10-27 22:19:39.75
+4783a9d5
+User
+error_description: 'missing field `client_id`',
+2025-10-27 22:19:39.75
+4783a9d5
+User
+error_uri: 'https://oauth.iracing.com/oauth2/book/error_invalid_request.html',
+2025-10-27 22:19:39.75
+4783a9d5
+User
+message: 'Request failed with status code 400'
+2025-10-27 22:19:39.75
+4783a9d5
+User
+}
+2025-10-27 22:19:39.76
+4783a9d5
+User
+2:19:39 AM [express] GET /api/auth/callback 302 in 220ms
+2025-10-27 22:19:40.32
+4783a9d5
+User
+2:19:40 AM [express] GET /api/users/wallet/0xDdD5d97e6442e0A5372841b41421d90ffE712Ca2 304 in 1ms :: …
+2025-10-27 22:19:40.33
+4783a9d5
+User
+2:19:40 AM [express] GET /api/iracing/status 304 in 0ms :: {"available":true,"message":"iRacing API …
