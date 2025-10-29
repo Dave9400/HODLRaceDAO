@@ -305,10 +305,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
       
-      const profile = profileResponse.data;
+      const linkData = profileResponse.data;
+      console.log('[iRacing Profile] Received S3 link, fetching actual data...');
       
-      console.log('[iRacing Profile] Raw API response:', JSON.stringify(profile, null, 2));
-      console.log('[iRacing Profile] Available fields:', Object.keys(profile));
+      // iRacing returns a signed S3 URL - fetch the actual data from it
+      if (!linkData.link) {
+        throw new Error('No data link returned from iRacing API');
+      }
+      
+      const dataResponse = await axios.get(linkData.link);
+      const profile = dataResponse.data;
+      
+      console.log('[iRacing Profile] Actual profile data:', JSON.stringify(profile, null, 2));
       
       // Extract relevant stats from member summary
       const careerStats = {

@@ -1,0 +1,132 @@
+2025-10-29 18:56:57.27
+b6f2a26f
+User
+10:56:57 PM [express] POST /api 200 in 2ms
+2025-10-29 18:56:57.46
+b6f2a26f
+User
+10:56:57 PM [express] POST /api/graphql 200 in 1ms
+2025-10-29 18:56:58.00
+b6f2a26f
+User
+10:56:58 PM [express] POST /api/gql 200 in 1ms
+2025-10-29 18:56:59.92
+b6f2a26f
+User
+10:56:59 PM [express] GET /api-docs/swagger.json 200 in 1ms
+2025-10-29 18:57:00.08
+b6f2a26f
+User
+10:57:00 PM [express] GET /api/swagger.json 200 in 2ms
+2025-10-29 18:57:34.99
+b6f2a26f
+User
+10:57:34 PM [express] GET /api/users/wallet/0xDdD5d97e6442e0A5372841b41421d90ffE712Ca2 304 in 3ms :: …
+2025-10-29 18:57:35.01
+b6f2a26f
+User
+10:57:35 PM [express] GET /api/iracing/status 304 in 1ms :: {"available":true,"message":"iRacing API …
+2025-10-29 18:57:36.24
+b6f2a26f
+User
+[iRacing OAuth] Starting auth flow with PKCE: {
+2025-10-29 18:57:36.24
+b6f2a26f
+User
+client_id: 'hodl-racing',
+2025-10-29 18:57:36.24
+b6f2a26f
+User
+redirect_uri: 'https://hodlracing.fun/api/auth/callback',
+2025-10-29 18:57:36.24
+b6f2a26f
+User
+walletAddress: '0xDdD5d97e6442e0A5372841b41421d90ffE712Ca2',
+2025-10-29 18:57:36.24
+b6f2a26f
+User
+scope: 'iracing.auth',
+2025-10-29 18:57:36.24
+b6f2a26f
+User
+audience: 'data-server',
+2025-10-29 18:57:36.24
+b6f2a26f
+User
+env: 'production'
+2025-10-29 18:57:36.24
+b6f2a26f
+User
+}
+2025-10-29 18:57:36.24
+b6f2a26f
+User
+10:57:36 PM [express] POST /api/iracing/auth/start 200 in 3ms :: {"authUrl":"https://oauth.iracing.co…
+2025-10-29 18:57:50.28
+b6f2a26f
+User
+[iRacing OAuth] Callback received: {
+2025-10-29 18:57:50.28
+b6f2a26f
+User
+hasCode: true,
+2025-10-29 18:57:50.28
+b6f2a26f
+User
+walletAddress: '0xDdD5d97e6442e0A5372841b41421d90ffE712Ca2'
+2025-10-29 18:57:50.28
+b6f2a26f
+User
+}
+2025-10-29 18:57:50.28
+b6f2a26f
+User
+[iRacing OAuth] Exchanging code for token with client credentials in body
+2025-10-29 18:57:50.77
+b6f2a26f
+User
+[iRacing OAuth] Access token received
+2025-10-29 18:57:50.77
+b6f2a26f
+User
+[iRacing OAuth] Redirecting to: https://hodlracing.fun/?token=***&success=true
+2025-10-29 18:57:50.78
+b6f2a26f
+User
+10:57:50 PM [express] GET /api/auth/callback 302 in 494ms
+2025-10-29 18:57:51.20
+b6f2a26f
+User
+10:57:51 PM [express] GET /api/users/wallet/0xDdD5d97e6442e0A5372841b41421d90ffE712Ca2 304 in 1ms :: …
+2025-10-29 18:57:51.21
+b6f2a26f
+User
+[iRacing Profile] Fetching profile data
+2025-10-29 18:57:51.22
+b6f2a26f
+User
+10:57:51 PM [express] GET /api/iracing/status 304 in 1ms :: {"available":true,"message":"iRacing API …
+2025-10-29 18:57:51.83
+b6f2a26f
+User
+[iRacing Profile] Raw API response: {
+2025-10-29 18:57:51.83
+b6f2a26f
+User
+"link": "https://scorpio-assets.s3.us-east-1.amazonaws.com/production/data-server/cache/data-services/stats/member_summary/c621ed2c-f6ad-4230-97b1-18aef8ec4951?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=AKIAUO6OO4A3WX3RTXUZ%2F20251029%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20251029T225751Z&X-Amz-Expires=120&X-Amz-Signature=1854699fa161b7ebb6e058b851635c4c875e6d2fef374cb850b70daf6bd539e9&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject",
+2025-10-29 18:57:51.83
+b6f2a26f
+User
+"expires": "2025-10-29T23:12:51.808Z"
+2025-10-29 18:57:51.83
+b6f2a26f
+User
+}
+2025-10-29 18:57:51.83
+b6f2a26f
+User
+[iRacing Profile] Available fields: [ 'link', 'expires' ]
+2025-10-29 18:57:51.83
+b6f2a26f
+User
+10:57:51 PM [express] GET /api/iracing/profile 304 in 621ms :: {"iracingId":"unknown","careerWins":0,…
