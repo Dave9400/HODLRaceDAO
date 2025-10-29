@@ -307,7 +307,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const profile = profileResponse.data;
       
-      console.log('[iRacing Profile] Profile data received:', JSON.stringify(profile, null, 2));
+      console.log('[iRacing Profile] Raw API response:', JSON.stringify(profile, null, 2));
+      console.log('[iRacing Profile] Available fields:', Object.keys(profile));
       
       // Extract relevant stats from member summary
       const careerStats = {
