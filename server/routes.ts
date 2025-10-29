@@ -133,12 +133,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       timestamp: Date.now()
     });
     
-    // Determine redirect URI based on environment
+    // Determine redirect URI - always use IRACING_REDIRECT_URI if set
     let redirectUri: string;
-    if (process.env.NODE_ENV === 'production' && process.env.IRACING_REDIRECT_URI) {
+    if (process.env.IRACING_REDIRECT_URI) {
       redirectUri = process.env.IRACING_REDIRECT_URI;
     } else {
-      // In development, use the current host from the request
+      // Fallback to dynamic detection if IRACING_REDIRECT_URI not set
       const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
       const host = req.headers['x-forwarded-host'] || req.headers['host'] || 'localhost:5000';
       redirectUri = `${protocol}://${host}/api/auth/callback`;
@@ -201,9 +201,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         walletAddress 
       });
       
-      // Determine redirect URI (must match the one used in authorization request)
+      // Determine redirect URI - always use IRACING_REDIRECT_URI if set (must match auth request)
       let redirectUri: string;
-      if (process.env.NODE_ENV === 'production' && process.env.IRACING_REDIRECT_URI) {
+      if (process.env.IRACING_REDIRECT_URI) {
         redirectUri = process.env.IRACING_REDIRECT_URI;
       } else {
         const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
