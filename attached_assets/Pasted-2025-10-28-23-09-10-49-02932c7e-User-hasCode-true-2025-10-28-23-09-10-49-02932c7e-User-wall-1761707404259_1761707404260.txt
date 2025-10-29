@@ -1,0 +1,109 @@
+2025-10-28 23:09:10.49
+02932c7e
+User
+hasCode: true,
+2025-10-28 23:09:10.49
+02932c7e
+User
+walletAddress: '0xDdD5d97e6442e0A5372841b41421d90ffE712Ca2'
+2025-10-28 23:09:10.49
+02932c7e
+User
+}
+2025-10-28 23:09:10.49
+02932c7e
+User
+[iRacing OAuth] Exchanging code for token with client credentials in body
+2025-10-28 23:09:10.98
+02932c7e
+User
+[iRacing OAuth] Access token received
+2025-10-28 23:09:10.98
+02932c7e
+User
+[iRacing OAuth] Redirecting to: https://hodlracing.fun/?token=***&success=true
+2025-10-28 23:09:10.98
+02932c7e
+User
+3:09:10 AM [express] GET /api/auth/callback 302 in 490ms
+2025-10-28 23:09:11.47
+02932c7e
+User
+3:09:11 AM [express] GET /api/users/wallet/0xDdD5d97e6442e0A5372841b41421d90ffE712Ca2 304 in 1ms :: …
+2025-10-28 23:09:11.48
+02932c7e
+User
+3:09:11 AM [express] GET /api/iracing/status 304 in 1ms :: {"available":true,"message":"iRacing API …
+2025-10-28 23:09:11.48
+02932c7e
+User
+[iRacing Profile] Fetching profile data
+2025-10-28 23:09:11.65
+02932c7e
+User
+[iRacing Profile] Error:
+2025-10-28 23:09:11.65
+02932c7e
+User
+2025-10-28 23:09:11.65
+02932c7e
+User
+2025-10-28 23:09:11.65
+02932c7e
+User
+2025-10-28 23:09:11.65
+02932c7e
+User
+2025-10-28 23:09:11.65
+02932c7e
+User
+2025-10-28 23:09:11.65
+02932c7e
+User
+2025-10-28 23:09:11.65
+02932c7e
+User
+2025-10-28 23:09:11.65
+02932c7e
+User
+2025-10-28 23:09:11.65
+02932c7e
+User
+iRacing.com Motorsport Simulations
+2025-10-28 23:09:11.65
+02932c7e
+User
+2025-10-28 23:09:11.65
+02932c7e
+User
+2025-10-28 23:09:11.65
+02932c7e
+User
+Error 404 - Not Found
+2025-10-28 23:09:11.65
+02932c7e
+User
+2025-10-28 23:09:11.65
+02932c7e
+User
+The page or image you are looking for cannot be found.
+2025-10-28 23:09:11.65
+02932c7e
+User
+If you believe this page should be loading please contact our support team at support@iracing.com for further assistance.
+2025-10-28 23:09:11.65
+02932c7e
+User
+2025-10-28 23:09:11.65
+02932c7e
+User
+2025-10-28 23:09:11.65
+02932c7e
+User
+2025-10-28 23:09:11.65
+02932c7e
+User
+2025-10-28 23:09:11.65
+02932c7e
+User
+3:09:11 AM [express] GET /api/iracing/profile 404 in 174ms :: {"error":"Failed to fetch profile"}

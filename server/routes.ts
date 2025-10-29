@@ -298,8 +298,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log('[iRacing Profile] Fetching profile data');
       
-      // Get user profile from iRacing using the access token
-      const profileResponse = await axios.get('https://members.iracing.com/api/member/profile', {
+      // Get user profile from iRacing Data API using the access token
+      const profileResponse = await axios.get('https://members-ng.iracing.com/data/stats/member_summary', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -309,14 +309,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log('[iRacing Profile] Profile data received:', JSON.stringify(profile, null, 2));
       
-      // Extract relevant stats
+      // Extract relevant stats from member summary
       const careerStats = {
-        iracingId: profile.custid?.toString() || profile.cust_id?.toString() || 'unknown',
-        careerWins: profile.stats?.wins || 0,
-        careerTop5s: profile.stats?.top5s || 0,
-        careerStarts: profile.stats?.starts || 0,
+        iracingId: profile.cust_id?.toString() || 'unknown',
+        careerWins: profile.career_wins || 0,
+        careerTop5s: profile.career_top5s || 0,
+        careerStarts: profile.career_starts || 0,
         irating: profile.irating || 0,
-        licenseName: profile.license?.name || "Unknown"
+        licenseName: profile.license_level_name || "Unknown"
       };
       
       res.json(careerStats);
