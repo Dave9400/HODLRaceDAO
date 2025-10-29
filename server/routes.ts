@@ -212,11 +212,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Exchange code for access token with all credentials in body (per iRacing docs)
-      // Send raw client_secret - it will be URL-encoded by encodeURIComponent below
+      // Mask the client_secret using iRacing's specific algorithm
+      const rawSecret = process.env.IRACING_CLIENT_SECRET!.trim();
+      const clientId = process.env.IRACING_CLIENT_ID!.trim();
+      const normalizedClientId = clientId.trim().toLowerCase();
+      const maskedSecret = crypto.createHash('sha256')
+        .update(`${rawSecret}${normalizedClientId}`)
+        .digest('base64');
+      
       const tokenRequestBody = {
         grant_type: 'authorization_code',
-        client_id: process.env.IRACING_CLIENT_ID!.trim(),
-        client_secret: process.env.IRACING_CLIENT_SECRET!.trim(),
+        client_id: clientId,
+        client_secret: maskedSecret,
         code: (code as string).trim(),
         redirect_uri: redirectUri.trim(),
         code_verifier: codeVerifier

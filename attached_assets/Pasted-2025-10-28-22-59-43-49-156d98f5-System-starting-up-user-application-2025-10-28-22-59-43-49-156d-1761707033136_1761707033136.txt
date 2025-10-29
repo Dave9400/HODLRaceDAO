@@ -1,0 +1,128 @@
+2025-10-28 22:59:43.49
+156d98f5
+System
+starting up user application
+2025-10-28 22:59:43.49
+156d98f5
+System
+forwarding local port 5000 to external port 80 (mapped as 1104)
+2025-10-28 22:59:45.00
+156d98f5
+User
+> rest-express@1.0.0 start
+2025-10-28 22:59:45.00
+156d98f5
+User
+> NODE_ENV=production node dist/index.js
+2025-10-28 22:59:47.03
+156d98f5
+User
+2:59:46 AM [express] serving on port 5000
+2025-10-28 23:00:07.25
+156d98f5
+User
+3:00:07 AM [express] GET /api/users/wallet/0xDdD5d97e6442e0A5372841b41421d90ffE712Ca2 304 in 3ms :: …
+2025-10-28 23:00:07.26
+156d98f5
+User
+3:00:07 AM [express] GET /api/iracing/status 304 in 1ms :: {"available":true,"message":"iRacing API …
+2025-10-28 23:00:08.49
+156d98f5
+User
+[iRacing OAuth] Starting auth flow with PKCE: {
+2025-10-28 23:00:08.49
+156d98f5
+User
+client_id: 'hodl-racing',
+2025-10-28 23:00:08.49
+156d98f5
+User
+redirect_uri: 'https://hodlracing.fun/api/auth/callback',
+2025-10-28 23:00:08.49
+156d98f5
+User
+walletAddress: '0xDdD5d97e6442e0A5372841b41421d90ffE712Ca2',
+2025-10-28 23:00:08.49
+156d98f5
+User
+scope: 'iracing.auth',
+2025-10-28 23:00:08.49
+156d98f5
+User
+audience: 'data-server',
+2025-10-28 23:00:08.49
+156d98f5
+User
+env: 'production'
+2025-10-28 23:00:08.49
+156d98f5
+User
+}
+2025-10-28 23:00:08.49
+156d98f5
+User
+3:00:08 AM [express] POST /api/iracing/auth/start 200 in 3ms :: {"authUrl":"https://oauth.iracing.co…
+2025-10-28 23:00:20.48
+156d98f5
+User
+[iRacing OAuth] Callback received: {
+2025-10-28 23:00:20.48
+156d98f5
+User
+hasCode: true,
+2025-10-28 23:00:20.48
+156d98f5
+User
+walletAddress: '0xDdD5d97e6442e0A5372841b41421d90ffE712Ca2'
+2025-10-28 23:00:20.48
+156d98f5
+User
+}
+2025-10-28 23:00:20.48
+156d98f5
+User
+[iRacing OAuth] Exchanging code for token with client credentials in body
+2025-10-28 23:00:20.68
+156d98f5
+User
+[iRacing OAuth] Error: {
+2025-10-28 23:00:20.68
+156d98f5
+User
+status: 400,
+2025-10-28 23:00:20.68
+156d98f5
+User
+status_reason: 'Bad Request',
+2025-10-28 23:00:20.68
+156d98f5
+User
+error: 'invalid_request',
+2025-10-28 23:00:20.68
+156d98f5
+User
+error_description: "invalid client secret or password: URL-safe Base64? (contains '-' or '_')",
+2025-10-28 23:00:20.68
+156d98f5
+User
+error_uri: 'https://oauth.iracing.com/oauth2/book/error_invalid_request.html',
+2025-10-28 23:00:20.68
+156d98f5
+User
+message: 'Request failed with status code 400'
+2025-10-28 23:00:20.68
+156d98f5
+User
+}
+2025-10-28 23:00:20.68
+156d98f5
+User
+3:00:20 AM [express] GET /api/auth/callback 302 in 198ms
+2025-10-28 23:00:21.11
+156d98f5
+User
+3:00:21 AM [express] GET /api/users/wallet/0xDdD5d97e6442e0A5372841b41421d90ffE712Ca2 304 in 1ms :: …
+2025-10-28 23:00:21.17
+156d98f5
+User
+3:00:21 AM [express] GET /api/iracing/status 304 in 1ms :: {"available":true,"message":"iRacing API …
