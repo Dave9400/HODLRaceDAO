@@ -296,60 +296,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const token = authHeader.substring(7); // Remove 'Bearer ' prefix
       
-      console.log('[iRacing Profile] Fetching profile data from multiple endpoints');
+      console.log('[iRacing Profile] Fetching member info...');
       
-      // Fetch both member info and career stats in parallel
-      const [memberInfoResponse, careerStatsResponse] = await Promise.all([
-        axios.get('https://members-ng.iracing.com/data/member/info', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        }),
-        axios.get('https://members-ng.iracing.com/data/stats/member_career', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
-      ]);
+      // Fetch member info first
+      const memberInfoResponse = await axios.get('https://members-ng.iracing.com/data/member/info', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       
-      console.log('[iRacing Profile] Fetching data from S3 links...');
+      console.log('[iRacing Profile] Member info link received, fetching data...');
       
-      // iRacing returns signed S3 URLs - fetch the actual data from them
-      if (!memberInfoResponse.data.link || !careerStatsResponse.data.link) {
-        throw new Error('No data link returned from iRacing API');
+      if (!memberInfoResponse.data.link) {
+        throw new Error('No member info link returned from iRacing API');
       }
       
-      const [memberData, careerData] = await Promise.all([
-        axios.get(memberInfoResponse.data.link),
-        axios.get(careerStatsResponse.data.link)
-      ]);
-      
+      const memberData = await axios.get(memberInfoResponse.data.link);
       const profile = memberData.data;
-      const career = careerData.data;
       
-      console.log('[iRacing Profile] Member info:', JSON.stringify(profile, null, 2));
-      console.log('[iRacing Profile] Career stats raw:', JSON.stringify(career, null, 2));
-      console.log('[iRacing Profile] Career stats keys:', Object.keys(career));
+      console.log('[iRacing Profile] Member info received for:', profile.display_name || 'Unknown');
       
-      // Try to find career stats in various possible locations in the response
+      // Now fetch yearly stats (more reliable than career stats)
+      console.log('[iRacing Profile] Fetching yearly stats...');
+      const yearlyStatsResponse = await axios.get('https://members-ng.iracing.com/data/stats/member_yearly', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (!yearlyStatsResponse.data.link) {
+        throw new Error('No yearly stats link returned from iRacing API');
+      }
+      
+      console.log('[iRacing Profile] Yearly stats link received, fetching data...');
+      const yearlyData = await axios.get(yearlyStatsResponse.data.link);
+      const yearlyStats = yearlyData.data;
+      
+      console.log('[iRacing Profile] Yearly stats type:', typeof yearlyStats, 'isArray:', Array.isArray(yearlyStats));
+      console.log('[iRacing Profile] Yearly stats preview:', JSON.stringify(yearlyStats).substring(0, 500));
+      
+      // Sum up stats across all years
       let wins = 0, top5s = 0, starts = 0;
       
-      if (career.stats) {
-        wins = career.stats.wins || 0;
-        top5s = career.stats.top5 || 0;
-        starts = career.stats.starts || 0;
-      } else if (Array.isArray(career)) {
-        // Sometimes the response is an array of stats by category
-        const allStats = career[0] || {};
-        wins = allStats.wins || 0;
-        top5s = allStats.top5 || 0;
-        starts = allStats.starts || 0;
-      } else {
-        // Stats might be directly on the object
-        wins = career.wins || 0;
-        top5s = career.top5 || 0;
-        starts = career.starts || 0;
+      if (Array.isArray(yearlyStats)) {
+        yearlyStats.forEach((yearData: any) => {
+          if (yearData.stats) {
+            wins += yearData.stats.wins || 0;
+            top5s += yearData.stats.top5 || 0;
+            starts += yearData.stats.starts || 0;
+          }
+        });
+      } else if (yearlyStats.stats) {
+        wins = yearlyStats.stats.wins || 0;
+        top5s = yearlyStats.stats.top5 || 0;
+        starts = yearlyStats.stats.starts || 0;
       }
       
-      console.log('[iRacing Profile] Extracted stats:', { wins, top5s, starts });
+      console.log('[iRacing Profile] Total stats calculated:', { wins, top5s, starts });
       
-      // Extract relevant stats from both endpoints
+      // Extract relevant stats
       const careerStats = {
         iracingId: profile.cust_id?.toString() || 'unknown',
         displayName: profile.display_name || 'Unknown Driver',
