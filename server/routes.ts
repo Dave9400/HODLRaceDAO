@@ -299,7 +299,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('[iRacing Profile] Fetching profile data');
       
       // Get user profile from iRacing Data API using the access token
-      const profileResponse = await axios.get('https://members-ng.iracing.com/data/stats/member_summary', {
+      const profileResponse = await axios.get('https://members-ng.iracing.com/data/member/info', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -316,16 +316,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const dataResponse = await axios.get(linkData.link);
       const profile = dataResponse.data;
       
-      console.log('[iRacing Profile] Actual profile data:', JSON.stringify(profile, null, 2));
+      console.log('[iRacing Profile] Member info data:', JSON.stringify(profile, null, 2));
       
-      // Extract relevant stats from member summary
+      // Extract relevant stats from member info
       const careerStats = {
         iracingId: profile.cust_id?.toString() || 'unknown',
-        careerWins: profile.career_wins || 0,
-        careerTop5s: profile.career_top5s || 0,
-        careerStarts: profile.career_starts || 0,
-        irating: profile.irating || 0,
-        licenseName: profile.license_level_name || "Unknown"
+        displayName: profile.display_name || 'Unknown Driver',
+        careerWins: profile.wins || 0,
+        careerTop5s: profile.top5s || 0,
+        careerStarts: profile.starts || 0,
+        irating: profile.licenses?.[0]?.irating || 0,
+        licenseName: profile.licenses?.[0]?.license_level_name || "Unknown"
       };
       
       res.json(careerStats);

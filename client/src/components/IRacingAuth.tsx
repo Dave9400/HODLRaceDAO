@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 
 interface IRacingStats {
   iracingId: string;
+  displayName: string;
   careerWins: number;
   careerTop5s: number;
   careerStarts: number;
@@ -208,7 +209,7 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
               iRacing Account Connected
             </CardTitle>
             <CardDescription>
-              Your iRacing account is successfully linked. View your stats and potential rewards below.
+              Welcome, {iracingStats.displayName}! Your iRacing account is successfully linked. View your stats and potential rewards below.
             </CardDescription>
           </CardHeader>
           <CardContent>

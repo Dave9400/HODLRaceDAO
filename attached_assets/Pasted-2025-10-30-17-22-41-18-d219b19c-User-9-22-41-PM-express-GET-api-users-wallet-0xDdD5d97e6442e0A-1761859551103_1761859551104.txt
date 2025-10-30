@@ -1,0 +1,133 @@
+2025-10-30 17:22:41.18
+d219b19c
+User
+9:22:41 PM [express] GET /api/users/wallet/0xDdD5d97e6442e0A5372841b41421d90ffE712Ca2 304 in 6ms :: …
+2025-10-30 17:22:41.18
+d219b19c
+User
+9:22:41 PM [express] GET /api/iracing/status 304 in 0ms :: {"available":true,"message":"iRacing API …
+2025-10-30 17:22:44.70
+d219b19c
+User
+[iRacing OAuth] Starting auth flow with PKCE: {
+2025-10-30 17:22:44.70
+d219b19c
+User
+client_id: 'hodl-racing',
+2025-10-30 17:22:44.70
+d219b19c
+User
+redirect_uri: 'https://hodlracing.fun/api/auth/callback',
+2025-10-30 17:22:44.70
+d219b19c
+User
+walletAddress: '0xDdD5d97e6442e0A5372841b41421d90ffE712Ca2',
+2025-10-30 17:22:44.70
+d219b19c
+User
+scope: 'iracing.auth',
+2025-10-30 17:22:44.70
+d219b19c
+User
+audience: 'data-server',
+2025-10-30 17:22:44.70
+d219b19c
+User
+env: 'production'
+2025-10-30 17:22:44.70
+d219b19c
+User
+}
+2025-10-30 17:22:44.71
+d219b19c
+User
+9:22:44 PM [express] POST /api/iracing/auth/start 200 in 4ms :: {"authUrl":"https://oauth.iracing.co…
+2025-10-30 17:22:54.65
+d219b19c
+User
+[iRacing OAuth] Callback received: {
+2025-10-30 17:22:54.65
+d219b19c
+User
+hasCode: true,
+2025-10-30 17:22:54.65
+d219b19c
+User
+walletAddress: '0xDdD5d97e6442e0A5372841b41421d90ffE712Ca2'
+2025-10-30 17:22:54.65
+d219b19c
+User
+}
+2025-10-30 17:22:54.65
+d219b19c
+User
+[iRacing OAuth] Exchanging code for token with client credentials in body
+2025-10-30 17:22:55.10
+d219b19c
+User
+[iRacing OAuth] Access token received
+2025-10-30 17:22:55.10
+d219b19c
+User
+[iRacing OAuth] Redirecting to: https://hodlracing.fun/?token=***&success=true
+2025-10-30 17:22:55.10
+d219b19c
+User
+9:22:55 PM [express] GET /api/auth/callback 302 in 452ms
+2025-10-30 17:22:55.53
+d219b19c
+User
+[iRacing Profile] Fetching profile data
+2025-10-30 17:22:55.55
+d219b19c
+User
+9:22:55 PM [express] GET /api/users/wallet/0xDdD5d97e6442e0A5372841b41421d90ffE712Ca2 304 in 0ms :: …
+2025-10-30 17:22:55.60
+d219b19c
+User
+9:22:55 PM [express] GET /api/iracing/status 304 in 1ms :: {"available":true,"message":"iRacing API …
+2025-10-30 17:22:56.16
+d219b19c
+User
+[iRacing Profile] Received S3 link, fetching actual data...
+2025-10-30 17:22:56.33
+d219b19c
+User
+[iRacing Profile] Actual profile data: {
+
+2025-10-30 17:22:56.33
+d219b19c
+User
+"this_year": {
+2025-10-30 17:22:56.33
+d219b19c
+User
+"num_official_sessions": 47,
+2025-10-30 17:22:56.33
+d219b19c
+User
+"num_league_sessions": 0,
+2025-10-30 17:22:56.33
+d219b19c
+User
+"num_official_wins": 2,
+2025-10-30 17:22:56.33
+d219b19c
+User
+"num_league_wins": 0
+2025-10-30 17:22:56.33
+d219b19c
+User
+},
+2025-10-30 17:22:56.33
+d219b19c
+User
+"cust_id": 28904
+2025-10-30 17:22:56.33
+d219b19c
+User
+}
+2025-10-30 17:22:56.33
+d219b19c
+User
+9:22:56 PM [express] GET /api/iracing/profile 200 in 797ms :: {"iracingId":"28904","careerWins":0,"c…
