@@ -324,15 +324,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const career = careerData.data;
       
       console.log('[iRacing Profile] Member info:', JSON.stringify(profile, null, 2));
-      console.log('[iRacing Profile] Career stats:', JSON.stringify(career, null, 2));
+      console.log('[iRacing Profile] Career stats raw:', JSON.stringify(career, null, 2));
+      console.log('[iRacing Profile] Career stats keys:', Object.keys(career));
+      
+      // Try to find career stats in various possible locations in the response
+      let wins = 0, top5s = 0, starts = 0;
+      
+      if (career.stats) {
+        wins = career.stats.wins || 0;
+        top5s = career.stats.top5 || 0;
+        starts = career.stats.starts || 0;
+      } else if (Array.isArray(career)) {
+        // Sometimes the response is an array of stats by category
+        const allStats = career[0] || {};
+        wins = allStats.wins || 0;
+        top5s = allStats.top5 || 0;
+        starts = allStats.starts || 0;
+      } else {
+        // Stats might be directly on the object
+        wins = career.wins || 0;
+        top5s = career.top5 || 0;
+        starts = career.starts || 0;
+      }
+      
+      console.log('[iRacing Profile] Extracted stats:', { wins, top5s, starts });
       
       // Extract relevant stats from both endpoints
       const careerStats = {
         iracingId: profile.cust_id?.toString() || 'unknown',
         displayName: profile.display_name || 'Unknown Driver',
-        careerWins: career.stats?.wins || 0,
-        careerTop5s: career.stats?.top5 || 0,
-        careerStarts: career.stats?.starts || 0,
+        careerWins: wins,
+        careerTop5s: top5s,
+        careerStarts: starts,
         irating: profile.licenses?.[0]?.irating || 0,
         licenseName: profile.licenses?.[0]?.license_level_name || "Unknown"
       };
