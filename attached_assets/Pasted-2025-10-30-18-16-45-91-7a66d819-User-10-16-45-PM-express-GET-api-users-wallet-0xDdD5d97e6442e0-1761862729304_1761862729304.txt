@@ -1,0 +1,145 @@
+2025-10-30 18:16:45.91
+7a66d819
+User
+10:16:45 PM [express] GET /api/users/wallet/0xDdD5d97e6442e0A5372841b41421d90ffE712Ca2 304 in 2ms :: …
+
+2025-10-30 18:16:45.91
+7a66d819
+User
+10:16:45 PM [express] GET /api/iracing/status 304 in 1ms :: {"available":true,"message":"iRacing API …
+2025-10-30 18:16:46.77
+7a66d819
+User
+[iRacing OAuth] Starting auth flow with PKCE: {
+2025-10-30 18:16:46.77
+7a66d819
+User
+client_id: 'hodl-racing',
+2025-10-30 18:16:46.77
+7a66d819
+User
+redirect_uri: 'https://hodlracing.fun/api/auth/callback',
+2025-10-30 18:16:46.77
+7a66d819
+User
+walletAddress: '0xDdD5d97e6442e0A5372841b41421d90ffE712Ca2',
+2025-10-30 18:16:46.77
+7a66d819
+User
+scope: 'iracing.auth',
+2025-10-30 18:16:46.77
+7a66d819
+User
+audience: 'data-server',
+2025-10-30 18:16:46.77
+7a66d819
+User
+env: 'production'
+2025-10-30 18:16:46.77
+7a66d819
+User
+}
+2025-10-30 18:16:46.77
+7a66d819
+User
+10:16:46 PM [express] POST /api/iracing/auth/start 200 in 2ms :: {"authUrl":"https://oauth.iracing.co…
+2025-10-30 18:16:55.64
+7a66d819
+User
+[iRacing OAuth] Callback received: {
+2025-10-30 18:16:55.64
+7a66d819
+User
+hasCode: true,
+2025-10-30 18:16:55.64
+7a66d819
+User
+walletAddress: '0xDdD5d97e6442e0A5372841b41421d90ffE712Ca2'
+2025-10-30 18:16:55.64
+7a66d819
+User
+}
+2025-10-30 18:16:55.64
+7a66d819
+User
+[iRacing OAuth] Exchanging code for token with client credentials in body
+2025-10-30 18:16:56.09
+7a66d819
+User
+[iRacing OAuth] Access token received
+2025-10-30 18:16:56.09
+7a66d819
+User
+[iRacing OAuth] Redirecting to: https://hodlracing.fun/?token=***&success=true
+2025-10-30 18:16:56.10
+7a66d819
+User
+10:16:56 PM [express] GET /api/auth/callback 302 in 451ms
+2025-10-30 18:16:56.58
+7a66d819
+User
+[iRacing Profile] Fetching profile data from multiple endpoints
+2025-10-30 18:16:56.59
+7a66d819
+User
+10:16:56 PM [express] GET /api/iracing/status 304 in 0ms :: {"available":true,"message":"iRacing API …
+2025-10-30 18:16:56.59
+7a66d819
+User
+10:16:56 PM [express] GET /api/users/wallet/0xDdD5d97e6442e0A5372841b41421d90ffE712Ca2 304 in 1ms :: …
+2025-10-30 18:16:56.84
+7a66d819
+User
+[iRacing Profile] Fetching data from S3 links...
+2025-10-30 18:16:57.06
+7a66d819
+User
+[iRacing Profile] Member info: {
+2025-10-30 18:16:57.06
+7a66d819
+User
+"cust_id": 28904,
+2025-10-30 18:16:57.06
+7a66d819
+User
+"display_name": "David McGrath",
+2025-10-30 18:16:57.06
+7a66d819
+User
+"first_name": "David",
+2025-10-30 18:16:57.06
+7a66d819
+User
+"last_name": "McGrath",
+2025-10-30 18:16:57.06
+7a66d819
+User
+"on_car_name": "McGrath",
+2025-10-30 18:16:57.06
+7a66d819
+User
+"member_since": "2009-05-10",
+2025-10-30 18:16:57.06
+7a66d819
+User
+"flair_id": 223,
+2025-10-30 18:16:57.06
+7a66d819
+User
+"flair_name": "United States",
+2025-10-30 18:16:57.06
+7a66d819
+User
+"flair_shortname": "USA",
+2025-10-30 18:16:57.06
+7a66d819
+User
+"flair_country_code": "US",
+2025-10-30 18:16:57.06
+7a66d819
+User
+"last_login": "2025-10-30T21:38:21.511002999Z",
+2025-10-30 18:16:57.06
+7a66d819
+User
+"read_tc": "2024-12-31T18:37:27Z",
