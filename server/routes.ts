@@ -296,35 +296,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const token = authHeader.substring(7); // Remove 'Bearer ' prefix
       
-      console.log('[iRacing Profile] Fetching profile data');
+      console.log('[iRacing Profile] Fetching profile data from multiple endpoints');
       
-      // Get user profile from iRacing Data API using the access token
-      const profileResponse = await axios.get('https://members-ng.iracing.com/data/member/info', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      // Fetch both member info and career stats in parallel
+      const [memberInfoResponse, careerStatsResponse] = await Promise.all([
+        axios.get('https://members-ng.iracing.com/data/member/info', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        axios.get('https://members-ng.iracing.com/data/stats/member_career', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+      ]);
       
-      const linkData = profileResponse.data;
-      console.log('[iRacing Profile] Received S3 link, fetching actual data...');
+      console.log('[iRacing Profile] Fetching data from S3 links...');
       
-      // iRacing returns a signed S3 URL - fetch the actual data from it
-      if (!linkData.link) {
+      // iRacing returns signed S3 URLs - fetch the actual data from them
+      if (!memberInfoResponse.data.link || !careerStatsResponse.data.link) {
         throw new Error('No data link returned from iRacing API');
       }
       
-      const dataResponse = await axios.get(linkData.link);
-      const profile = dataResponse.data;
+      const [memberData, careerData] = await Promise.all([
+        axios.get(memberInfoResponse.data.link),
+        axios.get(careerStatsResponse.data.link)
+      ]);
       
-      console.log('[iRacing Profile] Member info data:', JSON.stringify(profile, null, 2));
+      const profile = memberData.data;
+      const career = careerData.data;
       
-      // Extract relevant stats from member info
+      console.log('[iRacing Profile] Member info:', JSON.stringify(profile, null, 2));
+      console.log('[iRacing Profile] Career stats:', JSON.stringify(career, null, 2));
+      
+      // Extract relevant stats from both endpoints
       const careerStats = {
         iracingId: profile.cust_id?.toString() || 'unknown',
         displayName: profile.display_name || 'Unknown Driver',
-        careerWins: profile.wins || 0,
-        careerTop5s: profile.top5s || 0,
-        careerStarts: profile.starts || 0,
+        careerWins: career.stats?.wins || 0,
+        careerTop5s: career.stats?.top5 || 0,
+        careerStarts: career.stats?.starts || 0,
         irating: profile.licenses?.[0]?.irating || 0,
         licenseName: profile.licenses?.[0]?.license_level_name || "Unknown"
       };
