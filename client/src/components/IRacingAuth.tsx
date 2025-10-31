@@ -11,10 +11,13 @@ import {
   Users,
   CheckCircle,
   AlertCircle,
-  Loader2
+  Loader2,
+  Coins
 } from "lucide-react";
 import { useAccount } from 'wagmi';
 import { useToast } from "@/hooks/use-toast";
+import { useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi';
+import { parseEther, formatEther } from 'viem';
 
 interface IRacingStats {
   iracingId: string;
@@ -31,14 +34,76 @@ interface IRacingAuthProps {
   onAuthStatusChange?: (status: 'idle' | 'authenticated' | 'error') => void;
 }
 
+const CLAIM_CONTRACT_ADDRESS = import.meta.env.VITE_CLAIM_CONTRACT_ADDRESS as `0x${string}` | undefined;
+
+const CLAIM_CONTRACT_ABI = [
+  {
+    inputs: [
+      { name: "iracingId", type: "uint256" },
+      { name: "wins", type: "uint256" },
+      { name: "top5s", type: "uint256" },
+      { name: "starts", type: "uint256" },
+      { name: "signature", type: "bytes" }
+    ],
+    name: "claim",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function"
+  },
+  {
+    inputs: [
+      { name: "wins", type: "uint256" },
+      { name: "top5s", type: "uint256" },
+      { name: "starts", type: "uint256" }
+    ],
+    name: "getClaimableAmount",
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function"
+  },
+  {
+    inputs: [{ name: "", type: "uint256" }],
+    name: "hasClaimed",
+    outputs: [{ name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function"
+  }
+] as const;
+
 export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRacingAuthProps) {
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [authStatus, setAuthStatus] = useState<'idle' | 'authenticated' | 'error'>('idle');
   const [iracingStats, setIracingStats] = useState<IRacingStats | null>(null);
   const [searchParams, setSearchParams] = useState(window.location.search);
+  const [isClaiming, setIsClaiming] = useState(false);
+  const [iracingAuthToken, setIracingAuthToken] = useState<string | null>(null);
   
   const { address, isConnected } = useAccount();
   const { toast } = useToast();
+  
+  const { writeContract, data: claimTxHash, isPending: isClaimPending } = useWriteContract();
+  
+  const { isLoading: isTxLoading, isSuccess: isTxSuccess } = useWaitForTransactionReceipt({
+    hash: claimTxHash,
+  });
+  
+  const { data: hasClaimedData } = useReadContract({
+    address: CLAIM_CONTRACT_ADDRESS,
+    abi: CLAIM_CONTRACT_ABI,
+    functionName: 'hasClaimed',
+    args: iracingStats ? [BigInt(iracingStats.iracingId)] : undefined,
+  }) as { data: boolean | undefined };
+  
+  const { data: claimableAmount } = useReadContract({
+    address: CLAIM_CONTRACT_ADDRESS,
+    abi: CLAIM_CONTRACT_ABI,
+    functionName: 'getClaimableAmount',
+    args: iracingStats ? [
+      BigInt(iracingStats.careerWins),
+      BigInt(iracingStats.careerTop5s),
+      BigInt(iracingStats.careerStarts)
+    ] : undefined,
+  }) as { data: bigint | undefined };
 
   // Update search params when URL changes
   useEffect(() => {
@@ -87,6 +152,7 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
     } else if (token && success === 'true') {
       console.log('[IRacingAuth] OAuth success, fetching stats...');
       setAuthStatus('authenticated');
+      setIracingAuthToken(token);
       fetchIRacingStats(token);
       
       // Notify parent of status change
@@ -180,23 +246,89 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
     }
   };
 
+  const handleClaim = async () => {
+    if (!iracingStats || !address || !CLAIM_CONTRACT_ADDRESS || !iracingAuthToken) {
+      toast({
+        title: "Error",
+        description: "Missing required information for claim. Please re-authenticate with iRacing.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsClaiming(true);
+    
+    try {
+      const response = await fetch('/api/claim/generate-signature', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${iracingAuthToken}`
+        },
+        body: JSON.stringify({
+          walletAddress: address,
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to generate signature');
+      }
+      
+      const { signature, iracingId, wins, top5s, starts } = await response.json();
+      
+      writeContract({
+        address: CLAIM_CONTRACT_ADDRESS,
+        abi: CLAIM_CONTRACT_ABI,
+        functionName: 'claim',
+        args: [
+          BigInt(iracingId),
+          BigInt(wins),
+          BigInt(top5s),
+          BigInt(starts),
+          signature as `0x${string}`,
+        ],
+      });
+      
+    } catch (error: any) {
+      console.error('Claim error:', error);
+      toast({
+        title: "Claim Failed",
+        description: error.message || "Failed to submit claim transaction",
+        variant: "destructive",
+      });
+      setIsClaiming(false);
+    }
+  };
+  
+  useEffect(() => {
+    if (isTxSuccess) {
+      toast({
+        title: "Claim Successful! 🎉",
+        description: "NASCORN tokens have been sent to your wallet",
+      });
+      setIsClaiming(false);
+    }
+  }, [isTxSuccess]);
+  
   const calculatePotentialRewards = () => {
     if (!iracingStats) return 0;
     
-    // Base rates (these will be fetched from smart contract in production)
-    const validAccountReward = 1_000_000;
-    const winReward = 420_000;
-    const top5Reward = 69_000;
-    const startReward = 42_000;
+    if (claimableAmount) {
+      return Number(formatEther(claimableAmount));
+    }
     
-    const totalRewards = 
-      validAccountReward +
-      (iracingStats.careerWins * winReward) +
-      (iracingStats.careerTop5s * top5Reward) +
-      (iracingStats.careerStarts * startReward);
+    // Fallback calculation
+    const POINTS_PER_WIN = 1000;
+    const POINTS_PER_TOP5 = 100;
+    const POINTS_PER_START = 10;
+    const BASE_TOKENS_PER_POINT = 1000;
     
-    // Cap at 100 million
-    return Math.min(totalRewards, 100_000_000);
+    const points = 
+      (iracingStats.careerWins * POINTS_PER_WIN) +
+      (iracingStats.careerTop5s * POINTS_PER_TOP5) +
+      (iracingStats.careerStarts * POINTS_PER_START);
+    
+    return points * BASE_TOKENS_PER_POINT;
   };
 
   if (authStatus === 'authenticated' && iracingStats) {
@@ -246,11 +378,11 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Trophy className="w-6 h-6 text-yellow-500" />
-              Potential NASCORN Rewards
+              <Coins className="w-6 h-6 text-yellow-500" />
+              Claim NASCORN Tokens
             </CardTitle>
             <CardDescription>
-              Based on your current career statistics, you could earn the following rewards.
+              Based on your iRacing career statistics, claim your rewards.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -260,42 +392,55 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
                   {calculatePotentialRewards().toLocaleString()} NASCORN
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  {calculatePotentialRewards() >= 100_000_000 && (
-                    <span className="text-orange-500">(Capped at 100M per user)</span>
-                  )}
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div className="text-center p-3 bg-muted rounded-lg">
-                  <div className="font-semibold">Account Bonus</div>
-                  <div className="text-lg">1,000,000</div>
-                  <div className="text-xs text-muted-foreground">One-time</div>
-                </div>
-                <div className="text-center p-3 bg-muted rounded-lg">
-                  <div className="font-semibold">Win Bonus</div>
-                  <div className="text-lg">{(iracingStats.careerWins * 420_000).toLocaleString()}</div>
-                  <div className="text-xs text-muted-foreground">{iracingStats.careerWins} × 420k</div>
-                </div>
-                <div className="text-center p-3 bg-muted rounded-lg">
-                  <div className="font-semibold">Top 5 Bonus</div>
-                  <div className="text-lg">{(iracingStats.careerTop5s * 69_000).toLocaleString()}</div>
-                  <div className="text-xs text-muted-foreground">{iracingStats.careerTop5s} × 69k</div>
-                </div>
-                <div className="text-center p-3 bg-muted rounded-lg">
-                  <div className="font-semibold">Start Bonus</div>
-                  <div className="text-lg">{(iracingStats.careerStarts * 42_000).toLocaleString()}</div>
-                  <div className="text-xs text-muted-foreground">{iracingStats.careerStarts} × 42k</div>
+                  Claimable based on {iracingStats.careerWins} wins, {iracingStats.careerTop5s} top 5s, {iracingStats.careerStarts} starts
                 </div>
               </div>
 
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  Rewards decrease by half every time 10% of total supply is claimed. 
-                  Claim early to maximize your rewards!
-                </AlertDescription>
-              </Alert>
+              {hasClaimedData ? (
+                <Alert>
+                  <CheckCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    You have already claimed your tokens for iRacing ID #{iracingStats.iracingId}
+                  </AlertDescription>
+                </Alert>
+              ) : !CLAIM_CONTRACT_ADDRESS ? (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    Claim contract not configured. Please add VITE_CLAIM_CONTRACT_ADDRESS to environment.
+                  </AlertDescription>
+                </Alert>
+              ) : (
+                <>
+                  <Button
+                    onClick={handleClaim}
+                    disabled={isClaiming || isClaimPending || isTxLoading}
+                    className="w-full gap-2"
+                    size="lg"
+                    data-testid="button-claim-tokens"
+                  >
+                    {(isClaiming || isClaimPending || isTxLoading) ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        {isTxLoading ? 'Confirming...' : 'Claiming...'}
+                      </>
+                    ) : (
+                      <>
+                        <Coins className="w-4 h-4" />
+                        Claim Tokens
+                      </>
+                    )}
+                  </Button>
+
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      Rewards halve every 100M tokens claimed. Early adopters get up to 2x bonus!
+                      Claim early to maximize your rewards.
+                    </AlertDescription>
+                  </Alert>
+                </>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -335,15 +480,15 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
 
         <div className="space-y-4">
           <div className="text-sm text-muted-foreground">
-            <p className="mb-2">You'll earn NASCORN tokens for:</p>
+            <p className="mb-2">Claim NASCORN tokens based on your iRacing career:</p>
             <ul className="list-disc list-inside space-y-1">
-              <li><strong>1,000,000 NASCORN</strong> - Valid account verification (one-time)</li>
-              <li><strong>420,000 NASCORN</strong> - Per career win</li>
-              <li><strong>69,000 NASCORN</strong> - Per career top 5 finish</li>
-              <li><strong>42,000 NASCORN</strong> - Per race start</li>
+              <li><strong>1,000 points</strong> per win</li>
+              <li><strong>100 points</strong> per top 5 finish</li>
+              <li><strong>10 points</strong> per race start</li>
+              <li><strong>1,000 NASCORN</strong> per point earned</li>
             </ul>
             <p className="mt-2 text-xs">
-              *Rewards are capped at 100 million NASCORN per user and decrease over time as more tokens are claimed.
+              *Rewards halve every 100M tokens claimed. Early adopters get up to 2x bonus!
             </p>
           </div>
 
