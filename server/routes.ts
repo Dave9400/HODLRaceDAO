@@ -331,10 +331,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('[iRacing Profile] Yearly stats type:', typeof yearlyStats, 'isArray:', Array.isArray(yearlyStats));
       console.log('[iRacing Profile] Yearly stats preview:', JSON.stringify(yearlyStats).substring(0, 500));
       
-      // Sum up stats across all years
+      // Sum up stats across all categories
       let wins = 0, top5s = 0, starts = 0;
       
-      if (Array.isArray(yearlyStats)) {
+      if (yearlyStats.stats && Array.isArray(yearlyStats.stats)) {
+        // The response is an object with a "stats" array
+        // Each item in the array represents a category (Oval, Road, etc.)
+        yearlyStats.stats.forEach((categoryData: any) => {
+          wins += categoryData.wins || 0;
+          top5s += categoryData.top5 || 0;
+          starts += categoryData.starts || 0;
+        });
+        console.log('[iRacing Profile] Aggregated stats from', yearlyStats.stats.length, 'categories');
+      } else if (Array.isArray(yearlyStats)) {
+        // Fallback: if it's just an array of year data
         yearlyStats.forEach((yearData: any) => {
           if (yearData.stats) {
             wins += yearData.stats.wins || 0;
@@ -342,10 +352,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             starts += yearData.stats.starts || 0;
           }
         });
-      } else if (yearlyStats.stats) {
-        wins = yearlyStats.stats.wins || 0;
-        top5s = yearlyStats.stats.top5 || 0;
-        starts = yearlyStats.stats.starts || 0;
       }
       
       console.log('[iRacing Profile] Total stats calculated:', { wins, top5s, starts });
