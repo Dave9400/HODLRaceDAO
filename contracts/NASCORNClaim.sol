@@ -68,7 +68,7 @@ contract NASCORNClaim {
         
         uint256 baseReward = points * BASE_TOKENS_PER_POINT;
         
-        uint256 reward = calculateRewardWithHalvingAndBonus(baseReward);
+        uint256 reward = calculateRewardWithHalving(baseReward);
         
         if (totalClaimed + reward > TOTAL_CLAIM_POOL) {
             reward = TOTAL_CLAIM_POOL - totalClaimed;
@@ -87,56 +87,15 @@ contract NASCORNClaim {
         emit Claimed(msg.sender, iracingId, reward, claimNumber);
     }
     
-    function calculateRewardWithHalvingAndBonus(uint256 baseReward) internal view returns (uint256) {
+    function calculateRewardWithHalving(uint256 baseReward) internal view returns (uint256) {
         uint256 multiplier = getCurrentMultiplier();
-        uint256 bonus = getEarlyAdopterBonus();
-        uint256 reward = (baseReward * multiplier * bonus) / 10000;
+        uint256 reward = (baseReward * multiplier) / 100;
         
         uint256 remainingInPool = TOTAL_CLAIM_POOL > totalClaimed 
             ? TOTAL_CLAIM_POOL - totalClaimed 
             : 0;
             
         return reward < remainingInPool ? reward : remainingInPool;
-    }
-    
-    function getNextBoundary(uint256 claimed) internal pure returns (uint256) {
-        uint256[6] memory boundaries = [
-            50_000_000 * 1e18,
-            100_000_000 * 1e18,
-            200_000_000 * 1e18,
-            300_000_000 * 1e18,
-            400_000_000 * 1e18,
-            500_000_000 * 1e18
-        ];
-        
-        for (uint256 i = 0; i < boundaries.length; i++) {
-            if (claimed < boundaries[i]) {
-                return boundaries[i];
-            }
-        }
-        
-        return 500_000_000 * 1e18;
-    }
-    
-    function getMultiplierForClaimed(uint256 claimed) internal pure returns (uint256) {
-        uint256 tranche = claimed / HALVING_INTERVAL;
-        return getMultiplierForTranche(tranche);
-    }
-    
-    function getMultiplierForTranche(uint256 tranche) internal pure returns (uint256) {
-        if (tranche >= 5) return 3;
-        if (tranche == 4) return 6;
-        if (tranche == 3) return 12;
-        if (tranche == 2) return 25;
-        if (tranche == 1) return 50;
-        return 100;
-    }
-    
-    function getBonusForClaimed(uint256 claimed) internal pure returns (uint256) {
-        if (claimed < HALVING_INTERVAL / 2) return 200;
-        if (claimed < HALVING_INTERVAL) return 150;
-        if (claimed < HALVING_INTERVAL * 2) return 125;
-        return 100;
     }
     
     function getCurrentMultiplier() public view returns (uint256) {
@@ -146,13 +105,6 @@ contract NASCORNClaim {
         if (halvings == 3) return 12;
         if (halvings == 2) return 25;
         if (halvings == 1) return 50;
-        return 100;
-    }
-    
-    function getEarlyAdopterBonus() public view returns (uint256) {
-        if (totalClaimed < HALVING_INTERVAL / 2) return 200;
-        if (totalClaimed < HALVING_INTERVAL) return 150;
-        if (totalClaimed < HALVING_INTERVAL * 2) return 125;
         return 100;
     }
     
@@ -192,7 +144,7 @@ contract NASCORNClaim {
                         (starts * POINTS_PER_START);
         
         uint256 baseReward = points * BASE_TOKENS_PER_POINT;
-        uint256 reward = calculateRewardWithHalvingAndBonus(baseReward);
+        uint256 reward = calculateRewardWithHalving(baseReward);
         
         if (totalClaimed + reward > TOTAL_CLAIM_POOL) {
             reward = TOTAL_CLAIM_POOL - totalClaimed;

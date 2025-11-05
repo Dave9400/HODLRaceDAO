@@ -20,7 +20,7 @@ This smart contract allows iRacing drivers to claim NASCORN tokens based on thei
 
 ```
 Base Reward = (wins × 1000 + top5s × 100 + starts × 10) × 1000 tokens
-Final Reward = Base Reward × Halving Multiplier × Early Adopter Bonus
+Final Reward = Base Reward × Halving Multiplier
 ```
 
 ### Halving Schedule
@@ -32,24 +32,11 @@ Rewards are calculated using the multiplier at the time of claim:
 | 0-100M  | 100%       | 100%          |
 | 100M-200M | 50%      | 50%           |
 | 200M-300M | 25%      | 25%           |
-| 300M-400M | 12%      | 12%           |
-| 400M-500M | 6%       | 6%            |
-| 500M+   | 3%         | 3%            |
+| 300M-400M | 12.5%    | 12.5%         |
+| 400M-500M | 6.25%    | 6.25%         |
+| 500M+   | 3.125%     | 3.125%        |
 
-**Design Note**: Claims use the current multiplier (not pro-rated across boundaries). This creates urgency to claim before halvings occur, incentivizing early adoption.
-
-### Early Adopter Bonus
-
-Additional multiplier based on total claimed at time of claim:
-
-| Claimed | Bonus |
-|---------|-------|
-| 0-50M   | 2x    |
-| 50M-100M | 1.5x  |
-| 100M-200M | 1.25x |
-| 200M+   | 1x    |
-
-**Design Note**: Like halvings, bonuses apply at claim time. This rewards speed and promotes viral growth.
+**Design Note**: Claims use the current multiplier at the time of claim (not pro-rated across boundaries). This creates urgency to claim before halvings occur, incentivizing early adoption and viral growth.
 
 ## Example Claims
 
@@ -57,22 +44,19 @@ Additional multiplier based on total claimed at time of claim:
 - Points: 100,000 + 25,000 + 5,000 = 130,000
 - Base: 130M tokens
 - Multiplier: 100% (first tranche)
-- Early bonus: 2x (under 50M claimed)
-- Claim: 130M × 1.0 × 2.0 = **260M NASCORN** 🏆
+- Claim: 130M × 1.0 = **130M NASCORN** 🏆
 
 **Amateur** (0 wins, 5 top5s, 50 starts) - Claiming after 150M distributed:
 - Points: 0 + 500 + 500 = 1,000
 - Base: 1M tokens
 - Multiplier: 50% (second tranche)
-- Early bonus: 1.25x (100M-200M range)
-- Claim: 1M × 0.5 × 1.25 = **625K NASCORN**
+- Claim: 1M × 0.5 = **500K NASCORN**
 
 **Weekend Racer** (1 win, 10 top5s, 100 starts) - Claiming early:
 - Points: 1,000 + 1,000 + 1,000 = 3,000
 - Base: 3M tokens
-- Multiplier: 100%
-- Early bonus: 2x
-- Claim: 3M × 1.0 × 2.0 = **6M NASCORN**
+- Multiplier: 100% (first tranche)
+- Claim: 3M × 1.0 = **3M NASCORN**
 
 ## Deployment Steps
 
