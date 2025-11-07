@@ -99,6 +99,13 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
     args: address ? [address] : undefined,
   }) as { data: bigint | undefined; refetch: () => void };
   
+  const { data: lastClaimData, refetch: refetchLastClaim } = useReadContract({
+    address: CLAIM_CONTRACT_ADDRESS,
+    abi: CLAIM_CONTRACT_ABI,
+    functionName: 'lastClaim',
+    args: iracingStats ? [BigInt(iracingStats.iracingId)] : undefined,
+  }) as { data: readonly [bigint, bigint, bigint] | undefined; refetch: () => void };
+  
   const { data: contractStats, refetch: refetchContractStats } = useQuery<ContractStats>({
     queryKey: ['/api/contract/stats'],
     refetchInterval: 30000, // Refetch every 30 seconds
@@ -313,6 +320,7 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
         refetchHasClaimed();
         refetchClaimableAmount();
         refetchUserClaimCount();
+        refetchLastClaim();
         queryClient.invalidateQueries({ queryKey: ['/api/contract/stats'] });
       }, 2000); // 2 second delay
     }
@@ -451,15 +459,30 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
           <CardContent>
             <div className="space-y-4">
               {userClaimCount !== undefined && userClaimCount > BigInt(0) && (
-                <Alert>
-                  <CheckCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    You've claimed {userClaimCount.toString()} time{userClaimCount > BigInt(1) ? 's' : ''}! 
-                    {calculatePotentialRewards() > 0 
-                      ? " Claim more rewards based on your updated stats below." 
-                      : " Race more to earn additional rewards!"}
-                  </AlertDescription>
-                </Alert>
+                <>
+                  <Alert>
+                    <CheckCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      You've claimed {userClaimCount.toString()} time{userClaimCount > BigInt(1) ? 's' : ''}! 
+                      {calculatePotentialRewards() > 0 
+                        ? " Claim more rewards based on your updated stats below." 
+                        : " Race more to earn additional rewards!"}
+                    </AlertDescription>
+                  </Alert>
+                  
+                  {lastClaimData && (
+                    <Alert variant="default">
+                      <AlertDescription className="text-xs font-mono">
+                        <div>Last Claimed Stats (from contract):</div>
+                        <div>Wins: {lastClaimData[0].toString()} | Top 5s: {lastClaimData[1].toString()} | Starts: {lastClaimData[2].toString()}</div>
+                        <div className="mt-1">Current Stats:</div>
+                        <div>Wins: {iracingStats.careerWins} | Top 5s: {iracingStats.careerTop5s} | Starts: {iracingStats.careerStarts}</div>
+                        <div className="mt-1">Delta:</div>
+                        <div>Wins: {iracingStats.careerWins - Number(lastClaimData[0])} | Top 5s: {iracingStats.careerTop5s - Number(lastClaimData[1])} | Starts: {iracingStats.careerStarts - Number(lastClaimData[2])}</div>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </>
               )}
               
               <div className="text-center">
