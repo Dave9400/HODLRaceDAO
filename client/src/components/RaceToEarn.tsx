@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, Clock, Zap, Star, ArrowRight, Loader2, Plus, Calendar, Award, Wallet } from "lucide-react";
+import { Trophy, Clock, Zap, Star, ArrowRight, Loader2, Plus, Calendar, Award, Wallet, Users } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -234,115 +234,6 @@ export default function RaceToEarn() {
         </Card>
       )}
 
-      {/* Current Stats Preview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card>
-          <CardContent className="p-6 text-center">
-            <div className="text-3xl font-bold text-primary mb-2" data-testid="stat-total-races">
-              {profileLoading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : userProfile?.totalRaces || 0}
-            </div>
-            <div className="text-sm text-muted-foreground">Total Races</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6 text-center">
-            <div className="text-3xl font-bold text-destructive mb-2" data-testid="stat-wins">
-              {profileLoading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : userProfile?.totalWins || 0}
-            </div>
-            <div className="text-sm text-muted-foreground">Wins</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6 text-center">
-            <div className="text-3xl font-bold text-accent mb-2" data-testid="stat-win-rate">
-              {profileLoading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : 
-               userProfile ? `${((userProfile.totalWins / Math.max(userProfile.totalRaces, 1)) * 100).toFixed(1)}%` : "0%"}
-            </div>
-            <div className="text-sm text-muted-foreground">Win Rate</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6 text-center">
-            <div className="text-3xl font-bold text-secondary mb-2" data-testid="stat-earnings">
-              {profileLoading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : 
-               userProfile ? parseFloat(userProfile.totalEarnings).toFixed(2) : "0.00"}
-            </div>
-            <div className="text-sm text-muted-foreground">NASCORN Earned</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Achievements */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Award className="w-5 h-5" />
-            Your Achievements ({achievements.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {achievementsLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-8 h-8 animate-spin" />
-              <span className="ml-2">Loading achievements...</span>
-            </div>
-          ) : achievements.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Award className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>No achievements unlocked yet</p>
-              <p className="text-sm">Complete your first race to start earning achievements!</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {achievements.map((achievement, index) => (
-                <div 
-                  key={achievement.id} 
-                  className="flex items-center justify-between p-4 border rounded-lg hover-elevate"
-                  data-testid={`achievement-${index}`}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                      achievement.rarity === 'legendary' ? 'bg-yellow-100 text-yellow-600' :
-                      achievement.rarity === 'epic' ? 'bg-purple-100 text-purple-600' :
-                      achievement.rarity === 'rare' ? 'bg-blue-100 text-blue-600' :
-                      'bg-gray-100 text-gray-600'
-                    }`}>
-                      {achievement.icon === 'zap' ? <Zap className="w-5 h-5" /> :
-                       achievement.icon === 'flame' ? <Star className="w-5 h-5" /> :
-                       achievement.icon === 'crown' ? <Trophy className="w-5 h-5" /> :
-                       <Award className="w-5 h-5" />}
-                    </div>
-                    <div>
-                      <div className="font-medium flex items-center gap-2">
-                        {achievement.title}
-                        <Badge variant={achievement.rarity === 'legendary' ? 'default' : 'secondary'} className="text-xs">
-                          {achievement.rarity}
-                        </Badge>
-                      </div>
-                      <div className="text-sm text-muted-foreground">{achievement.description}</div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm text-muted-foreground">
-                      {new Date(achievement.earnedAt).toLocaleDateString()}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="mt-6 pt-6 border-t">
-            <div className="text-center text-muted-foreground">
-              <p className="text-sm">
-                Connect your iRacing account above to automatically sync your achievements 
-                and claim NASCORN rewards based on your racing performance.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Manual Race Entry Modal */}
       {showAddRace && (
         <Card className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
@@ -468,10 +359,25 @@ export default function RaceToEarn() {
         </Card>
       )}
 
-      <div className="mt-8 text-center">
-        <p className="text-sm text-muted-foreground">
-          Join our Discord to get notified when Race to Earn goes live and be among the first to claim rewards!
+      <div className="mt-8 text-center border-t pt-6">
+        <p className="text-sm text-muted-foreground mb-3">
+          Join the HODL Racing community
         </p>
+        <Button 
+          variant="outline" 
+          asChild
+          data-testid="button-discord"
+        >
+          <a 
+            href="https://discord.gg/ANhcMvU488" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="gap-2"
+          >
+            <Users className="w-4 h-4" />
+            Join Discord
+          </a>
+        </Button>
       </div>
     </div>
   );

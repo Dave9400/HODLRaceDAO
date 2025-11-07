@@ -285,19 +285,6 @@ export default function RewardsClaiming({ iracingStats, authToken, isAuthenticat
           </div>
         </CardContent>
       </Card>
-
-      {/* How It Works */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">How It Works</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 text-sm text-muted-foreground">
-          <p>1. <strong>Oracle Verification:</strong> Our backend fetches and verifies your latest iRacing stats</p>
-          <p>2. <strong>Wallet Signature:</strong> You sign a message proving you own this wallet (no gas)</p>
-          <p>3. <strong>Gas-Free Claim:</strong> Our relayer submits the transaction and pays all gas fees</p>
-          <p>4. <strong>Instant Rewards:</strong> NASCORN tokens appear in your wallet within seconds</p>
-        </CardContent>
-      </Card>
     </div>
   );
 }

@@ -353,17 +353,23 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div>
+                    <div className="text-sm text-muted-foreground">Total Pool</div>
+                    <div className="text-2xl font-bold">
+                      {contractStats.totalPool.toLocaleString(undefined, { maximumFractionDigits: 0 })}M
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground">Available to Claim</div>
+                    <div className="text-2xl font-bold text-green-600">
+                      {(contractStats.totalPool - contractStats.totalClaimed).toLocaleString(undefined, { maximumFractionDigits: 0 })}M
+                    </div>
+                  </div>
                   <div>
                     <div className="text-sm text-muted-foreground">Total Claimed</div>
                     <div className="text-2xl font-bold">
                       {contractStats.totalClaimed.toLocaleString(undefined, { maximumFractionDigits: 0 })}M
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-muted-foreground">Next Halving At</div>
-                    <div className="text-2xl font-bold">
-                      {contractStats.halving.nextHalvingAt.toLocaleString(undefined, { maximumFractionDigits: 0 })}M
                     </div>
                   </div>
                   <div>
