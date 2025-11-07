@@ -18,6 +18,7 @@ import { useAccount } from 'wagmi';
 import { useToast } from "@/hooks/use-toast";
 import { useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi';
 import { parseEther, formatEther } from 'viem';
+import { CLAIM_CONTRACT_ADDRESS, CLAIM_CONTRACT_ABI } from '@/lib/contracts';
 
 interface IRacingStats {
   iracingId: string;
@@ -34,41 +35,6 @@ interface IRacingAuthProps {
   onAuthStatusChange?: (status: 'idle' | 'authenticated' | 'error') => void;
 }
 
-const CLAIM_CONTRACT_ADDRESS = import.meta.env.VITE_CLAIM_CONTRACT_ADDRESS as `0x${string}` | undefined;
-
-const CLAIM_CONTRACT_ABI = [
-  {
-    inputs: [
-      { name: "iracingId", type: "uint256" },
-      { name: "wins", type: "uint256" },
-      { name: "top5s", type: "uint256" },
-      { name: "starts", type: "uint256" },
-      { name: "signature", type: "bytes" }
-    ],
-    name: "claim",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function"
-  },
-  {
-    inputs: [
-      { name: "wins", type: "uint256" },
-      { name: "top5s", type: "uint256" },
-      { name: "starts", type: "uint256" }
-    ],
-    name: "getClaimableAmount",
-    outputs: [{ name: "", type: "uint256" }],
-    stateMutability: "view",
-    type: "function"
-  },
-  {
-    inputs: [{ name: "", type: "uint256" }],
-    name: "hasClaimed",
-    outputs: [{ name: "", type: "bool" }],
-    stateMutability: "view",
-    type: "function"
-  }
-] as const;
 
 export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRacingAuthProps) {
   const [isAuthenticating, setIsAuthenticating] = useState(false);
