@@ -468,14 +468,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       // Create the message hash (must match contract's messageHash)
-      const messageHash = ethers.utils.solidityKeccak256(
+      // Using ethers v6 syntax: solidityPackedKeccak256
+      const messageHash = ethers.solidityPackedKeccak256(
         ['address', 'uint256', 'uint256', 'uint256', 'uint256'],
         [walletAddress, iracingId, wins, top5s, starts]
       );
       
       // Sign the VERIFIED message
       const wallet = new ethers.Wallet(process.env.CLAIM_SIGNER_PRIVATE_KEY);
-      const signature = await wallet.signMessage(ethers.utils.arrayify(messageHash));
+      // In ethers v6, signMessage accepts the hash directly (as bytes or hex string)
+      const signature = await wallet.signMessage(ethers.getBytes(messageHash));
       
       res.json({ 
         signature,
