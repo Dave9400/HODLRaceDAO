@@ -49,15 +49,51 @@ contract NASCORNClaim {
         uint256 starts,
         bytes memory signature
     ) external {
-        ClaimHistory memory history = lastClaim[iracingId];
+        ClaimHistory storage history = lastClaim[iracingId];
         
         // Verify stats haven't decreased (prevent gaming the system)
         if (wins < history.wins || top5s < history.top5s || starts < history.starts) {
             revert StatsDecreased();
         }
         
+        // Verify signature
+        if (!verifySignature(msg.sender, iracingId, wins, top5s, starts, signature)) {
+            revert InvalidSignature();
+        }
+        
+        // Calculate reward based on delta
+        uint256 reward = calculateDeltaReward(
+            wins - history.wins,
+            top5s - history.top5s,
+            starts - history.starts
+        );
+        
+        if (reward == 0 || token.balanceOf(address(this)) < reward) {
+            revert InsufficientBalance();
+        }
+        
+        // Update claim history with current stats
+        history.wins = wins;
+        history.top5s = top5s;
+        history.starts = starts;
+        
+        totalClaimed += reward;
+        
+        require(token.transfer(msg.sender, reward), "Transfer failed");
+        
+        emit Claimed(msg.sender, iracingId, reward, ++claimCount[msg.sender]);
+    }
+    
+    function verifySignature(
+        address user,
+        uint256 iracingId,
+        uint256 wins,
+        uint256 top5s,
+        uint256 starts,
+        bytes memory signature
+    ) internal view returns (bool) {
         bytes32 messageHash = keccak256(abi.encodePacked(
-            msg.sender,
+            user,
             iracingId,
             wins,
             top5s,
@@ -69,44 +105,25 @@ contract NASCORNClaim {
             messageHash
         ));
         
-        if (recoverSigner(ethSignedHash, signature) != signer) {
-            revert InvalidSignature();
-        }
-        
-        // Calculate delta (new stats - last claimed stats)
-        uint256 deltaWins = wins - history.wins;
-        uint256 deltaTop5s = top5s - history.top5s;
-        uint256 deltaStarts = starts - history.starts;
-        
+        return recoverSigner(ethSignedHash, signature) == signer;
+    }
+    
+    function calculateDeltaReward(
+        uint256 deltaWins,
+        uint256 deltaTop5s,
+        uint256 deltaStarts
+    ) internal view returns (uint256) {
         uint256 points = (deltaWins * POINTS_PER_WIN) + 
                         (deltaTop5s * POINTS_PER_TOP5) + 
                         (deltaStarts * POINTS_PER_START);
         
-        uint256 baseReward = points * BASE_TOKENS_PER_POINT;
-        
-        uint256 reward = calculateRewardWithHalving(baseReward);
+        uint256 reward = calculateRewardWithHalving(points * BASE_TOKENS_PER_POINT);
         
         if (totalClaimed + reward > TOTAL_CLAIM_POOL) {
-            reward = TOTAL_CLAIM_POOL - totalClaimed;
+            return TOTAL_CLAIM_POOL - totalClaimed;
         }
         
-        if (reward == 0 || token.balanceOf(address(this)) < reward) {
-            revert InsufficientBalance();
-        }
-        
-        // Update claim history with current stats
-        lastClaim[iracingId] = ClaimHistory({
-            wins: wins,
-            top5s: top5s,
-            starts: starts
-        });
-        
-        totalClaimed += reward;
-        uint256 claimNumber = ++claimCount[msg.sender];
-        
-        require(token.transfer(msg.sender, reward), "Transfer failed");
-        
-        emit Claimed(msg.sender, iracingId, reward, claimNumber);
+        return reward;
     }
     
     function calculateRewardWithHalving(uint256 baseReward) internal view returns (uint256) {
