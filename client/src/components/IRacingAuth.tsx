@@ -14,13 +14,14 @@ import {
   AlertCircle,
   Loader2,
   Coins,
-  TrendingUp
+  TrendingUp,
+  Wallet
 } from "lucide-react";
 import { useAccount } from 'wagmi';
 import { useToast } from "@/hooks/use-toast";
 import { useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi';
 import { parseEther, formatEther } from 'viem';
-import { CLAIM_CONTRACT_ADDRESS, CLAIM_CONTRACT_ABI } from '@/lib/contracts';
+import { CLAIM_CONTRACT_ADDRESS, CLAIM_CONTRACT_ABI, NASCORN_TOKEN_ADDRESS, NASCORN_TOKEN_ABI } from '@/lib/contracts';
 import { useQuery } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
 
@@ -105,6 +106,13 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
     functionName: 'lastClaim',
     args: iracingStats ? [BigInt(iracingStats.iracingId)] : undefined,
   }) as { data: readonly [bigint, bigint, bigint] | undefined; refetch: () => void };
+  
+  const { data: nascornBalance, refetch: refetchNascornBalance } = useReadContract({
+    address: NASCORN_TOKEN_ADDRESS,
+    abi: NASCORN_TOKEN_ABI,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+  }) as { data: bigint | undefined; refetch: () => void };
   
   const { data: contractStats, refetch: refetchContractStats } = useQuery<ContractStats>({
     queryKey: ['/api/contract/stats'],
@@ -321,6 +329,7 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
         refetchClaimableAmount();
         refetchUserClaimCount();
         refetchLastClaim();
+        refetchNascornBalance();
         queryClient.invalidateQueries({ queryKey: ['/api/contract/stats'] });
       }, 2000); // 2 second delay
     }
@@ -348,8 +357,197 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
   };
 
   if (authStatus === 'authenticated' && iracingStats) {
+    // Calculate delta stats
+    const deltaWins = lastClaimData ? iracingStats.careerWins - Number(lastClaimData[0]) : iracingStats.careerWins;
+    const deltaTop5s = lastClaimData ? iracingStats.careerTop5s - Number(lastClaimData[1]) : iracingStats.careerTop5s;
+    const deltaStarts = lastClaimData ? iracingStats.careerStarts - Number(lastClaimData[2]) : iracingStats.careerStarts;
+    const hasPreviousClaim = userClaimCount !== undefined && userClaimCount > BigInt(0);
+
     return (
       <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Coins className="w-6 h-6 text-yellow-500" />
+              Claim NASCORN Tokens
+            </CardTitle>
+            <CardDescription>
+              Based on your iRacing career statistics, claim your rewards.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {nascornBalance !== undefined && (
+                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Wallet className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">Wallet Balance</span>
+                  </div>
+                  <div className="font-bold">{Number(formatEther(nascornBalance)).toLocaleString()} NASCORN</div>
+                </div>
+              )}
+
+              {hasPreviousClaim && (
+                <Alert>
+                  <CheckCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    You've claimed {userClaimCount.toString()} time{userClaimCount > BigInt(1) ? 's' : ''}! 
+                    {calculatePotentialRewards() > 0 
+                      ? " You can claim more rewards based on your new racing stats below." 
+                      : " Complete more races to earn additional rewards!"}
+                  </AlertDescription>
+                </Alert>
+              )}
+              
+              <div className="text-center">
+                <div className="text-4xl font-bold text-primary mb-2" data-testid="text-claimable-amount">
+                  {calculatePotentialRewards().toLocaleString()} NASCORN
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {hasPreviousClaim 
+                    ? `Rewards based on ${deltaWins} new wins, ${deltaTop5s} new top 5s, ${deltaStarts} new starts`
+                    : `Rewards based on ${iracingStats.careerWins} wins, ${iracingStats.careerTop5s} top 5s, ${iracingStats.careerStarts} starts`
+                  }
+                </div>
+              </div>
+
+              {!CLAIM_CONTRACT_ADDRESS ? (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    Claim contract not configured. Please add VITE_CLAIM_CONTRACT_ADDRESS to environment.
+                  </AlertDescription>
+                </Alert>
+              ) : calculatePotentialRewards() <= 0 ? (
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    No new rewards available. Race more to earn additional tokens!
+                  </AlertDescription>
+                </Alert>
+              ) : (
+                <>
+                  <Button
+                    onClick={handleClaim}
+                    disabled={isClaiming || isClaimPending || isTxLoading}
+                    className="w-full gap-2"
+                    size="lg"
+                    data-testid="button-claim-tokens"
+                  >
+                    {(isClaiming || isClaimPending || isTxLoading) ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        {isTxLoading ? 'Confirming...' : 'Claiming...'}
+                      </>
+                    ) : (
+                      <>
+                        <Coins className="w-4 h-4" />
+                        {hasPreviousClaim ? 'Claim Additional Tokens' : 'Claim Tokens'}
+                      </>
+                    )}
+                  </Button>
+
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      Rewards halve every 100M tokens claimed. Claim early to maximize your rewards.
+                    </AlertDescription>
+                  </Alert>
+                </>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CheckCircle className="w-6 h-6 text-green-500" />
+              iRacing Statistics
+            </CardTitle>
+            <CardDescription>
+              Welcome, {iracingStats.displayName}! Your iRacing account is successfully linked.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              <div>
+                <h3 className="font-semibold mb-3">Account Information</h3>
+                <div className="flex flex-wrap gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">ID:</span>
+                    <Badge variant="outline">{iracingStats.iracingId}</Badge>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">License:</span>
+                    <Badge>{iracingStats.licenseName}</Badge>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">iRating:</span>
+                    <Badge variant="secondary">{iracingStats.irating}</Badge>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-3">Career Statistics</h3>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-2 mb-1">
+                      <Trophy className="w-4 h-4 text-yellow-500" />
+                      <span className="text-sm text-muted-foreground">Wins</span>
+                    </div>
+                    <div className="text-2xl font-bold">{iracingStats.careerWins}</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-2 mb-1">
+                      <Target className="w-4 h-4 text-blue-500" />
+                      <span className="text-sm text-muted-foreground">Top 5s</span>
+                    </div>
+                    <div className="text-2xl font-bold">{iracingStats.careerTop5s}</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-2 mb-1">
+                      <Car className="w-4 h-4 text-green-500" />
+                      <span className="text-sm text-muted-foreground">Starts</span>
+                    </div>
+                    <div className="text-2xl font-bold">{iracingStats.careerStarts}</div>
+                  </div>
+                </div>
+              </div>
+
+              {hasPreviousClaim && (
+                <div>
+                  <h3 className="font-semibold mb-3">New Stats Since Last Claim</h3>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="text-center">
+                      <div className="flex items-center justify-center gap-2 mb-1">
+                        <Trophy className="w-4 h-4 text-yellow-500" />
+                        <span className="text-sm text-muted-foreground">New Wins</span>
+                      </div>
+                      <div className="text-2xl font-bold text-yellow-600">{deltaWins}</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="flex items-center justify-center gap-2 mb-1">
+                        <Target className="w-4 h-4 text-blue-500" />
+                        <span className="text-sm text-muted-foreground">New Top 5s</span>
+                      </div>
+                      <div className="text-2xl font-bold text-blue-600">{deltaTop5s}</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="flex items-center justify-center gap-2 mb-1">
+                        <Car className="w-4 h-4 text-green-500" />
+                        <span className="text-sm text-muted-foreground">New Starts</span>
+                      </div>
+                      <div className="text-2xl font-bold text-green-600">{deltaStarts}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
         {contractStats && (
           <Card>
             <CardHeader>
@@ -404,161 +602,6 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
             </CardContent>
           </Card>
         )}
-        
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CheckCircle className="w-6 h-6 text-green-500" />
-              iRacing Account Connected
-            </CardTitle>
-            <CardDescription>
-              Welcome, {iracingStats.displayName}! Your iRacing account is successfully linked. View your stats and potential rewards below.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <h3 className="font-semibold">Account Information</h3>
-                <div className="text-sm space-y-1">
-                  <div>iRacing ID: <Badge variant="outline">{iracingStats.iracingId}</Badge></div>
-                  <div>License: <Badge>{iracingStats.licenseName}</Badge></div>
-                  <div>iRating: <Badge variant="secondary">{iracingStats.irating}</Badge></div>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <h3 className="font-semibold">Career Statistics</h3>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Trophy className="w-4 h-4 text-yellow-500" />
-                    <span>{iracingStats.careerWins} Wins</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Target className="w-4 h-4 text-blue-500" />
-                    <span>{iracingStats.careerTop5s} Top 5s</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Car className="w-4 h-4 text-green-500" />
-                    <span>{iracingStats.careerStarts} Starts</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Coins className="w-6 h-6 text-yellow-500" />
-              Claim NASCORN Tokens
-            </CardTitle>
-            <CardDescription>
-              Based on your iRacing career statistics, claim your rewards.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {userClaimCount !== undefined && userClaimCount > BigInt(0) && (
-                <>
-                  <Alert>
-                    <CheckCircle className="h-4 w-4" />
-                    <AlertDescription>
-                      You've claimed {userClaimCount.toString()} time{userClaimCount > BigInt(1) ? 's' : ''}! 
-                      {calculatePotentialRewards() > 0 
-                        ? " Claim more rewards based on your updated stats below." 
-                        : " Race more to earn additional rewards!"}
-                    </AlertDescription>
-                  </Alert>
-                  
-                  <Alert variant="default">
-                    <AlertDescription className="text-xs font-mono">
-                      <div className="font-bold mb-2">🔍 Debug: Contract State</div>
-                      {lastClaimData ? (
-                        <>
-                          <div>Last Claimed Stats (from contract):</div>
-                          <div>Wins: {lastClaimData[0].toString()} | Top 5s: {lastClaimData[1].toString()} | Starts: {lastClaimData[2].toString()}</div>
-                          <div className="mt-1">Current Stats:</div>
-                          <div>Wins: {iracingStats.careerWins} | Top 5s: {iracingStats.careerTop5s} | Starts: {iracingStats.careerStarts}</div>
-                          <div className="mt-1">Delta (what should be claimable):</div>
-                          <div className="font-bold text-yellow-600">
-                            Wins: {iracingStats.careerWins - Number(lastClaimData[0])} | 
-                            Top 5s: {iracingStats.careerTop5s - Number(lastClaimData[1])} | 
-                            Starts: {iracingStats.careerStarts - Number(lastClaimData[2])}
-                          </div>
-                          {lastClaimData[0] === BigInt(0) && lastClaimData[1] === BigInt(0) && lastClaimData[2] === BigInt(0) && (
-                            <div className="mt-2 text-red-600 font-bold">
-                              ⚠️ BUG FOUND: Contract has NO stored claim history! This is why you can claim again.
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        <div>Loading contract data...</div>
-                      )}
-                    </AlertDescription>
-                  </Alert>
-                </>
-              )}
-              
-              <div className="text-center">
-                <div className="text-4xl font-bold text-primary mb-2">
-                  {calculatePotentialRewards().toLocaleString()} NASCORN
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  {userClaimCount && userClaimCount > BigInt(0) 
-                    ? `Additional rewards based on ${iracingStats.careerWins} wins, ${iracingStats.careerTop5s} top 5s, ${iracingStats.careerStarts} starts`
-                    : `Claimable based on ${iracingStats.careerWins} wins, ${iracingStats.careerTop5s} top 5s, ${iracingStats.careerStarts} starts`
-                  }
-                </div>
-              </div>
-
-              {!CLAIM_CONTRACT_ADDRESS ? (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    Claim contract not configured. Please add VITE_CLAIM_CONTRACT_ADDRESS to environment.
-                  </AlertDescription>
-                </Alert>
-              ) : calculatePotentialRewards() <= 0 ? (
-                <Alert>
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    No new rewards available. Race more to earn additional tokens!
-                  </AlertDescription>
-                </Alert>
-              ) : (
-                <>
-                  <Button
-                    onClick={handleClaim}
-                    disabled={isClaiming || isClaimPending || isTxLoading}
-                    className="w-full gap-2"
-                    size="lg"
-                    data-testid="button-claim-tokens"
-                  >
-                    {(isClaiming || isClaimPending || isTxLoading) ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        {isTxLoading ? 'Confirming...' : 'Claiming...'}
-                      </>
-                    ) : (
-                      <>
-                        <Coins className="w-4 h-4" />
-                        {userClaimCount && userClaimCount > BigInt(0) ? 'Claim Additional Tokens' : 'Claim Tokens'}
-                      </>
-                    )}
-                  </Button>
-
-                  <Alert>
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>
-                      Rewards halve every 100M tokens claimed. Early adopters get up to 2x bonus!
-                      Claim early to maximize your rewards.
-                    </AlertDescription>
-                  </Alert>
-                </>
-              )}
-            </div>
-          </CardContent>
-        </Card>
       </div>
     );
   }
