@@ -470,18 +470,32 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
                     </AlertDescription>
                   </Alert>
                   
-                  {lastClaimData && (
-                    <Alert variant="default">
-                      <AlertDescription className="text-xs font-mono">
-                        <div>Last Claimed Stats (from contract):</div>
-                        <div>Wins: {lastClaimData[0].toString()} | Top 5s: {lastClaimData[1].toString()} | Starts: {lastClaimData[2].toString()}</div>
-                        <div className="mt-1">Current Stats:</div>
-                        <div>Wins: {iracingStats.careerWins} | Top 5s: {iracingStats.careerTop5s} | Starts: {iracingStats.careerStarts}</div>
-                        <div className="mt-1">Delta:</div>
-                        <div>Wins: {iracingStats.careerWins - Number(lastClaimData[0])} | Top 5s: {iracingStats.careerTop5s - Number(lastClaimData[1])} | Starts: {iracingStats.careerStarts - Number(lastClaimData[2])}</div>
-                      </AlertDescription>
-                    </Alert>
-                  )}
+                  <Alert variant="default">
+                    <AlertDescription className="text-xs font-mono">
+                      <div className="font-bold mb-2">🔍 Debug: Contract State</div>
+                      {lastClaimData ? (
+                        <>
+                          <div>Last Claimed Stats (from contract):</div>
+                          <div>Wins: {lastClaimData[0].toString()} | Top 5s: {lastClaimData[1].toString()} | Starts: {lastClaimData[2].toString()}</div>
+                          <div className="mt-1">Current Stats:</div>
+                          <div>Wins: {iracingStats.careerWins} | Top 5s: {iracingStats.careerTop5s} | Starts: {iracingStats.careerStarts}</div>
+                          <div className="mt-1">Delta (what should be claimable):</div>
+                          <div className="font-bold text-yellow-600">
+                            Wins: {iracingStats.careerWins - Number(lastClaimData[0])} | 
+                            Top 5s: {iracingStats.careerTop5s - Number(lastClaimData[1])} | 
+                            Starts: {iracingStats.careerStarts - Number(lastClaimData[2])}
+                          </div>
+                          {lastClaimData[0] === BigInt(0) && lastClaimData[1] === BigInt(0) && lastClaimData[2] === BigInt(0) && (
+                            <div className="mt-2 text-red-600 font-bold">
+                              ⚠️ BUG FOUND: Contract has NO stored claim history! This is why you can claim again.
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <div>Loading contract data...</div>
+                      )}
+                    </AlertDescription>
+                  </Alert>
                 </>
               )}
               
