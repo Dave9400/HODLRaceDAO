@@ -307,12 +307,14 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
       });
       setIsClaiming(false);
       
-      // Refetch all contract data after successful claim
-      refetchContractStats();
-      refetchHasClaimed();
-      refetchClaimableAmount();
-      refetchUserClaimCount();
-      queryClient.invalidateQueries({ queryKey: ['/api/contract/stats'] });
+      // Wait a moment for blockchain state to update, then refetch all data
+      setTimeout(() => {
+        refetchContractStats();
+        refetchHasClaimed();
+        refetchClaimableAmount();
+        refetchUserClaimCount();
+        queryClient.invalidateQueries({ queryKey: ['/api/contract/stats'] });
+      }, 2000); // 2 second delay
     }
   }, [isTxSuccess]);
   

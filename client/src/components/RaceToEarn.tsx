@@ -10,7 +10,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAccount } from "wagmi";
 import IRacingAuth from "./IRacingAuth";
-import RewardsClaiming from "./RewardsClaiming";
 
 interface UserProfile {
   totalRaces: number;
@@ -196,16 +195,6 @@ export default function RaceToEarn() {
           onAuthSuccess={handleAuthSuccess}
           onAuthStatusChange={handleAuthStatusChange}
         />
-        
-        {isAuthenticated && iracingStats && (
-          <div data-testid="section-rewards-claiming">
-            <RewardsClaiming 
-              iracingStats={iracingStats}
-              authToken={authToken}
-              isAuthenticated={isAuthenticated}
-            />
-          </div>
-        )}
       </div>
       
       {/* Fallback Manual Entry for Development */}
