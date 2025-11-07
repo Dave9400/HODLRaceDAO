@@ -1,8 +1,8 @@
 import { parseEther, formatEther } from 'viem';
 
-// Smart contract addresses (will be set after deployment)
-export const NASCORN_TOKEN_ADDRESS = "0x9a5F9cafE10C107C95a7CaE8b85Fbea2dCc8cb07"; // NASCORN token on Base
-export const CLAIM_CONTRACT_ADDRESS = import.meta.env.VITE_CLAIM_CONTRACT_ADDRESS || "0x0000000000000000000000000000000000000000";
+// Smart contract addresses (deployed on Base Sepolia testnet)
+export const NASCORN_TOKEN_ADDRESS = "0x4578B2246f4A01432760d3e36CACC6fACca3c8a1"; // Mock NASCORN token
+export const CLAIM_CONTRACT_ADDRESS = import.meta.env.VITE_CLAIM_CONTRACT_ADDRESS || "0x78feD8e5F2cB2237789886A21E70C542ee3B24F1";
 
 // Smart contract ABIs
 export const NASCORN_TOKEN_ABI = [
@@ -37,112 +37,33 @@ export const NASCORN_TOKEN_ABI = [
 ] as const;
 
 export const CLAIM_CONTRACT_ABI = [
-  // User management functions
-  {
-    "inputs": [{"internalType": "string", "name": "iracingId", "type": "string"}],
-    "name": "registerUser",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  
-  // Stats update (called by backend)
   {
     "inputs": [
-      {"internalType": "string", "name": "iracingId", "type": "string"},
+      {"internalType": "uint256", "name": "iracingId", "type": "uint256"},
       {"internalType": "uint256", "name": "wins", "type": "uint256"},
       {"internalType": "uint256", "name": "top5s", "type": "uint256"},
-      {"internalType": "uint256", "name": "starts", "type": "uint256"}
+      {"internalType": "uint256", "name": "starts", "type": "uint256"},
+      {"internalType": "bytes", "name": "signature", "type": "bytes"}
     ],
-    "name": "updateUserStats",
+    "name": "claim",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
-  
-  // Rewards claiming
   {
     "inputs": [],
-    "name": "claimRewards",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  
-  // View functions
-  {
-    "inputs": [{"internalType": "string", "name": "iracingId", "type": "string"}],
-    "name": "getUserStats",
-    "outputs": [
-      {"internalType": "uint256", "name": "careerWins", "type": "uint256"},
-      {"internalType": "uint256", "name": "careerTop5s", "type": "uint256"},
-      {"internalType": "uint256", "name": "careerStarts", "type": "uint256"},
-      {"internalType": "uint256", "name": "totalClaimed", "type": "uint256"},
-      {"internalType": "uint256", "name": "lastClaimTimestamp", "type": "uint256"},
-      {"internalType": "bool", "name": "hasClaimedInitial", "type": "bool"}
-    ],
+    "name": "getCurrentMultiplier",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
     "stateMutability": "view",
     "type": "function"
   },
-  
   {
-    "inputs": [],
-    "name": "getCurrentRewardRates",
-    "outputs": [
-      {"internalType": "uint256", "name": "accountReward", "type": "uint256"},
-      {"internalType": "uint256", "name": "perWin", "type": "uint256"},
-      {"internalType": "uint256", "name": "perTop5", "type": "uint256"},
-      {"internalType": "uint256", "name": "perStart", "type": "uint256"},
-      {"internalType": "uint256", "name": "halvingEpoch", "type": "uint256"}
-    ],
+    "inputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "name": "hasClaimed",
+    "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
     "stateMutability": "view",
     "type": "function"
   },
-  
-  // Leaderboard functions
-  {
-    "inputs": [],
-    "name": "getTopClaimers",
-    "outputs": [
-      {
-        "components": [
-          {"internalType": "address", "name": "userAddress", "type": "address"},
-          {"internalType": "string", "name": "iracingId", "type": "string"},
-          {"internalType": "uint256", "name": "totalClaimed", "type": "uint256"},
-          {"internalType": "uint256", "name": "weeklyEarned", "type": "uint256"},
-          {"internalType": "uint256", "name": "lastClaimTime", "type": "uint256"}
-        ],
-        "internalType": "struct NASCORNClaimContract.LeaderboardEntry[]",
-        "name": "",
-        "type": "tuple[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  
-  {
-    "inputs": [],
-    "name": "getTopWeeklyEarners",
-    "outputs": [
-      {
-        "components": [
-          {"internalType": "address", "name": "userAddress", "type": "address"},
-          {"internalType": "string", "name": "iracingId", "type": "string"},
-          {"internalType": "uint256", "name": "totalClaimed", "type": "uint256"},
-          {"internalType": "uint256", "name": "weeklyEarned", "type": "uint256"},
-          {"internalType": "uint256", "name": "lastClaimTime", "type": "uint256"}
-        ],
-        "internalType": "struct NASCORNClaimContract.LeaderboardEntry[]",
-        "name": "",
-        "type": "tuple[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  
-  // Global stats
   {
     "inputs": [],
     "name": "totalClaimed",
@@ -150,38 +71,104 @@ export const CLAIM_CONTRACT_ABI = [
     "stateMutability": "view",
     "type": "function"
   },
-  
   {
-    "inputs": [],
-    "name": "currentHalvingEpoch",
+    "inputs": [{"internalType": "address", "name": "", "type": "address"}],
+    "name": "claimCount",
     "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
     "stateMutability": "view",
     "type": "function"
   },
-  
-  // Admin functions  
   {
-    "inputs": [{"internalType": "string", "name": "updaterAddress", "type": "string"}],
-    "name": "addAuthorizedUpdater",
+    "inputs": [],
+    "name": "token",
+    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "signer",
+    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "TOTAL_CLAIM_POOL",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "HALVING_INTERVAL",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "POINTS_PER_WIN",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "POINTS_PER_TOP5",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "POINTS_PER_START",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "BASE_TOKENS_PER_POINT",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {"internalType": "uint256", "name": "wins", "type": "uint256"},
+      {"internalType": "uint256", "name": "top5s", "type": "uint256"},
+      {"internalType": "uint256", "name": "starts", "type": "uint256"}
+    ],
+    "name": "getClaimableAmount",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "emergencyWithdraw",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
-  
   {
-    "inputs": [],
-    "name": "pause",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  
-  {
-    "inputs": [],
-    "name": "unpause",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
+    "anonymous": false,
+    "inputs": [
+      {"indexed": true, "internalType": "address", "name": "user", "type": "address"},
+      {"indexed": false, "internalType": "uint256", "name": "iracingId", "type": "uint256"},
+      {"indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256"},
+      {"indexed": false, "internalType": "uint256", "name": "claimNumber", "type": "uint256"}
+    ],
+    "name": "Claimed",
+    "type": "event"
   }
 ] as const;
 

@@ -1,10 +1,10 @@
 import { createConfig, http } from 'wagmi'
-import { base } from 'wagmi/chains'
+import { baseSepolia } from 'wagmi/chains'
 import { metaMask, walletConnect, coinbaseWallet } from 'wagmi/connectors'
 
-// Base network configuration
+// Base Sepolia testnet configuration
 export const config = createConfig({
-  chains: [base],
+  chains: [baseSepolia],
   connectors: [
     metaMask(),
     coinbaseWallet({
@@ -18,16 +18,16 @@ export const config = createConfig({
     }),
   ],
   transports: {
-    [base.id]: http('https://mainnet.base.org'),
+    [baseSepolia.id]: http('https://sepolia.base.org'),
   },
 })
 
-// NASCORN token configuration
+// Mock NASCORN token configuration (testnet)
 export const NASCORN_TOKEN = {
-  address: '0x9a5F9cafE10C107C95a7CaE8b85Fbea2dCc8cb07' as const,
+  address: '0x4578B2246f4A01432760d3e36CACC6fACca3c8a1' as const,
   symbol: 'NASCORN',
   decimals: 18,
-  name: 'NASCORN'
+  name: 'Mock NASCORN'
 }
 
 // Common contract ABIs
