@@ -403,7 +403,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get contract stats - total claimed, halving progress, etc.
   app.get("/api/contract/stats", async (req, res) => {
     try {
-      const CLAIM_CONTRACT_ADDRESS = "0x78feD8e5F2cB2237789886A21E70C542ee3B24F1";
+      const CLAIM_CONTRACT_ADDRESS = "0x773F70eD43f97E3A9b381AF7fDB10DF66f9BfB82";
       
       // Minimal ABI for reading contract data
       const claimContractABI = [

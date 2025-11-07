@@ -53,7 +53,7 @@ Preferred communication style: Simple, everyday language.
 ### Blockchain Services
 - **Base Network**: Ethereum Layer 2 network (Base Sepolia testnet) for low-cost token transactions
 - **NASCORN Token Contract**: Custom ERC-20 token deployed on Base (address: 0x4578B2246f4A01432760d3e36CACC6fACca3c8a1)
-- **Claim Contract**: Smart contract for distributing NASCORN rewards (address: 0x78feD8e5F2cB2237789886A21E70C542ee3B24F1)
+- **Claim Contract**: Smart contract for distributing NASCORN rewards with incremental claims (address: 0x773F70eD43f97E3A9b381AF7fDB10DF66f9BfB82)
 - **Web3 Providers**: Integration with wallet providers through Wagmi connectors
 
 ### Smart Contract Features
