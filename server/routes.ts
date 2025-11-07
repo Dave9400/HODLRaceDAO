@@ -163,6 +163,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       env: process.env.NODE_ENV
     });
     
+    console.log('[iRacing OAuth] Full auth URL:', authUrl);
+    
     res.json({ authUrl });
   });
   
