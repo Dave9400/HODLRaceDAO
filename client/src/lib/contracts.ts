@@ -153,6 +153,31 @@ export const CLAIM_CONTRACT_ABI = [
     "type": "function"
   },
   {
+    "inputs": [
+      {"internalType": "uint256", "name": "iracingId", "type": "uint256"},
+      {"internalType": "uint256", "name": "wins", "type": "uint256"},
+      {"internalType": "uint256", "name": "top5s", "type": "uint256"},
+      {"internalType": "uint256", "name": "starts", "type": "uint256"}
+    ],
+    "name": "getClaimableAmountForId",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {"internalType": "uint256", "name": "", "type": "uint256"}
+    ],
+    "name": "lastClaim",
+    "outputs": [
+      {"internalType": "uint256", "name": "wins", "type": "uint256"},
+      {"internalType": "uint256", "name": "top5s", "type": "uint256"},
+      {"internalType": "uint256", "name": "starts", "type": "uint256"}
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "emergencyWithdraw",
     "outputs": [],

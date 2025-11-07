@@ -19,16 +19,22 @@ contract NASCORNClaim {
     uint256 public constant POINTS_PER_START = 10;
     uint256 public constant BASE_TOKENS_PER_POINT = 1000 * 1e18;
     
+    struct ClaimHistory {
+        uint256 wins;
+        uint256 top5s;
+        uint256 starts;
+    }
+    
     uint256 public totalClaimed;
-    mapping(uint256 => bool) public hasClaimed;
+    mapping(uint256 => ClaimHistory) public lastClaim;
     mapping(address => uint256) public claimCount;
     
     event Claimed(address indexed user, uint256 iracingId, uint256 amount, uint256 claimNumber);
     
-    error AlreadyClaimed();
     error InvalidSignature();
     error InsufficientBalance();
     error Unauthorized();
+    error StatsDecreased();
     
     constructor(address _token, address _signer) {
         token = IERC20(_token);
@@ -43,7 +49,12 @@ contract NASCORNClaim {
         uint256 starts,
         bytes memory signature
     ) external {
-        if (hasClaimed[iracingId]) revert AlreadyClaimed();
+        ClaimHistory memory history = lastClaim[iracingId];
+        
+        // Verify stats haven't decreased (prevent gaming the system)
+        if (wins < history.wins || top5s < history.top5s || starts < history.starts) {
+            revert StatsDecreased();
+        }
         
         bytes32 messageHash = keccak256(abi.encodePacked(
             msg.sender,
@@ -62,9 +73,14 @@ contract NASCORNClaim {
             revert InvalidSignature();
         }
         
-        uint256 points = (wins * POINTS_PER_WIN) + 
-                        (top5s * POINTS_PER_TOP5) + 
-                        (starts * POINTS_PER_START);
+        // Calculate delta (new stats - last claimed stats)
+        uint256 deltaWins = wins - history.wins;
+        uint256 deltaTop5s = top5s - history.top5s;
+        uint256 deltaStarts = starts - history.starts;
+        
+        uint256 points = (deltaWins * POINTS_PER_WIN) + 
+                        (deltaTop5s * POINTS_PER_TOP5) + 
+                        (deltaStarts * POINTS_PER_START);
         
         uint256 baseReward = points * BASE_TOKENS_PER_POINT;
         
@@ -78,7 +94,13 @@ contract NASCORNClaim {
             revert InsufficientBalance();
         }
         
-        hasClaimed[iracingId] = true;
+        // Update claim history with current stats
+        lastClaim[iracingId] = ClaimHistory({
+            wins: wins,
+            top5s: top5s,
+            starts: starts
+        });
+        
         totalClaimed += reward;
         uint256 claimNumber = ++claimCount[msg.sender];
         
@@ -151,5 +173,42 @@ contract NASCORNClaim {
         }
         
         return reward;
+    }
+    
+    function getClaimableAmountForId(
+        uint256 iracingId,
+        uint256 wins,
+        uint256 top5s,
+        uint256 starts
+    ) external view returns (uint256) {
+        ClaimHistory memory history = lastClaim[iracingId];
+        
+        // Check if stats decreased
+        if (wins < history.wins || top5s < history.top5s || starts < history.starts) {
+            return 0;
+        }
+        
+        // Calculate delta
+        uint256 deltaWins = wins - history.wins;
+        uint256 deltaTop5s = top5s - history.top5s;
+        uint256 deltaStarts = starts - history.starts;
+        
+        uint256 points = (deltaWins * POINTS_PER_WIN) + 
+                        (deltaTop5s * POINTS_PER_TOP5) + 
+                        (deltaStarts * POINTS_PER_START);
+        
+        uint256 baseReward = points * BASE_TOKENS_PER_POINT;
+        uint256 reward = calculateRewardWithHalving(baseReward);
+        
+        if (totalClaimed + reward > TOTAL_CLAIM_POOL) {
+            reward = TOTAL_CLAIM_POOL - totalClaimed;
+        }
+        
+        return reward;
+    }
+    
+    function hasClaimed(uint256 iracingId) external view returns (bool) {
+        ClaimHistory memory history = lastClaim[iracingId];
+        return history.wins > 0 || history.top5s > 0 || history.starts > 0;
     }
 }

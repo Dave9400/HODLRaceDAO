@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
 import { 
   ExternalLink, 
   Car, 
@@ -12,13 +13,16 @@ import {
   CheckCircle,
   AlertCircle,
   Loader2,
-  Coins
+  Coins,
+  TrendingUp
 } from "lucide-react";
 import { useAccount } from 'wagmi';
 import { useToast } from "@/hooks/use-toast";
 import { useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi';
 import { parseEther, formatEther } from 'viem';
 import { CLAIM_CONTRACT_ADDRESS, CLAIM_CONTRACT_ABI } from '@/lib/contracts';
+import { useQuery } from '@tanstack/react-query';
+import { queryClient } from '@/lib/queryClient';
 
 interface IRacingStats {
   iracingId: string;
@@ -28,6 +32,22 @@ interface IRacingStats {
   careerStarts: number;
   irating: number;
   licenseName: string;
+}
+
+interface ContractStats {
+  totalClaimed: number;
+  totalPool: number;
+  halvingInterval: number;
+  currentMultiplier: string;
+  halving: {
+    currentTier: number;
+    tierStart: number;
+    tierEnd: number;
+    progressInCurrentTier: number;
+    progressPercent: number;
+    nextHalvingAt: number;
+    remainingUntilHalving: number;
+  };
 }
 
 interface IRacingAuthProps {
@@ -53,23 +73,36 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
     hash: claimTxHash,
   });
   
-  const { data: hasClaimedData } = useReadContract({
+  const { data: hasClaimedData, refetch: refetchHasClaimed } = useReadContract({
     address: CLAIM_CONTRACT_ADDRESS,
     abi: CLAIM_CONTRACT_ABI,
     functionName: 'hasClaimed',
     args: iracingStats ? [BigInt(iracingStats.iracingId)] : undefined,
-  }) as { data: boolean | undefined };
+  }) as { data: boolean | undefined; refetch: () => void };
   
-  const { data: claimableAmount } = useReadContract({
+  const { data: claimableAmount, refetch: refetchClaimableAmount } = useReadContract({
     address: CLAIM_CONTRACT_ADDRESS,
     abi: CLAIM_CONTRACT_ABI,
-    functionName: 'getClaimableAmount',
+    functionName: 'getClaimableAmountForId',
     args: iracingStats ? [
+      BigInt(iracingStats.iracingId),
       BigInt(iracingStats.careerWins),
       BigInt(iracingStats.careerTop5s),
       BigInt(iracingStats.careerStarts)
     ] : undefined,
-  }) as { data: bigint | undefined };
+  }) as { data: bigint | undefined; refetch: () => void };
+  
+  const { data: userClaimCount, refetch: refetchUserClaimCount } = useReadContract({
+    address: CLAIM_CONTRACT_ADDRESS,
+    abi: CLAIM_CONTRACT_ABI,
+    functionName: 'claimCount',
+    args: address ? [address] : undefined,
+  }) as { data: bigint | undefined; refetch: () => void };
+  
+  const { data: contractStats, refetch: refetchContractStats } = useQuery<ContractStats>({
+    queryKey: ['/api/contract/stats'],
+    refetchInterval: 30000, // Refetch every 30 seconds
+  });
 
   // Update search params when URL changes
   useEffect(() => {
@@ -273,6 +306,13 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
         description: "NASCORN tokens have been sent to your wallet",
       });
       setIsClaiming(false);
+      
+      // Refetch all contract data after successful claim
+      refetchContractStats();
+      refetchHasClaimed();
+      refetchClaimableAmount();
+      refetchUserClaimCount();
+      queryClient.invalidateQueries({ queryKey: ['/api/contract/stats'] });
     }
   }, [isTxSuccess]);
   
@@ -300,6 +340,55 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
   if (authStatus === 'authenticated' && iracingStats) {
     return (
       <div className="space-y-6">
+        {contractStats && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="w-6 h-6 text-blue-500" />
+                Halving Progress
+              </CardTitle>
+              <CardDescription>
+                Track the total claimed supply and progress towards the next halving event
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <div className="text-sm text-muted-foreground">Total Claimed</div>
+                    <div className="text-2xl font-bold">
+                      {contractStats.totalClaimed.toLocaleString(undefined, { maximumFractionDigits: 0 })}M
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground">Next Halving At</div>
+                    <div className="text-2xl font-bold">
+                      {contractStats.halving.nextHalvingAt.toLocaleString(undefined, { maximumFractionDigits: 0 })}M
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground">Current Multiplier</div>
+                    <div className="text-2xl font-bold">
+                      {contractStats.currentMultiplier}x
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Progress to Next Halving</span>
+                    <span className="font-medium">{contractStats.halving.progressPercent.toFixed(1)}%</span>
+                  </div>
+                  <Progress value={contractStats.halving.progressPercent} className="h-2" />
+                  <div className="text-xs text-muted-foreground text-center">
+                    {contractStats.halving.remainingUntilHalving.toLocaleString(undefined, { maximumFractionDigits: 2 })}M tokens until rewards halve
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -353,27 +442,42 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
+              {userClaimCount !== undefined && userClaimCount > BigInt(0) && (
+                <Alert>
+                  <CheckCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    You've claimed {userClaimCount.toString()} time{userClaimCount > BigInt(1) ? 's' : ''}! 
+                    {calculatePotentialRewards() > 0 
+                      ? " Claim more rewards based on your updated stats below." 
+                      : " Race more to earn additional rewards!"}
+                  </AlertDescription>
+                </Alert>
+              )}
+              
               <div className="text-center">
                 <div className="text-4xl font-bold text-primary mb-2">
                   {calculatePotentialRewards().toLocaleString()} NASCORN
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  Claimable based on {iracingStats.careerWins} wins, {iracingStats.careerTop5s} top 5s, {iracingStats.careerStarts} starts
+                  {userClaimCount && userClaimCount > BigInt(0) 
+                    ? `Additional rewards based on ${iracingStats.careerWins} wins, ${iracingStats.careerTop5s} top 5s, ${iracingStats.careerStarts} starts`
+                    : `Claimable based on ${iracingStats.careerWins} wins, ${iracingStats.careerTop5s} top 5s, ${iracingStats.careerStarts} starts`
+                  }
                 </div>
               </div>
 
-              {hasClaimedData ? (
-                <Alert>
-                  <CheckCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    You have already claimed your tokens for iRacing ID #{iracingStats.iracingId}
-                  </AlertDescription>
-                </Alert>
-              ) : !CLAIM_CONTRACT_ADDRESS ? (
+              {!CLAIM_CONTRACT_ADDRESS ? (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
                     Claim contract not configured. Please add VITE_CLAIM_CONTRACT_ADDRESS to environment.
+                  </AlertDescription>
+                </Alert>
+              ) : calculatePotentialRewards() <= 0 ? (
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    No new rewards available. Race more to earn additional tokens!
                   </AlertDescription>
                 </Alert>
               ) : (
@@ -393,7 +497,7 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
                     ) : (
                       <>
                         <Coins className="w-4 h-4" />
-                        Claim Tokens
+                        {userClaimCount && userClaimCount > BigInt(0) ? 'Claim Additional Tokens' : 'Claim Tokens'}
                       </>
                     )}
                   </Button>

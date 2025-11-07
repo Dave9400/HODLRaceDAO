@@ -400,6 +400,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get contract stats - total claimed, halving progress, etc.
+  app.get("/api/contract/stats", async (req, res) => {
+    try {
+      const CLAIM_CONTRACT_ADDRESS = "0x78feD8e5F2cB2237789886A21E70C542ee3B24F1";
+      
+      // Minimal ABI for reading contract data
+      const claimContractABI = [
+        "function totalClaimed() view returns (uint256)",
+        "function TOTAL_CLAIM_POOL() view returns (uint256)",
+        "function HALVING_INTERVAL() view returns (uint256)",
+        "function getCurrentMultiplier() view returns (uint256)"
+      ];
+      
+      // Connect to Base Sepolia
+      const provider = new ethers.JsonRpcProvider("https://sepolia.base.org");
+      const contract = new ethers.Contract(CLAIM_CONTRACT_ADDRESS, claimContractABI, provider);
+      
+      // Read contract state
+      const [totalClaimed, totalPool, halvingInterval, currentMultiplier] = await Promise.all([
+        contract.totalClaimed(),
+        contract.TOTAL_CLAIM_POOL(),
+        contract.HALVING_INTERVAL(),
+        contract.getCurrentMultiplier()
+      ]);
+      
+      // Calculate halving progress - convert to millions for display
+      const claimed = Number(ethers.formatEther(totalClaimed)) / 1_000_000;
+      const pool = Number(ethers.formatEther(totalPool)) / 1_000_000;
+      const interval = Number(ethers.formatEther(halvingInterval)) / 1_000_000;
+      
+      // Determine current halving tier (0 = first 100M, 1 = second 100M, etc.)
+      const currentTier = Math.floor(claimed / interval);
+      const tierStart = currentTier * interval;
+      const tierEnd = (currentTier + 1) * interval;
+      const progressInCurrentTier = claimed - tierStart;
+      const progressPercent = (progressInCurrentTier / interval) * 100;
+      
+      res.json({
+        totalClaimed: claimed,
+        totalPool: pool,
+        halvingInterval: interval,
+        currentMultiplier: currentMultiplier.toString(),
+        halving: {
+          currentTier,
+          tierStart,
+          tierEnd,
+          progressInCurrentTier,
+          progressPercent: Math.round(progressPercent * 100) / 100,
+          nextHalvingAt: tierEnd,
+          remainingUntilHalving: tierEnd - claimed
+        }
+      });
+      
+    } catch (error: any) {
+      console.error('[Contract Stats] Error:', error.message);
+      res.status(500).json({ error: "Failed to fetch contract stats" });
+    }
+  });
+  
   // Generate signature for claiming tokens - REQUIRES VALID IRACING AUTH TOKEN
   app.post("/api/claim/generate-signature", async (req: any, res: any) => {
     try {

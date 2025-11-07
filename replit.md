@@ -51,9 +51,30 @@ Preferred communication style: Simple, everyday language.
 ## External Dependencies
 
 ### Blockchain Services
-- **Base Network**: Ethereum Layer 2 network for low-cost token transactions
-- **NASCORN Token Contract**: Custom ERC-20 token deployed on Base (address: 0x9a5F9cafE10C107C95a7CaE8b85Fbea2dCc8cb07)
+- **Base Network**: Ethereum Layer 2 network (Base Sepolia testnet) for low-cost token transactions
+- **NASCORN Token Contract**: Custom ERC-20 token deployed on Base (address: 0x4578B2246f4A01432760d3e36CACC6fACca3c8a1)
+- **Claim Contract**: Smart contract for distributing NASCORN rewards (address: 0x78feD8e5F2cB2237789886A21E70C542ee3B24F1)
 - **Web3 Providers**: Integration with wallet providers through Wagmi connectors
+
+### Smart Contract Features
+- **Incremental Claims**: Users can claim rewards multiple times based on stat deltas since their last claim
+- **Claim History Tracking**: Contract stores last claimed stats (wins, top5s, starts) for each iRacing ID
+- **Halving Mechanics**: Rewards halve every 100M tokens claimed (500M total pool)
+  - First 100M: 100% rewards
+  - Second 100M: 50% rewards
+  - Third 100M: 25% rewards
+  - Fourth 100M: 12% rewards
+  - Fifth 100M: 6% rewards
+  - Remaining: 3% rewards
+- **Security**: Backend signature verification prevents fake claims
+  - Only stats verified from iRacing API are signed
+  - Signature includes wallet address, iRacing ID, and current stats
+  - Stats cannot decrease (prevents gaming the system)
+- **Points System**:
+  - 1000 points per win
+  - 100 points per top 5 finish
+  - 10 points per race start
+  - Base: 1000 tokens per point (before halving multiplier)
 
 ### Database
 - **Neon Database**: Serverless PostgreSQL database for user data and application state
