@@ -403,7 +403,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get contract stats - total claimed, halving progress, etc.
   app.get("/api/contract/stats", async (req, res) => {
     try {
-      const CLAIM_CONTRACT_ADDRESS = process.env.VITE_CLAIM_CONTRACT_ADDRESS || "0xd8b934580fcE35a11B58C6D73aDeE468a2833fa8";
+      const CLAIM_CONTRACT_ADDRESS = process.env.VITE_CLAIM_CONTRACT_ADDRESS || "0x647d4f06acAE3Cab64B738f1fB15CE8009b067AC";
       
       // Minimal ABI for reading contract data
       const claimContractABI = [
@@ -455,7 +455,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
     } catch (error: any) {
       console.error('[Contract Stats] Error:', error.message);
-      res.status(500).json({ error: "Failed to fetch contract stats" });
+      
+      // Return default values if contract read fails (e.g., RPC issues or initialization)
+      res.json({
+        totalClaimed: 0,
+        totalPool: 500,
+        halvingInterval: 100,
+        currentMultiplier: "100",
+        halving: {
+          currentTier: 0,
+          tierStart: 0,
+          tierEnd: 100,
+          progressInCurrentTier: 0,
+          progressPercent: 0,
+          nextHalvingAt: 100,
+          remainingUntilHalving: 100
+        },
+        note: "Using default values - contract data may not be available yet"
+      });
     }
   });
   
@@ -527,7 +544,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       // EIP-712 Domain Separator (must match contract)
-      const CONTRACT_ADDRESS = process.env.VITE_CLAIM_CONTRACT_ADDRESS || "0xd8b934580fcE35a11B58C6D73aDeE468a2833fa8";
+      const CONTRACT_ADDRESS = process.env.VITE_CLAIM_CONTRACT_ADDRESS || "0x647d4f06acAE3Cab64B738f1fB15CE8009b067AC";
       const CHAIN_ID = 84532; // Base Sepolia
       
       const domain = {
