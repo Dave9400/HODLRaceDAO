@@ -1,0 +1,288 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+interface IERC20 {
+    function transfer(address to, uint256 amount) external returns (bool);
+    function balanceOf(address account) external view returns (uint256);
+}
+
+/// @title NASCORNClaim V2 - Secure incremental claim contract with EIP-712 signatures
+/// @notice Allows iRacing users to claim NASCORN tokens based on verified racing statistics
+/// @dev Uses EIP-712 for signature verification to prevent replay attacks
+contract NASCORNClaimV2 {
+    IERC20 public immutable token;
+    address public immutable owner;
+    address public immutable signer;
+    bytes32 public immutable DOMAIN_SEPARATOR;
+    
+    uint256 public constant TOTAL_CLAIM_POOL = 500_000_000 * 1e18;
+    uint256 public constant HALVING_INTERVAL = 100_000_000 * 1e18;
+    
+    uint256 public constant POINTS_PER_WIN = 1000;
+    uint256 public constant POINTS_PER_TOP5 = 100;
+    uint256 public constant POINTS_PER_START = 10;
+    uint256 public constant BASE_TOKENS_PER_POINT = 1000 * 1e18;
+    
+    // EIP-712 type hash for claim message
+    bytes32 public constant CLAIM_TYPEHASH = keccak256(
+        "Claim(address user,uint256 iracingId,uint256 wins,uint256 top5s,uint256 starts)"
+    );
+    
+    struct ClaimHistory {
+        uint256 wins;
+        uint256 top5s;
+        uint256 starts;
+    }
+    
+    uint256 public totalClaimed;
+    mapping(uint256 => ClaimHistory) public lastClaim;
+    mapping(address => uint256) public claimCount;
+    
+    event Claimed(address indexed user, uint256 iracingId, uint256 amount, uint256 claimNumber);
+    event EmergencyWithdrawal(address indexed owner, uint256 amount);
+    
+    error InvalidSignature();
+    error InsufficientBalance();
+    error Unauthorized();
+    error StatsDecreased();
+    error NoDeltaToClaim();
+    
+    constructor(address _token, address _signer) {
+        token = IERC20(_token);
+        owner = msg.sender;
+        signer = _signer;
+        
+        // Compute EIP-712 domain separator
+        DOMAIN_SEPARATOR = keccak256(abi.encode(
+            keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
+            keccak256(bytes("NASCORNClaim")),
+            keccak256(bytes("2")),
+            block.chainid,
+            address(this)
+        ));
+    }
+    
+    /// @notice Claim NASCORN tokens based on verified iRacing stats
+    /// @dev Signature must be EIP-712 compliant and signed by authorized backend signer
+    /// @param iracingId The user's iRacing member ID
+    /// @param wins Total career wins
+    /// @param top5s Total career top 5 finishes
+    /// @param starts Total career race starts
+    /// @param signature EIP-712 signature from backend attesting to stats
+    function claim(
+        uint256 iracingId,
+        uint256 wins,
+        uint256 top5s,
+        uint256 starts,
+        bytes memory signature
+    ) external {
+        ClaimHistory storage history = lastClaim[iracingId];
+        
+        // Verify stats haven't decreased (prevent gaming the system)
+        if (wins < history.wins || top5s < history.top5s || starts < history.starts) {
+            revert StatsDecreased();
+        }
+        
+        // Verify EIP-712 signature
+        if (!verifySignature(msg.sender, iracingId, wins, top5s, starts, signature)) {
+            revert InvalidSignature();
+        }
+        
+        // Calculate reward based on delta
+        uint256 deltaWins = wins - history.wins;
+        uint256 deltaTop5s = top5s - history.top5s;
+        uint256 deltaStarts = starts - history.starts;
+        
+        // Reject claims with no new stats
+        if (deltaWins == 0 && deltaTop5s == 0 && deltaStarts == 0) {
+            revert NoDeltaToClaim();
+        }
+        
+        uint256 reward = calculateDeltaReward(deltaWins, deltaTop5s, deltaStarts);
+        
+        if (token.balanceOf(address(this)) < reward) {
+            revert InsufficientBalance();
+        }
+        
+        // Update claim history BEFORE transfer (Checks-Effects-Interactions)
+        history.wins = wins;
+        history.top5s = top5s;
+        history.starts = starts;
+        
+        totalClaimed += reward;
+        claimCount[msg.sender]++;
+        
+        // Transfer tokens
+        require(token.transfer(msg.sender, reward), "Transfer failed");
+        
+        emit Claimed(msg.sender, iracingId, reward, claimCount[msg.sender]);
+    }
+    
+    /// @notice Verify EIP-712 signature
+    /// @dev Uses domain separator to prevent cross-chain/cross-contract replay
+    function verifySignature(
+        address user,
+        uint256 iracingId,
+        uint256 wins,
+        uint256 top5s,
+        uint256 starts,
+        bytes memory signature
+    ) internal view returns (bool) {
+        // Compute EIP-712 struct hash
+        bytes32 structHash = keccak256(abi.encode(
+            CLAIM_TYPEHASH,
+            user,
+            iracingId,
+            wins,
+            top5s,
+            starts
+        ));
+        
+        // Compute EIP-712 digest
+        bytes32 digest = keccak256(abi.encodePacked(
+            "\x19\x01",
+            DOMAIN_SEPARATOR,
+            structHash
+        ));
+        
+        address recovered = recoverSigner(digest, signature);
+        return recovered == signer;
+    }
+    
+    /// @notice Recover signer address from signature
+    /// @dev Includes validation to prevent signature malleability
+    function recoverSigner(bytes32 digest, bytes memory signature) 
+        internal 
+        pure 
+        returns (address) 
+    {
+        require(signature.length == 65, "Invalid signature length");
+        
+        bytes32 r;
+        bytes32 s;
+        uint8 v;
+        
+        assembly {
+            r := mload(add(signature, 32))
+            s := mload(add(signature, 64))
+            v := byte(0, mload(add(signature, 96)))
+        }
+        
+        // Validate v is 27 or 28
+        require(v == 27 || v == 28, "Invalid v value");
+        
+        // Validate s is in lower half of curve to prevent malleability
+        require(
+            uint256(s) <= 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0,
+            "Invalid s value"
+        );
+        
+        address recovered = ecrecover(digest, v, r, s);
+        require(recovered != address(0), "Invalid signature");
+        
+        return recovered;
+    }
+    
+    function calculateDeltaReward(
+        uint256 deltaWins,
+        uint256 deltaTop5s,
+        uint256 deltaStarts
+    ) internal view returns (uint256) {
+        uint256 points = (deltaWins * POINTS_PER_WIN) + 
+                        (deltaTop5s * POINTS_PER_TOP5) + 
+                        (deltaStarts * POINTS_PER_START);
+        
+        uint256 reward = calculateRewardWithHalving(points * BASE_TOKENS_PER_POINT);
+        
+        if (totalClaimed + reward > TOTAL_CLAIM_POOL) {
+            return TOTAL_CLAIM_POOL - totalClaimed;
+        }
+        
+        return reward;
+    }
+    
+    function calculateRewardWithHalving(uint256 baseReward) internal view returns (uint256) {
+        uint256 multiplier = getCurrentMultiplier();
+        uint256 reward = (baseReward * multiplier) / 100;
+        
+        uint256 remainingInPool = TOTAL_CLAIM_POOL > totalClaimed 
+            ? TOTAL_CLAIM_POOL - totalClaimed 
+            : 0;
+            
+        return reward < remainingInPool ? reward : remainingInPool;
+    }
+    
+    function getCurrentMultiplier() public view returns (uint256) {
+        uint256 halvings = totalClaimed / HALVING_INTERVAL;
+        if (halvings >= 5) return 3;
+        if (halvings == 4) return 6;
+        if (halvings == 3) return 12;
+        if (halvings == 2) return 25;
+        if (halvings == 1) return 50;
+        return 100;
+    }
+    
+    /// @notice Emergency function to withdraw all tokens (owner only)
+    /// @dev Should only be used if contract needs to be migrated or has critical bug
+    function emergencyWithdraw() external {
+        if (msg.sender != owner) revert Unauthorized();
+        uint256 balance = token.balanceOf(address(this));
+        require(token.transfer(owner, balance), "Transfer failed");
+        emit EmergencyWithdrawal(owner, balance);
+    }
+    
+    /// @notice Get claimable amount for specific iRacing ID (accounts for previous claims)
+    /// @dev This is the function frontends should use to show claimable amount
+    function getClaimableAmountForId(
+        uint256 iracingId,
+        uint256 wins,
+        uint256 top5s,
+        uint256 starts
+    ) external view returns (uint256) {
+        ClaimHistory memory history = lastClaim[iracingId];
+        
+        // Check if stats decreased
+        if (wins < history.wins || top5s < history.top5s || starts < history.starts) {
+            return 0;
+        }
+        
+        // Calculate delta
+        uint256 deltaWins = wins - history.wins;
+        uint256 deltaTop5s = top5s - history.top5s;
+        uint256 deltaStarts = starts - history.starts;
+        
+        // No delta = no reward
+        if (deltaWins == 0 && deltaTop5s == 0 && deltaStarts == 0) {
+            return 0;
+        }
+        
+        uint256 points = (deltaWins * POINTS_PER_WIN) + 
+                        (deltaTop5s * POINTS_PER_TOP5) + 
+                        (deltaStarts * POINTS_PER_START);
+        
+        uint256 baseReward = points * BASE_TOKENS_PER_POINT;
+        uint256 reward = calculateRewardWithHalving(baseReward);
+        
+        if (totalClaimed + reward > TOTAL_CLAIM_POOL) {
+            reward = TOTAL_CLAIM_POOL - totalClaimed;
+        }
+        
+        return reward;
+    }
+    
+    /// @notice Check if an iRacing ID has ever claimed
+    function hasClaimed(uint256 iracingId) external view returns (bool) {
+        ClaimHistory memory history = lastClaim[iracingId];
+        return history.wins > 0 || history.top5s > 0 || history.starts > 0;
+    }
+    
+    /// @notice Get the last claimed stats for an iRacing ID
+    function getLastClaimedStats(uint256 iracingId) external view returns (
+        uint256 wins,
+        uint256 top5s,
+        uint256 starts
+    ) {
+        ClaimHistory memory history = lastClaim[iracingId];
+        return (history.wins, history.top5s, history.starts);
+    }
+}

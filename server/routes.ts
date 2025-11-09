@@ -526,17 +526,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         stats: { wins, top5s, starts }
       });
       
-      // Create the message hash (must match contract's messageHash)
-      // Using ethers v6 syntax: solidityPackedKeccak256
-      const messageHash = ethers.solidityPackedKeccak256(
-        ['address', 'uint256', 'uint256', 'uint256', 'uint256'],
-        [walletAddress, iracingId, wins, top5s, starts]
-      );
+      // EIP-712 Domain Separator (must match contract)
+      // NOTE: You MUST update CONTRACT_ADDRESS after deploying the new contract!
+      const CONTRACT_ADDRESS = process.env.VITE_CLAIM_CONTRACT_ADDRESS || "0x773F70eD43f97E3A9b381AF7fDB10DF66f9BfB82";
+      const CHAIN_ID = 84532; // Base Sepolia
       
-      // Sign the VERIFIED message
+      const domain = {
+        name: "NASCORNClaim",
+        version: "2",
+        chainId: CHAIN_ID,
+        verifyingContract: CONTRACT_ADDRESS
+      };
+      
+      const types = {
+        Claim: [
+          { name: "user", type: "address" },
+          { name: "iracingId", type: "uint256" },
+          { name: "wins", type: "uint256" },
+          { name: "top5s", type: "uint256" },
+          { name: "starts", type: "uint256" }
+        ]
+      };
+      
+      const value = {
+        user: walletAddress,
+        iracingId: iracingId,
+        wins: wins,
+        top5s: top5s,
+        starts: starts
+      };
+      
+      // Sign using EIP-712 (prevents cross-chain/cross-contract replay)
       const wallet = new ethers.Wallet(process.env.CLAIM_SIGNER_PRIVATE_KEY);
-      // In ethers v6, signMessage accepts the hash directly (as bytes or hex string)
-      const signature = await wallet.signMessage(ethers.getBytes(messageHash));
+      const signature = await wallet.signTypedData(domain, types, value);
       
       res.json({ 
         signature,
