@@ -185,6 +185,33 @@ export const CLAIM_CONTRACT_ABI = [
     "type": "function"
   },
   {
+    "inputs": [
+      {"internalType": "uint256", "name": "iracingId", "type": "uint256"}
+    ],
+    "name": "getLastClaimedStats",
+    "outputs": [
+      {"internalType": "uint256", "name": "wins", "type": "uint256"},
+      {"internalType": "uint256", "name": "top5s", "type": "uint256"},
+      {"internalType": "uint256", "name": "starts", "type": "uint256"}
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "DOMAIN_SEPARATOR",
+    "outputs": [{"internalType": "bytes32", "name": "", "type": "bytes32"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "CLAIM_TYPEHASH",
+    "outputs": [{"internalType": "bytes32", "name": "", "type": "bytes32"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {"indexed": true, "internalType": "address", "name": "user", "type": "address"},
@@ -193,6 +220,15 @@ export const CLAIM_CONTRACT_ABI = [
       {"indexed": false, "internalType": "uint256", "name": "claimNumber", "type": "uint256"}
     ],
     "name": "Claimed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {"indexed": true, "internalType": "address", "name": "owner", "type": "address"},
+      {"indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256"}
+    ],
+    "name": "EmergencyWithdrawal",
     "type": "event"
   }
 ] as const;
