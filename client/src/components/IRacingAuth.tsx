@@ -338,11 +338,12 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
   const calculatePotentialRewards = () => {
     if (!iracingStats) return 0;
     
-    if (claimableAmount) {
+    // Use contract claimable amount if available (including 0)
+    if (claimableAmount !== undefined) {
       return Number(formatEther(claimableAmount));
     }
     
-    // Fallback calculation
+    // Fallback calculation only when contract data not available
     const POINTS_PER_WIN = 1000;
     const POINTS_PER_TOP5 = 100;
     const POINTS_PER_START = 10;
@@ -357,11 +358,14 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
   };
 
   if (authStatus === 'authenticated' && iracingStats) {
-    // Calculate delta stats
+    // Calculate delta stats - based on iRacing ID, not wallet
     const deltaWins = lastClaimData ? iracingStats.careerWins - Number(lastClaimData[0]) : iracingStats.careerWins;
     const deltaTop5s = lastClaimData ? iracingStats.careerTop5s - Number(lastClaimData[1]) : iracingStats.careerTop5s;
     const deltaStarts = lastClaimData ? iracingStats.careerStarts - Number(lastClaimData[2]) : iracingStats.careerStarts;
-    const hasPreviousClaim = userClaimCount !== undefined && userClaimCount > BigInt(0);
+    
+    // Check if this iRacing ID has claimed before (regardless of wallet)
+    const hasPreviousClaim = lastClaimData !== undefined && 
+      (lastClaimData[0] > BigInt(0) || lastClaimData[1] > BigInt(0) || lastClaimData[2] > BigInt(0));
 
     return (
       <div className="space-y-6">
@@ -391,7 +395,7 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
                 <Alert>
                   <CheckCircle className="h-4 w-4" />
                   <AlertDescription>
-                    You've claimed {userClaimCount.toString()} time{userClaimCount > BigInt(1) ? 's' : ''}! 
+                    Your iRacing account has claimed rewards before with last stats: {Number(lastClaimData[0])} wins, {Number(lastClaimData[1])} top 5s, {Number(lastClaimData[2])} starts.
                     {calculatePotentialRewards() > 0 
                       ? " You can claim more rewards based on your new racing stats below." 
                       : " Complete more races to earn additional rewards!"}
