@@ -2,7 +2,7 @@ import { parseEther, formatEther } from 'viem';
 
 // Smart contract addresses (deployed on Base Sepolia testnet)
 export const NASCORN_TOKEN_ADDRESS = "0x4578B2246f4A01432760d3e36CACC6fACca3c8a1"; // Mock NASCORN token
-export const CLAIM_CONTRACT_ADDRESS = import.meta.env.VITE_CLAIM_CONTRACT_ADDRESS || "0x773F70eD43f97E3A9b381AF7fDB10DF66f9BfB82";
+export const CLAIM_CONTRACT_ADDRESS = import.meta.env.VITE_CLAIM_CONTRACT_ADDRESS || "0xd8b934580fcE35a11B58C6D73aDeE468a2833fa8";
 
 // Smart contract ABIs
 export const NASCORN_TOKEN_ABI = [
