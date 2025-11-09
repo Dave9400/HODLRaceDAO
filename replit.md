@@ -10,6 +10,28 @@ The application serves as a Farcaster Mini App, providing a streamlined mobile-f
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+
+### November 2025 - Security Audit & Contract V2
+- **Critical Security Fixes**: Identified and fixed critical vulnerabilities in claim contract
+  - ⛔ Fixed signature replay attack vulnerability by implementing EIP-712 domain separation
+  - ⛔ Fixed signature malleability by adding v-range and s-value validation
+  - ⛔ Fixed missing claim history persistence (deployed contract bytecode mismatch)
+- **Contract V2 (NASCORNClaimV2.sol)**:
+  - Added EIP-712 typed structured data signing with domain separator
+  - Domain includes: contract name, version "2", chainId (84532), verifyingContract address
+  - Enhanced signature validation: v ∈ {27,28}, s in lower half of curve, non-zero recovery
+  - Added `NoDeltaToClaim` error for clearer zero-delta rejection
+  - Added `getLastClaimedStats()` helper function
+  - Added `EmergencyWithdrawal` event
+- **Backend Updates**:
+  - Updated signing code to use `wallet.signTypedData()` with EIP-712 format
+  - Backend signs with domain-separated typed data matching contract structure
+- **Documentation**:
+  - Created comprehensive `CONTRACTREVIEW.md` analyzing all functions and vulnerabilities
+  - Created `DEPLOYMENT_INSTRUCTIONS.md` with step-by-step Remix deployment guide
+- **Status**: Awaiting user deployment of V2 contract via Remix IDE
+
 ## System Architecture
 
 ### Frontend Architecture
@@ -66,7 +88,11 @@ Preferred communication style: Simple, everyday language.
   - Fourth 100M: 12% rewards
   - Fifth 100M: 6% rewards
   - Remaining: 3% rewards
-- **Security**: Backend signature verification prevents fake claims
+- **Security (V2)**: EIP-712 signature verification with domain separation
+  - EIP-712 domain separator prevents cross-chain and cross-contract replay attacks
+  - Domain includes: chainId, contract address, contract name, version
+  - Backend signs with typed structured data (EIP-712 standard)
+  - Signature validation: v-range check, s-malleability protection, non-zero address verification
   - Only stats verified from iRacing API are signed
   - Signature includes wallet address, iRacing ID, and current stats
   - Stats cannot decrease (prevents gaming the system)
