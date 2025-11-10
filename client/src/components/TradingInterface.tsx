@@ -13,17 +13,17 @@ export default function TradingInterface() {
   const { address, isConnected } = useAccount();
   const { toast } = useToast();
 
-  // NASCORN token address on Base network
-  const NASCORN_ADDRESS = "0x9a5F9cafE10C107C95a7CaE8b85Fbea2dCc8cb07";
+  // APEX token address on Base network
+  const APEX_ADDRESS = "0x9a5F9cafE10C107C95a7CaE8b85Fbea2dCc8cb07";
   
   // URLs
-  const uniswapUrl = `https://app.uniswap.org/#/swap?outputCurrency=${NASCORN_ADDRESS}&chain=base`;
-  const clankerUrl = `https://clanker.world/clanker/${NASCORN_ADDRESS}`;
+  const uniswapUrl = `https://app.uniswap.org/#/swap?outputCurrency=${APEX_ADDRESS}&chain=base`;
+  const clankerUrl = `https://clanker.world/clanker/${APEX_ADDRESS}`;
   const geckoterminalUrl = `https://www.geckoterminal.com/base/pools/0x9b350d0188b6a90655633e5bdfc07d0fc91507a994efa82bfcf544d5acdaff3f`;
 
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(NASCORN_ADDRESS);
+      await navigator.clipboard.writeText(APEX_ADDRESS);
       toast({
         title: "Address copied!",
         description: "Contract address copied to clipboard",
@@ -45,7 +45,7 @@ export default function TradingInterface() {
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <DollarSign className="h-5 w-5 text-blue-600" />
-              Trade NASCORN
+              Trade APEX
             </div>
             <a 
               href={uniswapUrl}
@@ -71,7 +71,7 @@ export default function TradingInterface() {
                 overflow: 'hidden',
                 minHeight: '660px'
               }}
-              title="Uniswap NASCORN Trading"
+              title="Uniswap APEX Trading"
               data-testid="iframe-uniswap-trading"
             />
           </div>
@@ -79,7 +79,7 @@ export default function TradingInterface() {
           {!isConnected && (
             <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-sm text-blue-700 text-center">
-                Connect your wallet in the Uniswap interface above to start trading NASCORN tokens on Base network
+                Connect your wallet in the Uniswap interface above to start trading APEX tokens on Base network
               </p>
             </div>
           )}
@@ -92,7 +92,7 @@ export default function TradingInterface() {
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-blue-600" />
-              NASCORN Price Chart
+              APEX Price Chart
             </div>
             <div className="flex gap-2">
               <a 
@@ -130,7 +130,7 @@ export default function TradingInterface() {
                 overflow: 'hidden',
                 minHeight: '500px'
               }}
-              title="NASCORN Price Chart"
+              title="APEX Price Chart"
               data-testid="iframe-price-chart"
             />
           </div>
@@ -149,7 +149,7 @@ export default function TradingInterface() {
               <div>
                 <h4 className="font-medium">Base Network</h4>
                 <p className="text-sm text-muted-foreground font-mono break-all">
-                  {NASCORN_ADDRESS}
+                  {APEX_ADDRESS}
                 </p>
               </div>
             </div>

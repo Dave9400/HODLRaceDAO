@@ -6,10 +6,10 @@ interface IERC20 {
     function balanceOf(address account) external view returns (uint256);
 }
 
-/// @title NASCORNClaim V2 - Secure incremental claim contract with EIP-712 signatures
-/// @notice Allows iRacing users to claim NASCORN tokens based on verified racing statistics
+/// @title APEXClaim V2 - Secure incremental claim contract with EIP-712 signatures
+/// @notice Allows iRacing users to claim APEX tokens based on verified racing statistics
 /// @dev Uses EIP-712 for signature verification to prevent replay attacks
-contract NASCORNClaimV2 {
+contract APEXClaimV2 {
     IERC20 public immutable token;
     address public immutable owner;
     address public immutable signer;
@@ -55,14 +55,14 @@ contract NASCORNClaimV2 {
         // Compute EIP-712 domain separator
         DOMAIN_SEPARATOR = keccak256(abi.encode(
             keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-            keccak256(bytes("NASCORNClaim")),
+            keccak256(bytes("APEXClaim")),
             keccak256(bytes("2")),
             block.chainid,
             address(this)
         ));
     }
     
-    /// @notice Claim NASCORN tokens based on verified iRacing stats
+    /// @notice Claim APEX tokens based on verified iRacing stats
     /// @dev Signature must be EIP-712 compliant and signed by authorized backend signer
     /// @param iracingId The user's iRacing member ID
     /// @param wins Total career wins

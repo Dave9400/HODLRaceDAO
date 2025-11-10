@@ -17,7 +17,7 @@ This will reinstall vite and fix the app crash.
 
 **Your contract is NOT abstract** - it's perfectly valid! The error message is misleading.
 
-The `NASCORNClaim.sol` contract:
+The `APEXClaim.sol` contract:
 - ✅ Has a constructor
 - ✅ Implements all methods
 - ✅ Has no abstract parent classes
@@ -43,18 +43,18 @@ import { ethers } from "hardhat";
 async function main() {
   // Deploy Mock ERC20 for testing
   const MockERC20 = await ethers.getContractFactory("contracts/test/MockERC20.sol:MockERC20");
-  const token = await MockERC20.deploy("NASCORN Token", "NASCORN", ethers.parseEther("500000000"));
+  const token = await MockERC20.deploy("APEX Token", "APEX", ethers.parseEther("500000000"));
   await token.waitForDeployment();
   console.log("Token deployed to:", await token.getAddress());
 
   // Your signer address (backend wallet that signs claims)
   const signerAddress = "YOUR_BACKEND_WALLET_ADDRESS";
 
-  // Deploy NASCORNClaim contract
-  const NASCORNClaim = await ethers.getContractFactory("NASCORNClaim");
-  const claim = await NASCORNClaim.deploy(await token.getAddress(), signerAddress);
+  // Deploy APEXClaim contract
+  const APEXClaim = await ethers.getContractFactory("APEXClaim");
+  const claim = await APEXClaim.deploy(await token.getAddress(), signerAddress);
   await claim.waitForDeployment();
-  console.log("NASCORNClaim deployed to:", await claim.getAddress());
+  console.log("APEXClaim deployed to:", await claim.getAddress());
 
   // Transfer tokens to claim contract
   const tx = await token.transfer(await claim.getAddress(), ethers.parseEther("500000000"));
@@ -76,15 +76,15 @@ npx hardhat run scripts/deploy.ts --network baseSepolia
 ### Option 2: Use Remix IDE (No Installation Required)
 
 1. Go to https://remix.ethereum.org
-2. Create new file `NASCORNClaim.sol`
-3. Copy your contract code from `contracts/NASCORNClaim.sol`
+2. Create new file `APEXClaim.sol`
+3. Copy your contract code from `contracts/APEXClaim.sol`
 4. Click "Compile" (Solidity 0.8.20)
 5. Go to "Deploy & Run Transactions"
 6. Select "Injected Provider - MetaMask"
 7. Switch MetaMask to Base Sepolia
 8. Deploy:
    - First deploy MockERC20 (for testing)
-   - Then deploy NASCORNClaim with:
+   - Then deploy APEXClaim with:
      - `_token`: Address of MockERC20
      - `_signer`: Your backend wallet address
 
@@ -93,7 +93,7 @@ npx hardhat run scripts/deploy.ts --network baseSepolia
 ```bash
 forge create --rpc-url $BASE_SEPOLIA_RPC \
   --private-key $PRIVATE_KEY \
-  contracts/NASCORNClaim.sol:NASCORNClaim \
+  contracts/APEXClaim.sol:APEXClaim \
   --constructor-args $TOKEN_ADDRESS $SIGNER_ADDRESS
 ```
 
@@ -109,10 +109,10 @@ forge create --rpc-url $BASE_SEPOLIA_RPC \
 ### 2. Token Contract
 For testing on Base Sepolia:
 - Deploy MockERC20 first
-- Or use existing NASCORN token if already deployed
+- Or use existing APEX token if already deployed
 
 For mainnet:
-- Use real NASCORN token address: `0x9a5F9cafE10C107C95a7CaE8b85Fbea2dCc8cb07`
+- Use real APEX token address: `0x9a5F9cafE10C107C95a7CaE8b85Fbea2dCc8cb07`
 
 ### 3. Base Sepolia Testnet Setup
 - Get testnet ETH from https://www.coinbase.com/faucets/base-ethereum-goerli-faucet
@@ -135,7 +135,7 @@ await token.transfer(claimContractAddress, ethers.parseEther("500000000"));
 ### 2. Update Frontend
 In `client/src/config/contracts.ts`:
 ```typescript
-export const NASCORN_CLAIM_ADDRESS = "YOUR_DEPLOYED_CONTRACT_ADDRESS";
+export const APEX_CLAIM_ADDRESS = "YOUR_DEPLOYED_CONTRACT_ADDRESS";
 ```
 
 ### 3. Test the Claim Flow

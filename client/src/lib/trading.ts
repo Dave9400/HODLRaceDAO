@@ -3,7 +3,7 @@ import { Token, CurrencyAmount, TradeType, Percent } from '@uniswap/sdk-core';
 import { Actions, V4Planner } from '@uniswap/v4-sdk';
 import { CommandType, RoutePlanner } from '@uniswap/universal-router-sdk';
 import { base } from 'wagmi/chains';
-import { NASCORN_TOKEN } from './web3';
+import { APEX_TOKEN } from './web3';
 
 // WETH on Base
 export const WETH_BASE = '0x4200000000000000000000000000000000000006' as const;
@@ -16,18 +16,18 @@ export const PERMIT2_ADDRESS = '0x000000000022D473030F116dDEE9F6B43aC78BA3' as c
 // Create SDK Token instances
 const BASE_CHAIN_ID = 8453;
 export const WETH_TOKEN = new Token(BASE_CHAIN_ID, WETH_BASE, 18, 'WETH', 'Wrapped Ether');
-export const NASCORN_SDK_TOKEN = new Token(BASE_CHAIN_ID, NASCORN_TOKEN.address, NASCORN_TOKEN.decimals, 'NASCORN', 'NASCORN');
+export const APEX_SDK_TOKEN = new Token(BASE_CHAIN_ID, APEX_TOKEN.address, APEX_TOKEN.decimals, 'APEX', 'APEX');
 
-// V3 Pool Configuration for NASCORN/WETH (using 0.3% fee tier)
-export const NASCORN_WETH_POOL_CONFIG = {
+// V3 Pool Configuration for APEX/WETH (using 0.3% fee tier)
+export const APEX_WETH_POOL_CONFIG = {
   token0: WETH_BASE,  // WETH (sorted first)
-  token1: NASCORN_TOKEN.address,  // NASCORN (sorted second) 
+  token1: APEX_TOKEN.address,  // APEX (sorted second) 
   fee: 3000,  // 0.3% fee tier
 };
 
 // Swap configuration interface
 export interface SwapConfig {
-  poolKey: typeof NASCORN_WETH_POOL_CONFIG;
+  poolKey: typeof APEX_WETH_POOL_CONFIG;
   zeroForOne: boolean;
   amountIn: string;
   amountOutMinimum: string;
@@ -73,10 +73,10 @@ export function createSwapConfig(
   amountIn: string,
   amountOutMinimum: string = '0'
 ): SwapConfig {
-  const zeroForOne = fromToken === NASCORN_WETH_POOL_CONFIG.currency0;
+  const zeroForOne = fromToken === APEX_WETH_POOL_CONFIG.currency0;
   
   return {
-    poolKey: NASCORN_WETH_POOL_CONFIG,
+    poolKey: APEX_WETH_POOL_CONFIG,
     zeroForOne,
     amountIn,
     amountOutMinimum,
@@ -90,10 +90,10 @@ export function prepareV4QuoteParams(
   toToken: Address,
   amountIn: bigint
 ) {
-  const zeroForOne = fromToken === NASCORN_WETH_POOL_CONFIG.currency0;
+  const zeroForOne = fromToken === APEX_WETH_POOL_CONFIG.currency0;
   
   return {
-    poolKey: NASCORN_WETH_POOL_CONFIG,
+    poolKey: APEX_WETH_POOL_CONFIG,
     zeroForOne,
     exactAmount: amountIn,
     sqrtPriceLimitX96: BigInt(0)

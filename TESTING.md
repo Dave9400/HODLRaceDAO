@@ -1,4 +1,4 @@
-# Testing Guide for NASCORN Claim System
+# Testing Guide for APEX Claim System
 
 ## Quick Start
 
@@ -21,7 +21,7 @@ npx hardhat test
 ## Testing Layers
 
 ### ✅ Layer 1: Smart Contract Tests (DONE)
-**Files**: `test/contracts/NASCORNClaim.test.ts`  
+**Files**: `test/contracts/APEXClaim.test.ts`  
 **What**: 25 comprehensive tests covering halving, security, edge cases  
 **Status**: Ready to run
 
@@ -135,7 +135,7 @@ npm install --save-dev --legacy-peer-deps hardhat @nomicfoundation/hardhat-ether
 npx hardhat test
 
 # Run specific test file
-npx hardhat test test/contracts/NASCORNClaim.test.ts
+npx hardhat test test/contracts/APEXClaim.test.ts
 
 # Run with gas reporting
 REPORT_GAS=true npx hardhat test
@@ -151,7 +151,7 @@ npx hardhat clean && npx hardhat compile
 When you run `npx hardhat test`, you should see:
 
 ```
-  NASCORNClaim Contract Tests
+  APEXClaim Contract Tests
     Deployment
       ✓ Should set the correct token address
       ✓ Should set the correct owner
@@ -173,7 +173,7 @@ When you run `npx hardhat test`, you should see:
 **Solution**: Run the install command above with `--legacy-peer-deps`
 
 ### Error: Contract not found
-**Solution**: Make sure `contracts/NASCORNClaim.sol` exists and run `npx hardhat compile`
+**Solution**: Make sure `contracts/APEXClaim.sol` exists and run `npx hardhat compile`
 
 ### Tests timeout
 **Solution**: Increase timeout in hardhat.config.ts:

@@ -1,4 +1,4 @@
-# How NASCORN Claim Contract Works (Simple Version)
+# How APEX Claim Contract Works (Simple Version)
 
 ## The Simple Formula
 
@@ -42,12 +42,12 @@ Base Reward = 130,000 × 1000 tokens
 ```
 Reward = (130M × 100) ÷ 100
        = 130,000,000 tokens
-       = 130M NASCORN 🏆
+       = 130M APEX 🏆
 ```
 
 **Step 5: Check Pool Limit**
 - Pool remaining: 500M tokens ✓
-- You get: **130M NASCORN**
+- You get: **130M APEX**
 
 ---
 
@@ -79,12 +79,12 @@ Base Reward = 1,000 × 1000 tokens
 ```
 Reward = (1M × 50) ÷ 100
        = 500,000 tokens
-       = 500K NASCORN
+       = 500K APEX
 ```
 
 **Step 5: Check Pool Limit**
 - Pool remaining: 350M tokens ✓
-- You get: **500K NASCORN**
+- You get: **500K APEX**
 
 ---
 
@@ -116,12 +116,12 @@ Base Reward = 62,000 × 1000 tokens
 ```
 Reward = (62M × 6) ÷ 100
        = 3,720,000 tokens
-       = 3.72M NASCORN
+       = 3.72M APEX
 ```
 
 **Step 5: Check Pool Limit**
 - Pool remaining: 50M tokens ✓
-- You get: **3.72M NASCORN**
+- You get: **3.72M APEX**
 
 ---
 
@@ -186,7 +186,7 @@ The contract values different accomplishments:
 - **Top 5 Finishes**: 100 points each
 - **Race Starts**: 10 points each (rewards participation)
 
-Each point = 1,000 NASCORN tokens (before halving multiplier applied)
+Each point = 1,000 APEX tokens (before halving multiplier applied)
 
 **This rewards:**
 - 🏆 Skill (wins count most)

@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { Contract, Signer, parseEther, formatEther, Wallet } from "ethers";
 
-describe("NASCORNClaim Contract Tests", function () {
+describe("APEXClaim Contract Tests", function () {
   let token: Contract;
   let claimContract: Contract;
   let owner: Signer;
@@ -34,9 +34,9 @@ describe("NASCORNClaim Contract Tests", function () {
     // Mint tokens to owner
     await token.mint(ownerAddress, TOTAL_POOL);
 
-    // Deploy NASCORNClaim contract
-    const NASCORNClaim = await ethers.getContractFactory("NASCORNClaim");
-    claimContract = await NASCORNClaim.deploy(
+    // Deploy APEXClaim contract
+    const APEXClaim = await ethers.getContractFactory("APEXClaim");
+    claimContract = await APEXClaim.deploy(
       await token.getAddress(),
       signer.address
     );

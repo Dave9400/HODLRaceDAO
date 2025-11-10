@@ -10,8 +10,8 @@ export default function NavigationHub({ onNavigate }: NavigationHubProps) {
   const navigationItems = [
     {
       id: "trade",
-      title: "Trade NASCORN",
-      description: "Buy and sell NASCORN tokens on Base network",
+      title: "Trade APEX",
+      description: "Buy and sell APEX tokens on Base network",
       icon: TrendingUp,
       color: "bg-primary",
       textColor: "text-primary-foreground"

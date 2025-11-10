@@ -22,12 +22,12 @@ export const config = createConfig({
   },
 })
 
-// Mock NASCORN token configuration (testnet)
-export const NASCORN_TOKEN = {
+// Mock APEX token configuration (testnet)
+export const APEX_TOKEN = {
   address: '0x4578B2246f4A01432760d3e36CACC6fACca3c8a1' as const,
-  symbol: 'NASCORN',
+  symbol: 'APEX',
   decimals: 18,
-  name: 'Mock NASCORN'
+  name: 'Mock APEX'
 }
 
 // Common contract ABIs

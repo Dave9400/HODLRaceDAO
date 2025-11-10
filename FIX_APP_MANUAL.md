@@ -70,10 +70,10 @@ If the app still won't start after trying both approaches above:
 
 ## Contract Deployment
 
-Remember: Your `NASCORNClaim.sol` contract is ready to deploy. Use Remix IDE:
+Remember: Your `APEXClaim.sol` contract is ready to deploy. Use Remix IDE:
 1. Go to https://remix.ethereum.org
-2. Create new file `NASCORNClaim.sol`
-3. In the CONTRACT dropdown, select `NASCORNClaim` (NOT `IERC20`)
+2. Create new file `APEXClaim.sol`
+3. In the CONTRACT dropdown, select `APEXClaim` (NOT `IERC20`)
 4. Deploy to Base Sepolia testnet
 
 See `REMIX_DEPLOYMENT_GUIDE.md` for complete deployment instructions.

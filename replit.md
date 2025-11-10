@@ -2,7 +2,7 @@
 
 ## Overview
 
-HODL Racing DAO is a Web3 racing community platform that combines decentralized finance with competitive racing. The application enables users to trade NASCORN tokens on the Base network while participating in a racing-focused DAO. The platform integrates with iRacing to reward real racing performance with token incentives, creating a unique intersection of motorsports and DeFi.
+HODL Racing DAO is a Web3 racing community platform that combines decentralized finance with competitive racing. The application enables users to trade APEX tokens on the Base network while participating in a racing-focused DAO. The platform integrates with iRacing to reward real racing performance with token incentives, creating a unique intersection of motorsports and DeFi.
 
 The application serves as a Farcaster Mini App, providing a streamlined mobile-first experience for the racing community. Users can connect their wallets, trade tokens, view racing statistics, and participate in DAO governance through an intuitive interface inspired by Uniswap's clean design and Gran Turismo's racing aesthetics.
 
@@ -27,7 +27,7 @@ Preferred communication style: Simple, everyday language.
   - Fetches racing stats (wins, top 5s, starts) from contract for each iRacing ID
 - **Frontend Leaderboard Component** (client/src/components/Leaderboard.tsx):
   - Complete rewrite to use backend API instead of non-existent contract view functions
-  - Displays driver rankings sorted by total NASCORN claimed
+  - Displays driver rankings sorted by total APEX claimed
   - Shows racing statistics (wins, top 5s, starts) for each driver
   - Implements "All Time" and "Weekly" tabs with proper data
   - Proper loading and error states with skeleton UI
@@ -45,7 +45,7 @@ Preferred communication style: Simple, everyday language.
   - ⛔ Fixed signature replay attack vulnerability by implementing EIP-712 domain separation
   - ⛔ Fixed signature malleability by adding v-range and s-value validation
   - ⛔ Fixed missing claim history persistence (deployed contract bytecode mismatch)
-- **Contract V2 (NASCORNClaimV2.sol)**:
+- **Contract V2 (APEXClaimV2.sol)**:
   - Added EIP-712 typed structured data signing with domain separator
   - Domain includes: contract name, version "2", chainId (84532), verifyingContract address
   - Enhanced signature validation: v ∈ {27,28}, s in lower half of curve, non-zero recovery
@@ -72,7 +72,7 @@ Preferred communication style: Simple, everyday language.
 ### Web3 Integration
 - **Blockchain**: Base network (Ethereum L2) for low-cost transactions and better user experience
 - **Wallet Connection**: Wagmi v2 with support for MetaMask, Coinbase Wallet, and WalletConnect
-- **Token Standard**: ERC-20 NASCORN token for community governance and rewards
+- **Token Standard**: ERC-20 APEX token for community governance and rewards
 - **Smart Contract Interaction**: Direct contract calls for token trading and balance queries
 
 ### Backend Architecture
@@ -102,8 +102,8 @@ Preferred communication style: Simple, everyday language.
 
 ### Blockchain Services
 - **Base Network**: Ethereum Layer 2 network (Base Sepolia testnet) for low-cost token transactions
-- **NASCORN Token Contract**: Custom ERC-20 token deployed on Base (address: 0x4578B2246f4A01432760d3e36CACC6fACca3c8a1)
-- **Claim Contract**: Smart contract for distributing NASCORN rewards with incremental claims (address: 0x773F70eD43f97E3A9b381AF7fDB10DF66f9BfB82)
+- **APEX Token Contract**: Custom ERC-20 token deployed on Base (address: 0x4578B2246f4A01432760d3e36CACC6fACca3c8a1)
+- **Claim Contract**: Smart contract for distributing APEX rewards with incremental claims (address: 0x773F70eD43f97E3A9b381AF7fDB10DF66f9BfB82)
 - **Web3 Providers**: Integration with wallet providers through Wagmi connectors
 
 ### Smart Contract Features

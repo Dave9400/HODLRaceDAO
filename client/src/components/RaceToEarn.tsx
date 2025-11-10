@@ -157,7 +157,7 @@ export default function RaceToEarn() {
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold mb-2">Race to Earn</h1>
           <p className="text-lg text-muted-foreground">
-            Earn NASCORN tokens based on your racing performance
+            Earn APEX tokens based on your racing performance
           </p>
         </div>
 
@@ -168,7 +168,7 @@ export default function RaceToEarn() {
             </div>
             <h2 className="text-2xl font-bold mb-2">Connect Your Wallet</h2>
             <p className="text-muted-foreground mb-6">
-              Connect your wallet to track your racing achievements and earn NASCORN tokens.
+              Connect your wallet to track your racing achievements and earn APEX tokens.
             </p>
             <Button size="lg" data-testid="button-connect-wallet-race">
               <Wallet className="w-4 h-4 mr-2" />
@@ -185,7 +185,7 @@ export default function RaceToEarn() {
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold mb-2">Race to Earn</h1>
         <p className="text-lg text-muted-foreground">
-          Earn NASCORN tokens based on your racing performance
+          Earn APEX tokens based on your racing performance
         </p>
       </div>
 
@@ -315,7 +315,7 @@ export default function RaceToEarn() {
                           title: "Race Added Successfully!",
                           description: result.achievements ? 
                             `Earned ${result.achievements.length} new achievement${result.achievements.length > 1 ? 's' : ''}!` :
-                            `Race completed at ${raceForm.trackName}. Earned ${parseFloat(result.race.earnings).toFixed(2)} NASCORN!`
+                            `Race completed at ${raceForm.trackName}. Earned ${parseFloat(result.race.earnings).toFixed(2)} APEX!`
                         });
                         
                         // Invalidate and refetch all related queries

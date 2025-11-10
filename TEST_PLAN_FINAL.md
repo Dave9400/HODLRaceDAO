@@ -1,4 +1,4 @@
-# NASCORN Claim Testing - Final Plan
+# APEX Claim Testing - Final Plan
 
 ## Current Situation
 
@@ -9,7 +9,7 @@ I've written comprehensive tests for your claim contract, but due to Replit envi
 ## ✅ What's Been Created
 
 ### 1. Smart Contract Tests (Ready for Testnet)
-**Files**: `test/contracts/NASCORNClaim.test.ts` (25 tests)
+**Files**: `test/contracts/APEXClaim.test.ts` (25 tests)
 
 **Coverage**:
 - ✅ Halving multipliers at all tranches (0M, 100M, 200M, 300M, 400M, 500M)
@@ -43,7 +43,7 @@ Skip automated tests and go straight to manual verification:
 
 1. **Deploy contract to Base Sepolia testnet**
    - Deploy MockERC20 token
-   - Deploy NASCORNClaim contract
+   - Deploy APEXClaim contract
    - Fund with 500M test tokens
 
 2. **Test Manually**:
@@ -137,7 +137,7 @@ curl -X POST http://localhost:5000/api/claim/generate-signature \
 
 | File | Tests | Status | Can Run? |
 |------|-------|--------|----------|
-| `test/contracts/NASCORNClaim.test.ts` | 25 | ✅ Written | ❌ (Hardhat blocked in Replit) |
+| `test/contracts/APEXClaim.test.ts` | 25 | ✅ Written | ❌ (Hardhat blocked in Replit) |
 | `test/api/claim-signature.test.ts` | 12 | ✅ Written | ⚠️ (Needs config fixes) |
 | Manual Testing Checklist | - | ✅ Ready | ✅ Yes |
 
@@ -153,7 +153,7 @@ curl -X POST http://localhost:5000/api/claim/generate-signature \
 4. If everything works → Deploy to mainnet!
 
 **Contract files are production-ready**:
-- ✅ `contracts/NASCORNClaim.sol` - Simplified, auditable design
+- ✅ `contracts/APEXClaim.sol` - Simplified, auditable design
 - ✅ `contracts/README.md` - Deployment instructions
 - ✅ `contracts/HOW_IT_WORKS.md` - Plain English explanation
 

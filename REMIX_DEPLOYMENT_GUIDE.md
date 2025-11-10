@@ -1,4 +1,4 @@
-# How to Deploy NASCORNClaim in Remix (Step-by-Step)
+# How to Deploy APEXClaim in Remix (Step-by-Step)
 
 ## The "Abstract Contract" Error - What's Happening
 
@@ -14,22 +14,22 @@ Go to https://remix.ethereum.org
 ### Step 2: Create the Contract File
 1. In the left sidebar, click the "File" icon
 2. Click "Create New File"
-3. Name it: `NASCORNClaim.sol`
+3. Name it: `APEXClaim.sol`
 4. Copy and paste your contract code
 
 ### Step 3: Compile
 1. Click the "Solidity Compiler" icon (left sidebar)
 2. Select compiler version: **0.8.20** or higher
-3. Click "Compile NASCORNClaim.sol"
+3. Click "Compile APEXClaim.sol"
 4. ✅ Should show green checkmark
 
 ### Step 4: Deploy
 1. Click "Deploy & Run Transactions" icon (left sidebar)
 2. **IMPORTANT**: In the "CONTRACT" dropdown, you'll see TWO items:
    - ❌ `IERC20` - Do NOT select this (it's an interface, cannot be deployed)
-   - ✅ `NASCORNClaim` - **SELECT THIS ONE**
+   - ✅ `APEXClaim` - **SELECT THIS ONE**
 
-3. Make sure `NASCORNClaim` is selected in the dropdown
+3. Make sure `APEXClaim` is selected in the dropdown
 4. Enter constructor parameters:
    - `_token`: Token contract address
    - `_signer`: Your backend wallet address (the one that signs claims)
@@ -39,10 +39,10 @@ Go to https://remix.ethereum.org
 
 ## Common Mistakes
 
-### ❌ Mistake 1: Selecting IERC20 Instead of NASCORNClaim
+### ❌ Mistake 1: Selecting IERC20 Instead of APEXClaim
 **If you see the abstract error**, you probably have `IERC20` selected in the CONTRACT dropdown.
 
-**Fix**: Click the CONTRACT dropdown and select `NASCORNClaim` instead.
+**Fix**: Click the CONTRACT dropdown and select `APEXClaim` instead.
 
 ### ❌ Mistake 2: Wrong Solidity Version
 Make sure compiler is set to **0.8.20 or higher**.
@@ -113,29 +113,29 @@ contract MockERC20 {
 ```
 
 3. Compile and deploy MockERC20:
-   - Name: `NASCORN Token`
-   - Symbol: `NASCORN`
+   - Name: `APEX Token`
+   - Symbol: `APEX`
    - Total Supply: `500000000000000000000000000` (500M with 18 decimals)
 
 4. Copy the deployed MockERC20 address
 
-**Step 2: Deploy NASCORNClaim**
+**Step 2: Deploy APEXClaim**
 - `_token`: The MockERC20 address you just deployed
 - `_signer`: Your backend wallet address (e.g., `0x1234...`)
 
-**Step 3: Fund NASCORNClaim with Tokens**
+**Step 3: Fund APEXClaim with Tokens**
 1. In Remix, go back to the MockERC20 contract
 2. In "Deployed Contracts", expand MockERC20
 3. Find the `transfer` function
 4. Enter:
-   - `to`: Your NASCORNClaim contract address
+   - `to`: Your APEXClaim contract address
    - `amount`: `500000000000000000000000000` (500M tokens)
 5. Click "transact"
 
 ### Option B: Use Existing Token (Mainnet)
 
 If deploying to Base mainnet:
-- `_token`: `0x9a5F9cafE10C107C95a7CaE8b85Fbea2dCc8cb07` (real NASCORN token)
+- `_token`: `0x9a5F9cafE10C107C95a7CaE8b85Fbea2dCc8cb07` (real APEX token)
 - `_signer`: Your backend wallet address
 
 ---
@@ -149,7 +149,7 @@ When you're in Remix "Deploy & Run Transactions" tab:
 │ CONTRACT                       ▼    │
 ├─────────────────────────────────────┤
 │ ❌ IERC20 - interfaces/IERC20.sol   │ <-- DON'T SELECT THIS
-│ ✅ NASCORNClaim - NASCORNClaim.sol  │ <-- SELECT THIS ONE!
+│ ✅ APEXClaim - APEXClaim.sol  │ <-- SELECT THIS ONE!
 └─────────────────────────────────────┘
 ```
 
@@ -159,7 +159,7 @@ When you're in Remix "Deploy & Run Transactions" tab:
 
 **Q: I only see IERC20 in the dropdown**
 - Make sure you compiled the file
-- Check that `contract NASCORNClaim {` is in your code (not commented out)
+- Check that `contract APEXClaim {` is in your code (not commented out)
 
 **Q: Deploy button is greyed out**
 - Make sure MetaMask is connected
@@ -168,7 +168,7 @@ When you're in Remix "Deploy & Run Transactions" tab:
 
 **Q: "Abstract contract" warning**
 - This appears when IERC20 is selected
-- **Solution**: Select `NASCORNClaim` from dropdown instead
+- **Solution**: Select `APEXClaim` from dropdown instead
 
 **Q: Constructor parameters won't accept my values**
 - Make sure addresses are in quotes: `"0x1234..."`
@@ -181,7 +181,7 @@ When you're in Remix "Deploy & Run Transactions" tab:
 Before clicking Deploy:
 
 - [ ] Compiled successfully (green checkmark)
-- [ ] `NASCORNClaim` selected in CONTRACT dropdown (NOT IERC20)
+- [ ] `APEXClaim` selected in CONTRACT dropdown (NOT IERC20)
 - [ ] MetaMask connected to Base Sepolia
 - [ ] Have testnet ETH for gas
 - [ ] Constructor parameters filled:

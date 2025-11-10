@@ -229,7 +229,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/transactions/user/:userId", (req, res) => {
     res.json({ 
       transactions: [], 
-      message: "NASCORN transactions are tracked on Base blockchain" 
+      message: "APEX transactions are tracked on Base blockchain" 
     });
   });
 
@@ -683,7 +683,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const CHAIN_ID = 84532; // Base Sepolia
       
       const domain = {
-        name: "NASCORNClaim",
+        name: "APEXClaim",
         version: "2",
         chainId: CHAIN_ID,
         verifyingContract: CONTRACT_ADDRESS

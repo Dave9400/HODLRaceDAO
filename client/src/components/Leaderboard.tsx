@@ -54,8 +54,8 @@ export default function Leaderboard() {
       name: `Racer ${entry.iracingId}`, // In production, resolve to actual names
       iracingId: entry.iracingId,
       address: entry.walletAddress,
-      totalClaimed: formatNascornAmount(entry.totalClaimed),
-      weeklyEarned: formatNascornAmount(entry.weeklyEarned || "0"),
+      totalClaimed: formatApexAmount(entry.totalClaimed),
+      weeklyEarned: formatApexAmount(entry.weeklyEarned || "0"),
       lastClaimTime: new Date(Number(entry.lastClaimTime) * 1000),
       wins: Number(entry.wins),
       top5s: Number(entry.top5s),
@@ -63,7 +63,7 @@ export default function Leaderboard() {
     }));
   };
 
-  const formatNascornAmount = (amount: string): string => {
+  const formatApexAmount = (amount: string): string => {
     try {
       const value = formatEther(BigInt(amount));
       const num = parseFloat(value);
@@ -104,7 +104,7 @@ export default function Leaderboard() {
         <div className="text-center py-8 text-muted-foreground">
           <Trophy className="w-12 h-12 mx-auto mb-4 opacity-50" />
           <p>No claims have been made yet</p>
-          <p className="text-sm">Be the first to claim NASCORN rewards!</p>
+          <p className="text-sm">Be the first to claim APEX rewards!</p>
         </div>
       );
     }
@@ -244,7 +244,7 @@ export default function Leaderboard() {
                  }
                }, 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
             </div>
-            <div className="text-sm text-muted-foreground">Total NASCORN Claimed</div>
+            <div className="text-sm text-muted-foreground">Total APEX Claimed</div>
           </CardContent>
         </Card>
         <Card>

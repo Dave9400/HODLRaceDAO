@@ -1,8 +1,8 @@
-# NASCORN Claim Contract
+# APEX Claim Contract
 
 ## Overview
 
-This smart contract allows iRacing drivers to claim NASCORN tokens based on their verified racing statistics. The contract implements a halving mechanism and early adopter bonuses to incentivize platform growth.
+This smart contract allows iRacing drivers to claim APEX tokens based on their verified racing statistics. The contract implements a halving mechanism and early adopter bonuses to incentivize platform growth.
 
 ## Security Features
 
@@ -14,7 +14,7 @@ This smart contract allows iRacing drivers to claim NASCORN tokens based on thei
 
 ## Tokenomics
 
-**Total Claim Pool**: 500M NASCORN (50% of 1B total supply)
+**Total Claim Pool**: 500M APEX (50% of 1B total supply)
 
 ### Reward Formula
 
@@ -44,27 +44,27 @@ Rewards are calculated using the multiplier at the time of claim:
 - Points: 100,000 + 25,000 + 5,000 = 130,000
 - Base: 130M tokens
 - Multiplier: 100% (first tranche)
-- Claim: 130M × 1.0 = **130M NASCORN** 🏆
+- Claim: 130M × 1.0 = **130M APEX** 🏆
 
 **Amateur** (0 wins, 5 top5s, 50 starts) - Claiming after 150M distributed:
 - Points: 0 + 500 + 500 = 1,000
 - Base: 1M tokens
 - Multiplier: 50% (second tranche)
-- Claim: 1M × 0.5 = **500K NASCORN**
+- Claim: 1M × 0.5 = **500K APEX**
 
 **Weekend Racer** (1 win, 10 top5s, 100 starts) - Claiming early:
 - Points: 1,000 + 1,000 + 1,000 = 3,000
 - Base: 3M tokens
 - Multiplier: 100% (first tranche)
-- Claim: 3M × 1.0 = **3M NASCORN**
+- Claim: 3M × 1.0 = **3M APEX**
 
 ## Deployment Steps
 
 ### 1. Deploy ERC20 Token
 
 ```solidity
-// Deploy NASCORN token with 1B supply
-constructor() ERC20("NASCORN", "CORN") {
+// Deploy APEX token with 1B supply
+constructor() ERC20("APEX", "CORN") {
     _mint(msg.sender, 1_000_000_000 * 1e18);
 }
 ```
@@ -81,8 +81,8 @@ node -e "console.log(require('ethers').Wallet.createRandom().privateKey)"
 ### 3. Deploy Claim Contract
 
 ```javascript
-const claimContract = await deploy("NASCORNClaim", [
-  TOKEN_ADDRESS,  // Your deployed NASCORN token address
+const claimContract = await deploy("APEXClaim", [
+  TOKEN_ADDRESS,  // Your deployed APEX token address
   SIGNER_ADDRESS  // Public address from step 2
 ]);
 ```
@@ -101,7 +101,7 @@ await token.transfer(
 
 Add to Replit Secrets:
 - `CLAIM_SIGNER_PRIVATE_KEY`: Private key from step 2
-- `NASCORN_CLAIM_CONTRACT`: Deployed contract address
+- `APEX_CLAIM_CONTRACT`: Deployed contract address
 
 ## Usage Flow
 

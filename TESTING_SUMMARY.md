@@ -1,4 +1,4 @@
-# Testing Summary for NASCORN Claim System
+# Testing Summary for APEX Claim System
 
 ## Overview
 
@@ -9,7 +9,7 @@ Due to Hardhat dependency conflicts in the Replit environment, we've prioritized
 ## ✅ Layer 1: Contract Tests (Written, Installation Blocked)
 
 **Status**: Test code written, ready for deployment testing  
-**Files**: `test/contracts/NASCORNClaim.test.ts` (25 tests)
+**Files**: `test/contracts/APEXClaim.test.ts` (25 tests)
 
 **Why Blocked**: Hardhat v2/v3 peer dependency conflicts in Replit  
 **Workaround**: Run these tests when deploying to testnet (Base Sepolia)

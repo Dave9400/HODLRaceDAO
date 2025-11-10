@@ -1,26 +1,26 @@
-# NASCORNClaimV2 Deployment Instructions
+# APEXClaimV2 Deployment Instructions
 
 ## Step 1: Deploy via Remix IDE
 
 1. **Open Remix IDE**: Go to https://remix.ethereum.org/
 
 2. **Create New File**: 
-   - In the file explorer, create a new file: `NASCORNClaimV2.sol`
-   - Copy the entire contents of `contracts/NASCORNClaimV2.sol` into this file
+   - In the file explorer, create a new file: `APEXClaimV2.sol`
+   - Copy the entire contents of `contracts/APEXClaimV2.sol` into this file
 
 3. **Compile Contract**:
    - Go to the "Solidity Compiler" tab (left sidebar)
    - Select compiler version: `0.8.20` or higher
-   - Click "Compile NASCORNClaimV2.sol"
+   - Click "Compile APEXClaimV2.sol"
    - Verify there are no errors
 
 4. **Deploy Contract**:
    - Go to "Deploy & Run Transactions" tab
    - Environment: Select "Injected Provider - MetaMask"
    - Make sure MetaMask is connected to **Base Sepolia** network
-   - Select contract: `NASCORNClaimV2`
+   - Select contract: `APEXClaimV2`
    - Constructor parameters:
-     - `_token`: `0x4578B2246f4A01432760d3e36CACC6fACca3c8a1` (Mock NASCORN token address)
+     - `_token`: `0x4578B2246f4A01432760d3e36CACC6fACca3c8a1` (Mock APEX token address)
      - `_signer`: Get this from your backend signer wallet address (the address corresponding to CLAIM_SIGNER_PRIVATE_KEY)
    - Click "Deploy"
    - Confirm transaction in MetaMask
@@ -28,11 +28,11 @@
 
 ## Step 2: Fund the Contract
 
-Transfer NASCORN tokens to the newly deployed contract:
+Transfer APEX tokens to the newly deployed contract:
 
 ```
 Contract Address: <YOUR_DEPLOYED_ADDRESS>
-Amount: 500,000,000 NASCORN (500M tokens)
+Amount: 500,000,000 APEX (500M tokens)
 ```
 
 ## Step 3: Update Environment Variables
@@ -71,7 +71,7 @@ npm run dev
 Before going live, verify:
 
 - [ ] Contract deployed successfully to Base Sepolia
-- [ ] Contract funded with 500M NASCORN tokens
+- [ ] Contract funded with 500M APEX tokens
 - [ ] Environment variable updated with new contract address
 - [ ] Backend signing uses correct contract address in EIP-712 domain
 - [ ] First claim succeeds and shows correct reward
@@ -100,7 +100,7 @@ Before going live, verify:
 - Solution: Ensure backend CONTRACT_ADDRESS in routes.ts matches deployed contract
 
 **Problem: Storage not persisting**
-- Solution: Verify you deployed NASCORNClaimV2.sol (not V1), check bytecode matches source
+- Solution: Verify you deployed APEXClaimV2.sol (not V1), check bytecode matches source
 
 **Problem: Claims always showing full amount**
 - Solution: Frontend should use `getClaimableAmountForId()`, not `getClaimableAmount()`
@@ -113,7 +113,7 @@ Before going live, verify:
 **Current Deployment:**
 - Old Contract (DO NOT USE): `0x773F70eD43f97E3A9b381AF7fDB10DF66f9BfB82`
 - New V2 Contract: `<UPDATE_AFTER_DEPLOYMENT>`
-- NASCORN Token: `0x4578B2246f4A01432760d3e36CACC6fACca3c8a1`
+- APEX Token: `0x4578B2246f4A01432760d3e36CACC6fACca3c8a1`
 
 **Network:**
 - Chain: Base Sepolia Testnet

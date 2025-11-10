@@ -87,10 +87,10 @@ export default function RewardsClaiming({ iracingStats, authToken, isAuthenticat
       setClaimStatus('signing');
       setStatusMessage("Please sign the message in your wallet to authorize the claim...");
       
-      // Create the user consent hash: keccak256(abi.encodePacked("NASCORN LINK", racerId, wallet, expiry))
+      // Create the user consent hash: keccak256(abi.encodePacked("APEX LINK", racerId, wallet, expiry))
       const textHash = ethers.utils.solidityKeccak256(
         ["string", "uint256", "address", "uint256"],
-        ["NASCORN LINK", oracleData.racerId, address, oracleData.expiry]
+        ["APEX LINK", oracleData.racerId, address, oracleData.expiry]
       );
       
       // Sign the hash
@@ -132,7 +132,7 @@ export default function RewardsClaiming({ iracingStats, authToken, isAuthenticat
       
       toast({
         title: "Rewards Claimed!",
-        description: "Your NASCORN tokens have been successfully claimed. Check your wallet!",
+        description: "Your APEX tokens have been successfully claimed. Check your wallet!",
       });
       
     } catch (error: any) {
@@ -156,7 +156,7 @@ export default function RewardsClaiming({ iracingStats, authToken, isAuthenticat
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Coins className="w-6 h-6" />
-            Claim NASCORN Rewards
+            Claim APEX Rewards
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -181,7 +181,7 @@ export default function RewardsClaiming({ iracingStats, authToken, isAuthenticat
             Race to Earn Rewards
           </CardTitle>
           <CardDescription>
-            Claim NASCORN tokens based on your verified iRacing performance. Gas fees paid by the platform!
+            Claim APEX tokens based on your verified iRacing performance. Gas fees paid by the platform!
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -217,13 +217,13 @@ export default function RewardsClaiming({ iracingStats, authToken, isAuthenticat
             <AlertDescription>
               <strong>Current Reward Rates:</strong>
               <ul className="mt-2 space-y-1 text-sm">
-                <li>• Baseline reward: 1,000,000 NASCORN (one-time)</li>
-                <li>• Per Win: 420,000 NASCORN</li>
-                <li>• Per Top 5: 69,000 NASCORN</li>
-                <li>• Per Start: 42,000 NASCORN</li>
+                <li>• Baseline reward: 1,000,000 APEX (one-time)</li>
+                <li>• Per Win: 420,000 APEX</li>
+                <li>• Per Top 5: 69,000 APEX</li>
+                <li>• Per Start: 42,000 APEX</li>
               </ul>
               <p className="mt-2 text-xs text-muted-foreground">
-                Rewards halve after every 1B NASCORN claimed globally. Max 100M per user.
+                Rewards halve after every 1B APEX claimed globally. Max 100M per user.
               </p>
             </AlertDescription>
           </Alert>
@@ -274,7 +274,7 @@ export default function RewardsClaiming({ iracingStats, authToken, isAuthenticat
               ) : (
                 <>
                   <Coins className="w-4 h-4" />
-                  Claim NASCORN Rewards (Gas-Free!)
+                  Claim APEX Rewards (Gas-Free!)
                 </>
               )}
             </Button>

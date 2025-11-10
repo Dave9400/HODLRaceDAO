@@ -6,7 +6,7 @@ interface IERC20 {
     function balanceOf(address account) external view returns (uint256);
 }
 
-contract NASCORNClaim {
+contract APEXClaim {
     IERC20 public immutable token;
     address public immutable owner;
     address public immutable signer;

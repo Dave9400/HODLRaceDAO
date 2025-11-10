@@ -15,7 +15,7 @@ export default function AboutPage() {
       title: "Foundation & Community",
       status: "completed",
       items: [
-        "Launch NASCORN token on Base",
+        "Launch APEX token on Base",
         "Build initial trading interface",
         "Establish DAO governance structure",
         "Create community Discord"

@@ -32,7 +32,7 @@ If nothing else works:
 
 1. **Download your contract files**:
    - Right-click `contracts/` folder → Download
-   - Save `contracts/NASCORNClaim.sol` somewhere safe
+   - Save `contracts/APEXClaim.sol` somewhere safe
 
 2. **Fork this Repl**:
    - Click the 3 dots menu (top right)
@@ -59,7 +59,7 @@ These conflicts prevent installation from completing successfully.
 **Focus on deploying your contract via Remix** - forget about the Replit app for now:
 
 1. Go to https://remix.ethereum.org
-2. Upload your `NASCORNClaim.sol` file
+2. Upload your `APEXClaim.sol` file
 3. Deploy to Base Sepolia testnet
 4. Test the contract manually
 
@@ -72,11 +72,11 @@ Your contract code is solid - the Replit app issues are just development environ
 Once you're in Remix:
 
 - [ ] Select Solidity compiler **0.8.20 or higher**
-- [ ] Click "Compile NASCORNClaim.sol"
-- [ ] In "Deploy & Run", select **`NASCORNClaim`** from dropdown (NOT `IERC20`)
+- [ ] Click "Compile APEXClaim.sol"
+- [ ] In "Deploy & Run", select **`APEXClaim`** from dropdown (NOT `IERC20`)
 - [ ] Connect MetaMask to Base Sepolia
 - [ ] Deploy with constructor params:
-  - `_token`: MockERC20 address (or real NASCORN token)
+  - `_token`: MockERC20 address (or real APEX token)
   - `_signer`: Your backend wallet address
 - [ ] Fund contract with tokens
 - [ ] Test claim function

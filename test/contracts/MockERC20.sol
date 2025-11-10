@@ -2,8 +2,8 @@
 pragma solidity ^0.8.20;
 
 contract MockERC20 {
-    string public name = "NASCORN";
-    string public symbol = "NASCORN";
+    string public name = "APEX";
+    string public symbol = "APEX";
     uint8 public decimals = 18;
     uint256 public totalSupply;
     

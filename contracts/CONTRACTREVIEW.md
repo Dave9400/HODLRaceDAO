@@ -1,8 +1,8 @@
-# NASCORNClaim Contract Security Review
+# APEXClaim Contract Security Review
 
-**Contract:** NASCORNClaim.sol  
+**Contract:** APEXClaim.sol  
 **Version:** Solidity ^0.8.20  
-**Purpose:** Enable iRacing users to claim NASCORN tokens based on verified racing statistics with incremental claims and halving mechanics
+**Purpose:** Enable iRacing users to claim APEX tokens based on verified racing statistics with incremental claims and halving mechanics
 
 ## Executive Summary
 
@@ -43,7 +43,7 @@
 **Purpose:** Initialize contract with token address and authorized signer
 
 **Functionality:**
-- Sets the NASCORN ERC20 token address (immutable)
+- Sets the APEX ERC20 token address (immutable)
 - Sets the backend signer address that can attest to iRacing stats (immutable)
 - Sets deployer as owner for emergency functions (immutable)
 
@@ -60,7 +60,7 @@
 
 ### 2. `claim(uint256 iracingId, uint256 wins, uint256 top5s, uint256 starts, bytes memory signature)`
 
-**Purpose:** Allow users to claim NASCORN tokens based on verified iRacing stats
+**Purpose:** Allow users to claim APEX tokens based on verified iRacing stats
 
 **Functionality:**
 1. Load user's previous claim history from storage
@@ -139,7 +139,7 @@
 ```
 1. Alice gets signature for 100 wins on Base Sepolia
 2. Attacker deploys identical contract on another chain with same signer
-3. Attacker deploys NASCORN token copy and sends to new contract
+3. Attacker deploys APEX token copy and sends to new contract
 4. Alice (or attacker with her TX data) replays signature on new chain
 5. Drains second contract
 ```
@@ -335,7 +335,7 @@ Final reward = 16M * 0.5 = 8M tokens
 
 ### Immutable Variables
 ```solidity
-IERC20 public immutable token;      // NASCORN token contract
+IERC20 public immutable token;      // APEX token contract
 address public immutable owner;      // Emergency withdrawal rights
 address public immutable signer;     // Backend signature authority
 ```
@@ -372,10 +372,10 @@ mapping(address => uint256) public claimCount;        // Wallet => number of cla
 **Impact:** Complete loss of funds
 
 **Attack:**
-1. Deploy NASCORNClaim on Chain A (Base) with 500M NASCORN
+1. Deploy APEXClaim on Chain A (Base) with 500M APEX
 2. User claims 50M tokens with valid signature
-3. Attacker deploys identical NASCORNClaim on Chain B (Optimism) with same signer address
-4. Attacker funds Chain B contract with NASCORN
+3. Attacker deploys identical APEXClaim on Chain B (Optimism) with same signer address
+4. Attacker funds Chain B contract with APEX
 5. Attacker replays same signature from Chain A on Chain B
 6. Drains Chain B contract
 
@@ -383,7 +383,7 @@ mapping(address => uint256) public claimCount;        // Wallet => number of cla
 ```solidity
 bytes32 domainSeparator = keccak256(abi.encode(
     keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-    keccak256(bytes("NASCORNClaim")),
+    keccak256(bytes("APEXClaim")),
     keccak256(bytes("1")),
     block.chainid,
     address(this)

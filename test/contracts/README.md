@@ -1,4 +1,4 @@
-# Smart Contract Tests - NASCORN Claim
+# Smart Contract Tests - APEX Claim
 
 ## Installation
 
@@ -80,7 +80,7 @@ npx hardhat test
 ## Expected Test Output
 
 ```
-NASCORNClaim Contract Tests
+APEXClaim Contract Tests
   Deployment
     ✓ Should set the correct token address
     ✓ Should set the correct owner

@@ -21,7 +21,7 @@ import { useAccount } from 'wagmi';
 import { useToast } from "@/hooks/use-toast";
 import { useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi';
 import { parseEther, formatEther } from 'viem';
-import { CLAIM_CONTRACT_ADDRESS, CLAIM_CONTRACT_ABI, NASCORN_TOKEN_ADDRESS, NASCORN_TOKEN_ABI } from '@/lib/contracts';
+import { CLAIM_CONTRACT_ADDRESS, CLAIM_CONTRACT_ABI, APEX_TOKEN_ADDRESS, APEX_TOKEN_ABI } from '@/lib/contracts';
 import { useQuery } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
 
@@ -107,9 +107,9 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
     args: iracingStats ? [BigInt(iracingStats.iracingId)] : undefined,
   }) as { data: readonly [bigint, bigint, bigint] | undefined; refetch: () => void };
   
-  const { data: nascornBalance, refetch: refetchNascornBalance } = useReadContract({
-    address: NASCORN_TOKEN_ADDRESS,
-    abi: NASCORN_TOKEN_ABI,
+  const { data: apexBalance, refetch: refetchApexBalance } = useReadContract({
+    address: APEX_TOKEN_ADDRESS,
+    abi: APEX_TOKEN_ABI,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
   }) as { data: bigint | undefined; refetch: () => void };
@@ -318,7 +318,7 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
     if (isTxSuccess) {
       toast({
         title: "Claim Successful! 🎉",
-        description: "NASCORN tokens have been sent to your wallet",
+        description: "APEX tokens have been sent to your wallet",
       });
       setIsClaiming(false);
       
@@ -329,7 +329,7 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
         refetchClaimableAmount();
         refetchUserClaimCount();
         refetchLastClaim();
-        refetchNascornBalance();
+        refetchApexBalance();
         queryClient.invalidateQueries({ queryKey: ['/api/contract/stats'] });
       }, 2000); // 2 second delay
     }
@@ -373,7 +373,7 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Coins className="w-6 h-6 text-yellow-500" />
-              Claim NASCORN Tokens
+              Claim APEX Tokens
             </CardTitle>
             <CardDescription>
               Based on your iRacing career statistics, claim your rewards.
@@ -381,13 +381,13 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {nascornBalance !== undefined && (
+              {apexBalance !== undefined && (
                 <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
                   <div className="flex items-center gap-2">
                     <Wallet className="w-4 h-4 text-muted-foreground" />
                     <span className="text-sm text-muted-foreground">Wallet Balance</span>
                   </div>
-                  <div className="font-bold">{Number(formatEther(nascornBalance)).toLocaleString()} NASCORN</div>
+                  <div className="font-bold">{Number(formatEther(apexBalance)).toLocaleString()} APEX</div>
                 </div>
               )}
 
@@ -405,7 +405,7 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
               
               <div className="text-center">
                 <div className="text-4xl font-bold text-primary mb-2" data-testid="text-claimable-amount">
-                  {calculatePotentialRewards().toLocaleString()} NASCORN
+                  {calculatePotentialRewards().toLocaleString()} APEX
                 </div>
                 <div className="text-sm text-muted-foreground">
                   {hasPreviousClaim 
@@ -610,7 +610,7 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
           Connect iRacing Account
         </CardTitle>
         <CardDescription>
-          Link your iRacing account to claim NASCORN tokens based on your racing performance.
+          Link your iRacing account to claim APEX tokens based on your racing performance.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -634,12 +634,12 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
 
         <div className="space-y-4">
           <div className="text-sm text-muted-foreground">
-            <p className="mb-2">Claim NASCORN tokens based on your iRacing career:</p>
+            <p className="mb-2">Claim APEX tokens based on your iRacing career:</p>
             <ul className="list-disc list-inside space-y-1">
               <li><strong>1,000 points</strong> per win</li>
               <li><strong>100 points</strong> per top 5 finish</li>
               <li><strong>10 points</strong> per race start</li>
-              <li><strong>1,000 NASCORN</strong> per point earned</li>
+              <li><strong>1,000 APEX</strong> per point earned</li>
             </ul>
             <p className="mt-2 text-xs">
               *Rewards halve every 100M tokens claimed. Early adopters get up to 2x bonus!
