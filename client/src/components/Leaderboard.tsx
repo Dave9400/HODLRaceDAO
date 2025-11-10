@@ -17,6 +17,7 @@ interface LeaderboardEntry {
   wins: string;
   top5s: string;
   starts: string;
+  displayName: string;
 }
 
 interface DisplayLeaderboardEntry {
@@ -51,7 +52,7 @@ export default function Leaderboard() {
     
     return data.map((entry, index) => ({
       rank: index + 1,
-      name: `Racer ${entry.iracingId}`, // In production, resolve to actual names
+      name: entry.displayName || `Racer ${entry.iracingId}`,
       iracingId: entry.iracingId,
       address: entry.walletAddress,
       totalClaimed: formatApexAmount(entry.totalClaimed),

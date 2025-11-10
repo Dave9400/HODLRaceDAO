@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Wallet, ExternalLink } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Wallet, ExternalLink, Sparkles } from "lucide-react";
 import { useConnect, useAccount } from 'wagmi';
 
 interface WalletModalProps {
@@ -41,23 +42,38 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
         </DialogHeader>
         
         <div className="space-y-4">
+          <Alert className="bg-primary/10 border-primary/20" data-testid="alert-coinbase-recommendation">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <AlertDescription className="text-sm">
+              <strong>New to crypto?</strong> Coinbase Smart Wallet lets you create a wallet instantly without downloads or seed phrases. Perfect for beginners!
+            </AlertDescription>
+          </Alert>
           
           <div className="space-y-2">
             {connectors.map((connector) => (
               <Button
                 key={connector.id}
                 variant="outline"
-                className="w-full justify-start gap-3 h-auto p-4 hover-elevate"
+                className={`w-full justify-start gap-3 h-auto p-4 hover-elevate ${
+                  connector.name === 'Coinbase Wallet' ? 'border-primary/50' : ''
+                }`}
                 onClick={() => handleConnect(connector)}
                 disabled={isPending}
                 data-testid={`button-wallet-${connector.name.toLowerCase().replace(' ', '-')}`}
               >
                 <span className="text-xl">{walletIcons[connector.name] || '💳'}</span>
-                <div className="text-left">
-                  <div className="font-medium">{connector.name}</div>
+                <div className="text-left flex-1">
+                  <div className="font-medium flex items-center gap-2">
+                    {connector.name}
+                    {connector.name === 'Coinbase Wallet' && (
+                      <span className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
+                        Recommended
+                      </span>
+                    )}
+                  </div>
                   <div className="text-sm text-muted-foreground">
                     {connector.name === 'MetaMask' && 'Connect using MetaMask wallet'}
-                    {connector.name === 'Coinbase Wallet' && 'Use Coinbase\'s smart wallet solution'}
+                    {connector.name === 'Coinbase Wallet' && 'No downloads needed - create wallet in seconds'}
                     {connector.name === 'WalletConnect' && 'Connect with WalletConnect protocol'}
                     {!['MetaMask', 'Coinbase Wallet', 'WalletConnect'].includes(connector.name) && 'Connect with this wallet'}
                   </div>

@@ -175,11 +175,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Sort by total claimed (descending)
       leaderboard.sort((a, b) => BigInt(b.totalClaimed) - BigInt(a.totalClaimed) > 0 ? 1 : -1);
       
+      // Fetch user names from database
+      const iracingIds = leaderboard.map(entry => entry.iracingId);
+      let userNamesMap = new Map<string, { firstName: string | null; lastName: string | null; displayName: string }>();
+      
+      if (iracingIds.length > 0) {
+        try {
+          const users = await db.select()
+            .from(schema.users)
+            .where(inArray(schema.users.iracingId, iracingIds));
+          
+          users.forEach(user => {
+            userNamesMap.set(user.iracingId, {
+              firstName: user.firstName,
+              lastName: user.lastName,
+              displayName: user.displayName
+            });
+          });
+          
+          console.log(`[Leaderboard] Fetched ${users.length} user names from database`);
+        } catch (dbError) {
+          console.error('[Leaderboard] Failed to fetch user names:', dbError);
+        }
+      }
+      
+      // Enrich leaderboard with user names
+      const enrichedLeaderboard = leaderboard.map(entry => {
+        const userData = userNamesMap.get(entry.iracingId);
+        let displayName = `Racer ${entry.iracingId}`;
+        
+        if (userData) {
+          if (userData.firstName && userData.lastName) {
+            displayName = `${userData.firstName} ${userData.lastName}`;
+          } else if (userData.displayName) {
+            displayName = userData.displayName;
+          }
+        }
+        
+        return {
+          ...entry,
+          displayName
+        };
+      });
+      
       // Calculate weekly stats (last 7 days) using cached event data
       const now = Math.floor(Date.now() / 1000);
       const weekAgo = now - (7 * 24 * 60 * 60);
       
-      const weeklyLeaderboard = leaderboard.map(entry => {
+      const weeklyLeaderboard = enrichedLeaderboard.map(entry => {
         const claimData = claimsByIracingId.get(entry.iracingId);
         
         if (!claimData) {
@@ -203,9 +246,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       weeklyLeaderboard.sort((a, b) => BigInt(b.weeklyEarned) - BigInt(a.weeklyEarned) > 0 ? 1 : -1);
       
       res.json({
-        allTime: leaderboard,
+        allTime: enrichedLeaderboard,
         weekly: weeklyLeaderboard,
-        totalClaimers: leaderboard.length
+        totalClaimers: enrichedLeaderboard.length
       });
       
     } catch (error: any) {
@@ -456,25 +499,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Save user data to database for leaderboard display
       const iracingId = profile.cust_id?.toString();
       const displayName = profile.display_name || 'Unknown Driver';
-      const memberSince = profile.member_since ? new Date(profile.member_since).toISOString() : null;
+      const firstName = profile.first_name || null;
+      const lastName = profile.last_name || null;
       
       if (iracingId) {
         try {
-          const firstName = profile.first_name || null;
-          const lastName = profile.last_name || null;
+          await db.insert(schema.users)
+            .values({
+              iracingId,
+              displayName,
+              firstName,
+              lastName,
+            })
+            .onConflictDoUpdate({
+              target: schema.users.iracingId,
+              set: {
+                displayName,
+                firstName,
+                lastName,
+              },
+            });
           
-          await db.execute(`
-            INSERT INTO users (iracing_id, display_name, first_name, last_name, last_updated)
-            VALUES ($1, $2, $3, $4, NOW())
-            ON CONFLICT (iracing_id) 
-            DO UPDATE SET 
-              display_name = $2,
-              first_name = $3,
-              last_name = $4,
-              last_updated = NOW()
-          `, [iracingId, displayName, firstName, lastName]);
-          
-          console.log('[iRacing Profile] Saved user data to database:', { iracingId, displayName });
+          console.log('[iRacing Profile] Saved user data to database:', { iracingId, displayName, firstName, lastName });
         } catch (dbError) {
           console.error('[iRacing Profile] Failed to save user data:', dbError);
         }
