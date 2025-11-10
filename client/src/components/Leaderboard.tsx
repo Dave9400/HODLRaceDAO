@@ -3,17 +3,20 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, Medal, Award, TrendingUp, Calendar, Filter, Loader2, Coins } from "lucide-react";
-import { useReadContract } from "wagmi";
-import { CLAIM_CONTRACT_ADDRESS, CLAIM_CONTRACT_ABI, formatNascornAmount } from "@/lib/contracts";
+import { Trophy, Medal, Award, Calendar, Filter, Loader2, Coins, Car, Target } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { formatEther } from "viem";
 
-interface ContractLeaderboardEntry {
-  userAddress: string;
+interface LeaderboardEntry {
   iracingId: string;
-  totalClaimed: bigint;
-  weeklyEarned: bigint;
-  lastClaimTime: bigint;
+  walletAddress: string;
+  totalClaimed: string;
+  weeklyEarned: string;
+  claimCount: number;
+  lastClaimTime: number;
+  wins: string;
+  top5s: string;
+  starts: string;
 }
 
 interface DisplayLeaderboardEntry {
@@ -24,59 +27,56 @@ interface DisplayLeaderboardEntry {
   totalClaimed: string;
   weeklyEarned: string;
   lastClaimTime: Date;
+  wins: number;
+  top5s: number;
+  starts: number;
+}
+
+interface LeaderboardResponse {
+  allTime: LeaderboardEntry[];
+  weekly: LeaderboardEntry[];
+  totalClaimers: number;
 }
 
 export default function Leaderboard() {
-  // Fetch all-time top claimers from smart contract
-  const { data: topClaimersData, isLoading: loadingClaimers, error: claimersError } = useReadContract({
-    address: CLAIM_CONTRACT_ADDRESS as `0x${string}`,
-    abi: CLAIM_CONTRACT_ABI,
-    functionName: 'getTopClaimers',
-    query: { 
-      enabled: CLAIM_CONTRACT_ADDRESS !== "0x0000000000000000000000000000000000000000",
-      refetchInterval: 30000 // Refresh every 30 seconds
-    }
+  // Fetch leaderboard data from backend
+  const { data: leaderboardData, isLoading, error } = useQuery<LeaderboardResponse>({
+    queryKey: ['/api/leaderboard'],
+    refetchInterval: 30000, // Refresh every 30 seconds
   });
 
-  // Fetch weekly top earners from smart contract
-  const { data: weeklyEarnersData, isLoading: loadingWeekly, error: weeklyError } = useReadContract({
-    address: CLAIM_CONTRACT_ADDRESS as `0x${string}`,
-    abi: CLAIM_CONTRACT_ABI,
-    functionName: 'getTopWeeklyEarners',
-    query: { 
-      enabled: CLAIM_CONTRACT_ADDRESS !== "0x0000000000000000000000000000000000000000",
-      refetchInterval: 30000
-    }
-  });
-
-  // Fetch total claimed from contract
-  const { data: totalClaimedData } = useReadContract({
-    address: CLAIM_CONTRACT_ADDRESS as `0x${string}`,
-    abi: CLAIM_CONTRACT_ABI,
-    functionName: 'totalClaimed',
-    query: { enabled: CLAIM_CONTRACT_ADDRESS !== "0x0000000000000000000000000000000000000000" }
-  });
-
-  // Transform contract data for display
-  const transformContractData = (data: any[]): DisplayLeaderboardEntry[] => {
+  // Transform backend data for display
+  const transformLeaderboardData = (data: LeaderboardEntry[]): DisplayLeaderboardEntry[] => {
     if (!data) return [];
     
     return data.map((entry, index) => ({
       rank: index + 1,
       name: `Racer ${entry.iracingId}`, // In production, resolve to actual names
       iracingId: entry.iracingId,
-      address: entry.userAddress,
+      address: entry.walletAddress,
       totalClaimed: formatNascornAmount(entry.totalClaimed),
-      weeklyEarned: formatNascornAmount(entry.weeklyEarned),
-      lastClaimTime: new Date(Number(entry.lastClaimTime) * 1000)
+      weeklyEarned: formatNascornAmount(entry.weeklyEarned || "0"),
+      lastClaimTime: new Date(Number(entry.lastClaimTime) * 1000),
+      wins: Number(entry.wins),
+      top5s: Number(entry.top5s),
+      starts: Number(entry.starts)
     }));
   };
 
-  const allTimeLeaders = transformContractData(topClaimersData as any[]);
-  const weeklyLeaders = transformContractData(weeklyEarnersData as any[]);
-  
-  const isLoading = loadingClaimers || loadingWeekly;
-  const error = claimersError || weeklyError;
+  const formatNascornAmount = (amount: string): string => {
+    try {
+      const value = formatEther(BigInt(amount));
+      const num = parseFloat(value);
+      return num >= 1000000 
+        ? `${(num / 1000000).toFixed(2)}M`
+        : num.toLocaleString(undefined, { maximumFractionDigits: 0 });
+    } catch {
+      return "0";
+    }
+  };
+
+  const allTimeLeaders = transformLeaderboardData(leaderboardData?.allTime || []);
+  const weeklyLeaders = transformLeaderboardData(leaderboardData?.weekly || []);
 
   const LeaderboardTable = ({ data, isMonthly = false }: { data: any[], isMonthly?: boolean }) => {
     if (isLoading) {
@@ -171,12 +171,33 @@ export default function Leaderboard() {
                   )}
                 </div>
 
+                {/* Racing Stats */}
+                <div className="hidden md:flex gap-4 text-center">
+                  <div className="flex items-center gap-1">
+                    <Trophy className="w-4 h-4 text-yellow-500" />
+                    <span className="text-sm font-semibold" data-testid={`wins-${index}`}>{driver.wins}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Target className="w-4 h-4 text-blue-500" />
+                    <span className="text-sm font-semibold" data-testid={`top5s-${index}`}>{driver.top5s}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Car className="w-4 h-4 text-green-500" />
+                    <span className="text-sm font-semibold" data-testid={`starts-${index}`}>{driver.starts}</span>
+                  </div>
+                </div>
+
                 {/* Mobile Stats */}
                 <div className="sm:hidden text-right">
                   <div className="font-bold text-primary">{driver.totalClaimed}</div>
                   {isMonthly && (
                     <div className="text-xs text-muted-foreground">Week: {driver.weeklyEarned}</div>
                   )}
+                  <div className="flex items-center gap-2 justify-end mt-1 text-xs">
+                    <span>🏆 {driver.wins}</span>
+                    <span>🎯 {driver.top5s}</span>
+                    <span>🏁 {driver.starts}</span>
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -201,7 +222,7 @@ export default function Leaderboard() {
           <CardContent className="p-6 text-center">
             <Trophy className="w-8 h-8 text-accent mx-auto mb-3" />
             <div className="text-2xl font-bold mb-1" data-testid="stat-active-claimers">
-              {isLoading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : allTimeLeaders.length}
+              {isLoading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : leaderboardData?.totalClaimers || 0}
             </div>
             <div className="text-sm text-muted-foreground">Active Claimers</div>
           </CardContent>
@@ -211,7 +232,17 @@ export default function Leaderboard() {
             <Coins className="w-8 h-8 text-primary mx-auto mb-3" />
             <div className="text-2xl font-bold mb-1" data-testid="stat-total-claimed">
               {isLoading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : 
-               totalClaimedData ? formatNascornAmount(totalClaimedData) : "0"}
+               allTimeLeaders.reduce((sum, driver) => {
+                 try {
+                   const cleaned = driver.totalClaimed.replace(/[M,]/g, '');
+                   const value = driver.totalClaimed.includes('M') 
+                     ? parseFloat(cleaned) * 1000000 
+                     : parseFloat(cleaned);
+                   return sum + value;
+                 } catch {
+                   return sum;
+                 }
+               }, 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
             </div>
             <div className="text-sm text-muted-foreground">Total NASCORN Claimed</div>
           </CardContent>
@@ -221,7 +252,17 @@ export default function Leaderboard() {
             <Award className="w-8 h-8 text-destructive mx-auto mb-3" />
             <div className="text-2xl font-bold mb-1" data-testid="stat-weekly-earned">
               {isLoading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : 
-               weeklyLeaders.reduce((sum, driver) => sum + parseFloat(driver.weeklyEarned.replace(/,/g, '')), 0).toLocaleString()}
+               weeklyLeaders.reduce((sum, driver) => {
+                 try {
+                   const cleaned = driver.weeklyEarned.replace(/[M,]/g, '');
+                   const value = driver.weeklyEarned.includes('M') 
+                     ? parseFloat(cleaned) * 1000000 
+                     : parseFloat(cleaned);
+                   return sum + value;
+                 } catch {
+                   return sum;
+                 }
+               }, 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
             </div>
             <div className="text-sm text-muted-foreground">Weekly Earnings</div>
           </CardContent>
@@ -275,11 +316,6 @@ export default function Leaderboard() {
         <p className="text-sm text-muted-foreground mb-4">
           Rankings update automatically when users claim rewards from the smart contract
         </p>
-        {CLAIM_CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000" && (
-          <Badge variant="secondary" className="text-sm">
-            Smart contract not deployed - showing placeholder data
-          </Badge>
-        )}
       </div>
     </div>
   );

@@ -74,12 +74,145 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ races: [], message: "Race history will be retrieved from smart contract" });
   });
 
-  // Leaderboard routes - placeholder for on-chain leaderboard
-  app.get("/api/leaderboard", (req, res) => {
-    res.json({ 
-      leaderboard: [], 
-      message: "Leaderboard will be calculated from on-chain race data" 
-    });
+  // Leaderboard routes - fetch from blockchain claim events
+  app.get("/api/leaderboard", async (req, res) => {
+    try {
+      const CLAIM_CONTRACT_ADDRESS = process.env.VITE_CLAIM_CONTRACT_ADDRESS || "0x647d4f06acAE3Cab64B738f1fB15CE8009b067AC";
+      
+      const claimContractABI = [
+        "event Claimed(address indexed user, uint256 iracingId, uint256 amount, uint256 claimNumber)",
+        "function lastClaim(uint256 iracingId) view returns (uint256 wins, uint256 top5s, uint256 starts)",
+        "function totalClaimed() view returns (uint256)"
+      ];
+      
+      const provider = new ethers.JsonRpcProvider("https://sepolia.base.org");
+      const contract = new ethers.Contract(CLAIM_CONTRACT_ADDRESS, claimContractABI, provider);
+      
+      // Fetch all Claimed events
+      const filter = contract.filters.Claimed();
+      const events = await contract.queryFilter(filter, 0, 'latest');
+      
+      // Cache block timestamps to avoid duplicate RPC calls
+      const blockTimestamps = new Map<number, number>();
+      const getBlockTimestamp = async (blockNumber: number): Promise<number> => {
+        if (blockTimestamps.has(blockNumber)) {
+          return blockTimestamps.get(blockNumber)!;
+        }
+        const block = await provider.getBlock(blockNumber);
+        const timestamp = block!.timestamp;
+        blockTimestamps.set(blockNumber, timestamp);
+        return timestamp;
+      };
+      
+      // Aggregate claims by iRacing ID
+      const claimsByIracingId = new Map<string, {
+        iracingId: string;
+        totalClaimed: bigint;
+        walletAddress: string;
+        lastClaimTime: number;
+        claimCount: number;
+        events: Array<{ amount: bigint; timestamp: number; blockNumber: number }>;
+      }>();
+      
+      for (const event of events) {
+        if (!('args' in event) || !event.args) continue;
+        
+        const [user, iracingId, amount, claimNumber] = event.args as unknown as [string, bigint, bigint, bigint];
+        const id = iracingId.toString();
+        const timestamp = await getBlockTimestamp(event.blockNumber);
+        
+        const existing = claimsByIracingId.get(id);
+        
+        // Always accumulate totalClaimed (fix for same-block claims bug)
+        claimsByIracingId.set(id, {
+          iracingId: id,
+          totalClaimed: (existing?.totalClaimed || BigInt(0)) + amount,
+          walletAddress: user,
+          lastClaimTime: Math.max(existing?.lastClaimTime || 0, timestamp),
+          claimCount: Math.max(existing?.claimCount || 0, Number(claimNumber)),
+          events: [
+            ...(existing?.events || []),
+            { amount, timestamp, blockNumber: event.blockNumber }
+          ]
+        });
+      }
+      
+      // Fetch stats for each iRacing ID and build leaderboard
+      const leaderboard = await Promise.all(
+        Array.from(claimsByIracingId.values()).map(async (claim) => {
+          try {
+            const [wins, top5s, starts] = await contract.lastClaim(BigInt(claim.iracingId));
+            return {
+              iracingId: claim.iracingId,
+              walletAddress: claim.walletAddress,
+              totalClaimed: claim.totalClaimed.toString(),
+              claimCount: claim.claimCount,
+              lastClaimTime: claim.lastClaimTime,
+              wins: wins.toString(),
+              top5s: top5s.toString(),
+              starts: starts.toString()
+            };
+          } catch (error) {
+            console.error(`Error fetching stats for iRacing ID ${claim.iracingId}:`, error);
+            return {
+              iracingId: claim.iracingId,
+              walletAddress: claim.walletAddress,
+              totalClaimed: claim.totalClaimed.toString(),
+              claimCount: claim.claimCount,
+              lastClaimTime: claim.lastClaimTime,
+              wins: "0",
+              top5s: "0",
+              starts: "0"
+            };
+          }
+        })
+      );
+      
+      // Sort by total claimed (descending)
+      leaderboard.sort((a, b) => BigInt(b.totalClaimed) - BigInt(a.totalClaimed) > 0 ? 1 : -1);
+      
+      // Calculate weekly stats (last 7 days) using cached event data
+      const now = Math.floor(Date.now() / 1000);
+      const weekAgo = now - (7 * 24 * 60 * 60);
+      
+      const weeklyLeaderboard = leaderboard.map(entry => {
+        const claimData = claimsByIracingId.get(entry.iracingId);
+        
+        if (!claimData) {
+          return {
+            ...entry,
+            weeklyEarned: "0"
+          };
+        }
+        
+        // Sum amounts from events within last 7 days (using cached timestamps)
+        const weeklyTotal = claimData.events
+          .filter(e => e.timestamp >= weekAgo)
+          .reduce((sum, e) => sum + e.amount, BigInt(0));
+        
+        return {
+          ...entry,
+          weeklyEarned: weeklyTotal.toString()
+        };
+      });
+      
+      weeklyLeaderboard.sort((a, b) => BigInt(b.weeklyEarned) - BigInt(a.weeklyEarned) > 0 ? 1 : -1);
+      
+      res.json({
+        allTime: leaderboard,
+        weekly: weeklyLeaderboard,
+        totalClaimers: leaderboard.length
+      });
+      
+    } catch (error: any) {
+      console.error('[Leaderboard] Error:', error.message);
+      res.json({
+        allTime: [],
+        weekly: [],
+        totalClaimers: 0,
+        error: "Unable to fetch leaderboard data"
+      });
+    }
   });
 
   // Achievement routes - placeholder for on-chain achievements
