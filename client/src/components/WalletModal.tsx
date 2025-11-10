@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Wallet, ExternalLink, Sparkles } from "lucide-react";
+import { Wallet, ExternalLink, Sparkles, Circle, Hexagon } from "lucide-react";
 import { useConnect, useAccount } from 'wagmi';
 
 interface WalletModalProps {
@@ -9,15 +9,22 @@ interface WalletModalProps {
   onClose: () => void;
 }
 
+const WalletIcon = ({ name }: { name: string }) => {
+  switch (name) {
+    case 'MetaMask':
+      return <Hexagon className="w-5 h-5 text-orange-500" />;
+    case 'Coinbase Wallet':
+      return <Circle className="w-5 h-5 text-blue-600" />;
+    case 'WalletConnect':
+      return <Circle className="w-5 h-5 text-purple-500" />;
+    default:
+      return <Wallet className="w-5 h-5" />;
+  }
+};
+
 export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
   const { connect, connectors, isPending } = useConnect();
   const { isConnected } = useAccount();
-
-  const walletIcons: Record<string, string> = {
-    'MetaMask': '🦊',
-    'Coinbase Wallet': '🔵', 
-    'WalletConnect': '💜'
-  };
 
   const handleConnect = async (connector: any) => {
     try {
@@ -61,7 +68,9 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
                 disabled={isPending}
                 data-testid={`button-wallet-${connector.name.toLowerCase().replace(' ', '-')}`}
               >
-                <span className="text-xl">{walletIcons[connector.name] || '💳'}</span>
+                <div className="flex-shrink-0">
+                  <WalletIcon name={connector.name} />
+                </div>
                 <div className="text-left flex-1">
                   <div className="font-medium flex items-center gap-2">
                     {connector.name}

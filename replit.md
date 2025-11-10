@@ -12,6 +12,22 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### November 2025 - Real Names on Leaderboard & Crypto Newbie UX
+- **iRacing Profiles Database**: Created `iracing_profiles` table to store user names
+  - Columns: iracing_id (PK), display_name, first_name, last_name, last_updated
+  - Auto-populated when users authenticate with iRacing
+  - Leaderboard now shows real names (e.g., "David McGrath") instead of "Racer 28904"
+- **Coinbase Smart Wallet Recommendation**: Added prominent UI recommendation for crypto newbies
+  - Alert banner in wallet modal explaining benefits
+  - "Recommended" badge on Coinbase Wallet option
+  - Updated copy: "No downloads needed - create wallet in seconds"
+- **Gas Sponsorship Infrastructure**: Backend ready for Coinbase paymaster integration
+  - Created `/api/paymaster` proxy endpoint for secure paymaster requests
+  - Comprehensive setup guide in GAS_SPONSORSHIP_SETUP.md
+  - Requires CDP_PAYMASTER_URL secret from Coinbase Developer Platform
+  - $15,000 in free gas credits available through Base Gasless Campaign
+- **Status**: Real names working, UI improved for beginners, gas sponsorship ready for user setup
+
 ### November 2025 - Leaderboard Event-Based Implementation
 - **Account Information UI**: Removed license and iRating fields from display (lines 481-489 in IRacingAuth.tsx)
   - Now shows only iRacing ID in Account Information section

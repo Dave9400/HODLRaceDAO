@@ -175,40 +175,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Sort by total claimed (descending)
       leaderboard.sort((a, b) => BigInt(b.totalClaimed) - BigInt(a.totalClaimed) > 0 ? 1 : -1);
       
-      // Fetch user names from database
+      // Fetch iRacing profiles from database
       const iracingIds = leaderboard.map(entry => entry.iracingId);
-      let userNamesMap = new Map<string, { firstName: string | null; lastName: string | null; displayName: string }>();
+      let profilesMap = new Map<string, { firstName: string | null; lastName: string | null; displayName: string }>();
       
       if (iracingIds.length > 0) {
         try {
-          const users = await db.select()
-            .from(schema.users)
-            .where(inArray(schema.users.iracingId, iracingIds));
+          const profiles = await db.select()
+            .from(schema.iracingProfiles)
+            .where(inArray(schema.iracingProfiles.iracingId, iracingIds));
           
-          users.forEach(user => {
-            userNamesMap.set(user.iracingId, {
-              firstName: user.firstName,
-              lastName: user.lastName,
-              displayName: user.displayName
+          profiles.forEach(profile => {
+            profilesMap.set(profile.iracingId, {
+              firstName: profile.firstName,
+              lastName: profile.lastName,
+              displayName: profile.displayName
             });
           });
           
-          console.log(`[Leaderboard] Fetched ${users.length} user names from database`);
+          console.log(`[Leaderboard] Fetched ${profiles.length} iRacing profiles from database`);
         } catch (dbError) {
-          console.error('[Leaderboard] Failed to fetch user names:', dbError);
+          console.error('[Leaderboard] Failed to fetch iRacing profiles:', dbError);
         }
       }
       
-      // Enrich leaderboard with user names
+      // Enrich leaderboard with real names from iRacing profiles
       const enrichedLeaderboard = leaderboard.map(entry => {
-        const userData = userNamesMap.get(entry.iracingId);
+        const profile = profilesMap.get(entry.iracingId);
         let displayName = `Racer ${entry.iracingId}`;
         
-        if (userData) {
-          if (userData.firstName && userData.lastName) {
-            displayName = `${userData.firstName} ${userData.lastName}`;
-          } else if (userData.displayName) {
-            displayName = userData.displayName;
+        if (profile) {
+          if (profile.firstName && profile.lastName) {
+            displayName = `${profile.firstName} ${profile.lastName}`;
+          } else if (profile.displayName) {
+            displayName = profile.displayName;
           }
         }
         
@@ -504,7 +504,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (iracingId) {
         try {
-          await db.insert(schema.users)
+          await db.insert(schema.iracingProfiles)
             .values({
               iracingId,
               displayName,
@@ -512,7 +512,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               lastName,
             })
             .onConflictDoUpdate({
-              target: schema.users.iracingId,
+              target: schema.iracingProfiles.iracingId,
               set: {
                 displayName,
                 firstName,
@@ -520,9 +520,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
               },
             });
           
-          console.log('[iRacing Profile] Saved user data to database:', { iracingId, displayName, firstName, lastName });
+          console.log('[iRacing Profile] Saved iRacing profile to database:', { iracingId, displayName, firstName, lastName });
         } catch (dbError) {
-          console.error('[iRacing Profile] Failed to save user data:', dbError);
+          console.error('[iRacing Profile] Failed to save iRacing profile:', dbError);
         }
       }
       
@@ -611,6 +611,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Get contract stats - total claimed, halving progress, etc.
+  // Paymaster proxy endpoint for gas sponsorship
+  app.post("/api/paymaster", async (req, res) => {
+    try {
+      const paymasterUrl = process.env.CDP_PAYMASTER_URL;
+      
+      if (!paymasterUrl) {
+        return res.status(503).json({ 
+          error: "Gas sponsorship not configured",
+          message: "Please configure CDP_PAYMASTER_URL to enable gasless transactions"
+        });
+      }
+      
+      // Proxy the request to Coinbase Paymaster
+      const response = await axios.post(paymasterUrl, req.body, {
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      res.json(response.data);
+    } catch (error: any) {
+      console.error('[Paymaster] Error:', error.message);
+      res.status(500).json({ 
+        error: "Paymaster request failed",
+        message: error.message 
+      });
+    }
+  });
+
   app.get("/api/contract/stats", async (req, res) => {
     try {
       const CLAIM_CONTRACT_ADDRESS = process.env.VITE_CLAIM_CONTRACT_ADDRESS || "0x647d4f06acAE3Cab64B738f1fB15CE8009b067AC";
