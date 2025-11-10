@@ -479,16 +479,8 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
                 <h3 className="font-semibold mb-3">Account Information</h3>
                 <div className="flex flex-wrap gap-3">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">ID:</span>
+                    <span className="text-sm text-muted-foreground">iRacing ID:</span>
                     <Badge variant="outline">{iracingStats.iracingId}</Badge>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">License:</span>
-                    <Badge>{iracingStats.licenseName}</Badge>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">iRating:</span>
-                    <Badge variant="secondary">{iracingStats.irating}</Badge>
                   </div>
                 </div>
               </div>
