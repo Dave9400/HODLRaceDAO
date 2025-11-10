@@ -18,6 +18,7 @@ Preferred communication style: Simple, everyday language.
   - Cleaner, simpler user interface
 - **Backend Leaderboard Endpoint** (server/routes.ts lines 80-207):
   - Created `/api/leaderboard` endpoint that fetches all Claim events from blockchain
+  - Queries from contract deployment block (33479508) to avoid RPC 100k block limit
   - Aggregates claims by iRacing ID (not wallet address)
   - Fixed critical same-block claims bug - now properly accumulates all events even when multiple claims occur in same block
   - Implements block timestamp caching to avoid duplicate RPC calls
@@ -35,7 +36,9 @@ Preferred communication style: Simple, everyday language.
   - Block timestamp caching eliminates redundant RPC calls (O(n) → O(unique blocks))
   - Weekly calculation reuses cached event data from aggregation phase
   - No duplicate provider.getBlock() calls across aggregation and weekly filtering
+  - Queries from deployment block instead of block 0 to avoid RPC range limits
 - **Testing**: E2E tests passed - all UI components functional, tab switching works, empty states correct
+- **Status**: Leaderboard fully functional, displaying real claim data from blockchain
 
 ### November 2025 - Security Audit & Contract V2
 - **Critical Security Fixes**: Identified and fixed critical vulnerabilities in claim contract

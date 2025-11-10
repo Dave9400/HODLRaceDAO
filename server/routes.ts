@@ -88,9 +88,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const provider = new ethers.JsonRpcProvider("https://sepolia.base.org");
       const contract = new ethers.Contract(CLAIM_CONTRACT_ADDRESS, claimContractABI, provider);
       
-      // Fetch all Claimed events
+      // Fetch all Claimed events from contract deployment block
+      // Contract deployed at block 33479508 on Base Sepolia
+      const deploymentBlock = 33479508;
       const filter = contract.filters.Claimed();
-      const events = await contract.queryFilter(filter, 0, 'latest');
+      const events = await contract.queryFilter(filter, deploymentBlock, 'latest');
       
       // Cache block timestamps to avoid duplicate RPC calls
       const blockTimestamps = new Map<number, number>();
