@@ -4,6 +4,8 @@ import axios from "axios";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { ethers } from "ethers";
+import { db, schema } from "./db";
+import { eq, inArray } from "drizzle-orm";
 
 // Temporary in-memory store for OAuth state with PKCE (use Redis in production)
 const oauthStates = new Map<string, { 
@@ -450,6 +452,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const profile = memberData.data;
       
       console.log('[iRacing Profile] Member info received for:', profile.display_name || 'Unknown');
+      
+      // Save user data to database for leaderboard display
+      const iracingId = profile.cust_id?.toString();
+      const displayName = profile.display_name || 'Unknown Driver';
+      const memberSince = profile.member_since ? new Date(profile.member_since).toISOString() : null;
+      
+      if (iracingId) {
+        try {
+          const firstName = profile.first_name || null;
+          const lastName = profile.last_name || null;
+          
+          await db.execute(`
+            INSERT INTO users (iracing_id, display_name, first_name, last_name, last_updated)
+            VALUES ($1, $2, $3, $4, NOW())
+            ON CONFLICT (iracing_id) 
+            DO UPDATE SET 
+              display_name = $2,
+              first_name = $3,
+              last_name = $4,
+              last_updated = NOW()
+          `, [iracingId, displayName, firstName, lastName]);
+          
+          console.log('[iRacing Profile] Saved user data to database:', { iracingId, displayName });
+        } catch (dbError) {
+          console.error('[iRacing Profile] Failed to save user data:', dbError);
+        }
+      }
       
       // Now fetch yearly stats (more reliable than career stats)
       console.log('[iRacing Profile] Fetching yearly stats...');
