@@ -5,7 +5,8 @@ import {
   Target, 
   Calendar, 
   ExternalLink,
-  CheckCircle 
+  CheckCircle,
+  Trophy
 } from "lucide-react";
 
 export default function AboutPage() {
@@ -120,6 +121,71 @@ export default function AboutPage() {
         </CardContent>
       </Card>
 
+      {/* APEX Legacy */}
+      <Card className="mb-12 border-primary/20">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-2xl">
+            <Trophy className="w-6 h-6 text-primary" />
+            The APEX Legacy: Why $APEX?
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="prose prose-sm md:prose-base max-w-none dark:prose-invert">
+          <p className="text-base leading-relaxed">
+            In the dawn of the 20th century, when the automobile was still a mechanical marvel forged in the fires of innovation, 
+            the concept of the "apex" emerged as the sacred geometry of speed—a precise point on every curve where victory kissed 
+            the edge of disaster. This wasn't mere technique; it was a philosophy, born in the dusty workshops of pioneers like 
+            Karl Benz and the daring circuits of Europe. From the inaugural Grand Prix at Le Mans in 1906, where Ferenc Szisz 
+            navigated the apexes of endurance with unyielding precision, to the thunderous ovals of America where stock cars first 
+            roared to life, the apex became the invisible thread weaving through motorsports' grand tapestry.
+          </p>
+          
+          <p className="text-base leading-relaxed">
+            Picture the <strong>Apex Order</strong>, a mythical brotherhood whispered about in the garages of yore, where masters like 
+            Tazio Nuvolari—the "Flying Mantuan" who tamed the twisting roads of the Mille Miglia rally in the 1930s—passed down the 
+            art of clipping the apex amid gravel and glory. This order transcended borders and disciplines, embracing the raw chaos 
+            of dirt track racing, where legends like A.J. Foyt battled wheel-to-wheel on oval bullrings, teaching that the perfect 
+            apex on loose soil demanded not just skill, but soul. In the high-speed ballet of Formula 1, Ayrton Senna embodied its 
+            essence, his rain-soaked mastery at Monaco in 1984 turning apexes into poetry, mentoring a generation through sheer 
+            brilliance. Michael Schumacher, the relentless professor of the track, elevated it further in the 1990s and 2000s, 
+            dissecting circuits like Suzuka with surgical precision, his seven world championships a testament to the apex as a path 
+            to immortality.
+          </p>
+          
+          <p className="text-base leading-relaxed">
+            Across the Atlantic, the Apex Order found its American heartbeat in the thunder of NASCAR, where Bill Elliott—Awesome Bill 
+            from Dawsonville—shattered speed barriers at Talladega in 1985, hitting apexes at over 212 mph in his Coors-sponsored Ford, 
+            proving that even on banked superspeedways, the line between triumph and turmoil was razor-thin. Dale Earnhardt, the 
+            Intimidator, carried the torch with his unyielding aggression, clinching seven championships by owning the apex in 
+            door-slamming duels at Daytona and Bristol, his black No. 3 Chevy a symbol of gritty determination that inspired countless 
+            drivers to push limits while honoring the craft.
+          </p>
+          
+          <p className="text-base leading-relaxed">
+            The spirit extended to the open-wheel ovals of IndyCar, where Michael Andretti's daring charges at the Indianapolis 500 in 
+            the 1990s—navigating the treacherous turns of the Brickyard with family legacy in his veins—showed how the apex bridged 
+            speed and strategy, turning 200-lap marathons into lessons in endurance. Rallycross and off-road realms weren't forgotten; 
+            the Apex Order drew from the frozen forests of Monte Carlo Rally, where Walter Röhrl's quattro mastery in the 1980s taught 
+            that apexes on ice and mud required intuition honed by vintage trials.
+          </p>
+          
+          <p className="text-base leading-relaxed font-semibold">
+            Today, in the digital realm of iRacing, where these disciplines converge—from the high-banked frenzy of NASCAR ovals to the 
+            sinuous demands of F1 road courses, the grit of dirt ovals, and the unpredictable slides of rallycross—the $APEX token 
+            revives this ancient order. It's a free-to-claim laurel for the virtuosos who conquer virtual tracks, mirroring the heroes 
+            of old. Holders aren't mere participants; they're guardians of the legacy, using $APEX to unlock entry into elite online 
+            battles and real-world races, perpetuating the classy, vintage ethos of mentorship. Each token claimed echoes the teachings 
+            of Elliott's calculated calm, Earnhardt's fearless fire, Senna's spiritual speed, Schumacher's analytical apexes, and 
+            Andretti's oval artistry—a chain linking past pioneers to future legends, where every lap refines the driver, and speed 
+            becomes an eternal inheritance.
+          </p>
+          
+          <div className="mt-6 p-4 bg-primary/10 rounded-lg border border-primary/20">
+            <p className="text-center font-semibold text-lg">
+              Join the Apex Order, and etch your name into motorsports' unending story.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Roadmap */}
       <Card className="mb-12">
