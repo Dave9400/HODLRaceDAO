@@ -1,11 +1,11 @@
 import { parseEther, formatEther } from 'viem';
 
 // Smart contract addresses (deployed on Base Sepolia testnet)
-export const NASCORN_TOKEN_ADDRESS = "0x4578B2246f4A01432760d3e36CACC6fACca3c8a1"; // Mock NASCORN token
+export const APEX_TOKEN_ADDRESS = "0x4578B2246f4A01432760d3e36CACC6fACca3c8a1"; // Mock APEX token
 export const CLAIM_CONTRACT_ADDRESS = import.meta.env.VITE_CLAIM_CONTRACT_ADDRESS || "0x647d4f06acAE3Cab64B738f1fB15CE8009b067AC";
 
 // Smart contract ABIs
-export const NASCORN_TOKEN_ABI = [
+export const APEX_TOKEN_ABI = [
   {
     "inputs": [{"internalType": "address", "name": "account", "type": "address"}],
     "name": "balanceOf",
@@ -234,11 +234,11 @@ export const CLAIM_CONTRACT_ABI = [
 ] as const;
 
 // Utility functions for token amounts
-export const formatNascornAmount = (amount: bigint): string => {
+export const formatApexAmount = (amount: bigint): string => {
   return parseFloat(formatEther(amount)).toLocaleString();
 };
 
-export const parseNascornAmount = (amount: string): bigint => {
+export const parseApexAmount = (amount: string): bigint => {
   return parseEther(amount);
 };
 

@@ -22,7 +22,7 @@ function Router() {
 
   const navigationItems = [
     { id: "home", label: "Home", icon: Home },
-    { id: "trade", label: "Trade NASCORN", icon: TrendingUp },
+    { id: "trade", label: "Trade APEX", icon: TrendingUp },
     { id: "race", label: "Race to Earn", icon: Trophy },
     { id: "leaderboard", label: "Leaderboard", icon: Users },
     { id: "about", label: "About DAO", icon: Info },
