@@ -12,6 +12,31 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### November 2025 - Leaderboard Event-Based Implementation
+- **Account Information UI**: Removed license and iRating fields from display (lines 481-489 in IRacingAuth.tsx)
+  - Now shows only iRacing ID in Account Information section
+  - Cleaner, simpler user interface
+- **Backend Leaderboard Endpoint** (server/routes.ts lines 80-207):
+  - Created `/api/leaderboard` endpoint that fetches all Claim events from blockchain
+  - Aggregates claims by iRacing ID (not wallet address)
+  - Fixed critical same-block claims bug - now properly accumulates all events even when multiple claims occur in same block
+  - Implements block timestamp caching to avoid duplicate RPC calls
+  - Returns both all-time and weekly leaderboard data
+  - Weekly calculation properly filters claims from last 7 days using actual block timestamps
+  - Fetches racing stats (wins, top 5s, starts) from contract for each iRacing ID
+- **Frontend Leaderboard Component** (client/src/components/Leaderboard.tsx):
+  - Complete rewrite to use backend API instead of non-existent contract view functions
+  - Displays driver rankings sorted by total NASCORN claimed
+  - Shows racing statistics (wins, top 5s, starts) for each driver
+  - Implements "All Time" and "Weekly" tabs with proper data
+  - Proper loading and error states with skeleton UI
+  - Empty state shows "No claims have been made yet" when no data exists
+- **Performance Optimizations**:
+  - Block timestamp caching eliminates redundant RPC calls (O(n) → O(unique blocks))
+  - Weekly calculation reuses cached event data from aggregation phase
+  - No duplicate provider.getBlock() calls across aggregation and weekly filtering
+- **Testing**: E2E tests passed - all UI components functional, tab switching works, empty states correct
+
 ### November 2025 - Security Audit & Contract V2
 - **Critical Security Fixes**: Identified and fixed critical vulnerabilities in claim contract
   - ⛔ Fixed signature replay attack vulnerability by implementing EIP-712 domain separation
@@ -30,7 +55,7 @@ Preferred communication style: Simple, everyday language.
 - **Documentation**:
   - Created comprehensive `CONTRACTREVIEW.md` analyzing all functions and vulnerabilities
   - Created `DEPLOYMENT_INSTRUCTIONS.md` with step-by-step Remix deployment guide
-- **Status**: Awaiting user deployment of V2 contract via Remix IDE
+- **Status**: Contract V2 deployed at 0x647d4f06acAE3Cab64B738f1fB15CE8009b067AC
 
 ## System Architecture
 
