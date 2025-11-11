@@ -1,13 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Trophy, Clock, Zap, Star, ArrowRight, Loader2, Plus, Calendar, Award, Wallet, Users } from "lucide-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Wallet, Users } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { useAccount } from "wagmi";
 import IRacingAuth from "./IRacingAuth";
 
@@ -41,15 +36,7 @@ interface IRacingStats {
 }
 
 export default function RaceToEarn() {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
   const { address, isConnected } = useAccount();
-  const [showAddRace, setShowAddRace] = useState(false);
-  const [raceForm, setRaceForm] = useState({
-    trackName: "",
-    position: "",
-    lapTime: ""
-  });
   const [iracingStats, setIracingStats] = useState<IRacingStats | null>(null);
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -196,157 +183,6 @@ export default function RaceToEarn() {
           onAuthStatusChange={handleAuthStatusChange}
         />
       </div>
-      
-      {/* Fallback Manual Entry for Development */}
-      {!isAuthenticated && (
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Plus className="w-6 h-6" />
-              Manual Race Entry
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground mb-4">
-              While we're building the automated iRacing integration, you can manually add races to test the interface.
-            </p>
-            <Button 
-              variant="outline" 
-              className="w-full" 
-              onClick={() => setShowAddRace(true)}
-              data-testid="button-add-race-manual"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Race Result Manually
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Manual Race Entry Modal */}
-      {showAddRace && (
-        <Card className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md">
-            <CardHeader>
-              <CardTitle>Add Race Result</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="trackName">Track Name</Label>
-                <Select value={raceForm.trackName} onValueChange={(value) => setRaceForm(prev => ({ ...prev, trackName: value }))}>
-                  <SelectTrigger data-testid="select-track">
-                    <SelectValue placeholder="Select track" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Monaco">Monaco</SelectItem>
-                    <SelectItem value="Silverstone">Silverstone</SelectItem>
-                    <SelectItem value="Spa">Spa-Francorchamps</SelectItem>
-                    <SelectItem value="Monza">Monza</SelectItem>
-                    <SelectItem value="Suzuka">Suzuka</SelectItem>
-                    <SelectItem value="Nurburgring">Nürburgring</SelectItem>
-                    <SelectItem value="Laguna Seca">Laguna Seca</SelectItem>
-                    <SelectItem value="Road America">Road America</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Label htmlFor="position">Finish Position</Label>
-                <Input
-                  id="position"
-                  type="number"
-                  min="1"
-                  max="20"
-                  value={raceForm.position}
-                  onChange={(e) => setRaceForm(prev => ({ ...prev, position: e.target.value }))}
-                  data-testid="input-position"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="lapTime">Best Lap Time (seconds, e.g., 83.456)</Label>
-                <Input
-                  id="lapTime"
-                  type="number"
-                  step="0.001"
-                  value={raceForm.lapTime}
-                  onChange={(e) => setRaceForm(prev => ({ ...prev, lapTime: e.target.value }))}
-                  placeholder="83.456"
-                  data-testid="input-laptime"
-                />
-              </div>
-              
-              <div className="flex gap-2 pt-4">
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => setShowAddRace(false)}
-                  data-testid="button-cancel-race"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  className="flex-1"
-                  onClick={async () => {
-                    if (!user?.id) {
-                      toast({
-                        title: "Error",
-                        description: "User not found. Please try reconnecting your wallet.",
-                        variant: "destructive"
-                      });
-                      return;
-                    }
-
-                    try {
-                      const response = await fetch("/api/races", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          userId: user.id,
-                          trackName: raceForm.trackName,
-                          position: parseInt(raceForm.position),
-                          lapTime: raceForm.lapTime
-                        })
-                      });
-                      
-                      if (response.ok) {
-                        const result = await response.json();
-                        toast({
-                          title: "Race Added Successfully!",
-                          description: result.achievements ? 
-                            `Earned ${result.achievements.length} new achievement${result.achievements.length > 1 ? 's' : ''}!` :
-                            `Race completed at ${raceForm.trackName}. Earned ${parseFloat(result.race.earnings).toFixed(2)} APEX!`
-                        });
-                        
-                        // Invalidate and refetch all related queries
-                        queryClient.invalidateQueries({ queryKey: ["/api/racing-profiles", user.id] });
-                        queryClient.invalidateQueries({ queryKey: ["/api/achievements/user", user.id] });
-                        queryClient.invalidateQueries({ queryKey: ["/api/leaderboard"] });
-                        
-                        // Reset form
-                        setRaceForm({ trackName: "", position: "", lapTime: "" });
-                        setShowAddRace(false);
-                      } else {
-                        throw new Error("Failed to add race");
-                      }
-                    } catch (error) {
-                      toast({
-                        title: "Error",
-                        description: "Failed to add race result",
-                        variant: "destructive"
-                      });
-                    }
-                  }}
-                  disabled={!raceForm.trackName || !raceForm.position || !user?.id}
-                  data-testid="button-submit-race"
-                >
-                  Add Race
-                </Button>
-              </div>
-            </CardContent>
-          </div>
-        </Card>
-      )}
 
       <div className="mt-8 text-center border-t pt-6">
         <p className="text-sm text-muted-foreground mb-3">
