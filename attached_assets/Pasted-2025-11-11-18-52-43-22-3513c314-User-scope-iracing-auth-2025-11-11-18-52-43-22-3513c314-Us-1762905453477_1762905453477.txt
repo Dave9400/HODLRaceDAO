@@ -1,0 +1,132 @@
+2025-11-11 18:52:43.22
+3513c314
+User
+scope: 'iracing.auth',
+2025-11-11 18:52:43.22
+3513c314
+User
+audience: 'data-server',
+2025-11-11 18:52:43.22
+3513c314
+User
+env: 'production'
+2025-11-11 18:52:43.22
+3513c314
+User
+}
+2025-11-11 18:52:43.22
+3513c314
+User
+[iRacing OAuth] Full auth URL: https://oauth.iracing.com/oauth2/authorize?response_type=code&client_id=hodl-racing&redirect_uri=https%3A%2F%2Fhodlracing.fun%2Fapi%2Fauth%2Fcallback&state=34a154e70b0fc223efeaa5a8e1ceb3d4e1ab76c5e29fb3dd90bb439a87e4e1fd&scope=iracing.auth&audience=data-server&code_challenge=HDZ1SlxvPDiFiBITIEPy1OBi-P6sqAxA9Ghiy09tZqM&code_challenge_method=S256
+2025-11-11 18:52:43.22
+3513c314
+User
+11:52:43 PM [express] POST /api/iracing/auth/start 200 in 0ms :: {"authUrl":"https://oauth.iracing.co…
+2025-11-11 18:52:51.63
+3513c314
+User
+[iRacing OAuth] Callback received: {
+2025-11-11 18:52:51.63
+3513c314
+User
+hasCode: true,
+2025-11-11 18:52:51.63
+3513c314
+User
+walletAddress: '0xA7847Ee70c4a500b4B53CBFe6FBFfAa4570eB335'
+2025-11-11 18:52:51.63
+3513c314
+User
+}
+2025-11-11 18:52:51.63
+3513c314
+User
+[iRacing OAuth] Exchanging code for token with client credentials in body
+2025-11-11 18:52:52.03
+3513c314
+User
+[iRacing OAuth] Access token received
+2025-11-11 18:52:52.03
+3513c314
+User
+[iRacing OAuth] Redirecting to: https://hodlracing.fun/?token=***&success=true
+2025-11-11 18:52:52.04
+3513c314
+User
+11:52:52 PM [express] GET /api/auth/callback 302 in 409ms
+2025-11-11 18:52:52.76
+3513c314
+User
+11:52:52 PM [express] GET /api/users/wallet/0xA7847Ee70c4a500b4B53CBFe6FBFfAa4570eB335 304 in 1ms :: …
+2025-11-11 18:52:52.77
+3513c314
+User
+[iRacing Profile] Fetching member info...
+2025-11-11 18:52:52.78
+3513c314
+User
+11:52:52 PM [express] GET /api/iracing/status 304 in 0ms :: {"available":true,"message":"iRacing API …
+2025-11-11 18:52:52.89
+3513c314
+User
+11:52:52 PM [express] GET /api/contract/stats 304 in 120ms :: {"totalClaimed":39.17,"totalPool":500,"…
+2025-11-11 18:52:52.98
+3513c314
+User
+[iRacing Profile] Member info link received, fetching data...
+2025-11-11 18:52:53.12
+3513c314
+User
+[iRacing Profile] Member info received for: Thomas M Venturino
+2025-11-11 18:52:53.12
+3513c314
+User
+[iRacing Profile] Failed to save iRacing profile: Error: All attempts to open a WebSocket to connect to the database failed. Please refer to https://github.com/neondatabase/serverless/blob/main/CONFIG.md#websocketconstructor-typeof-websocket--undefined. Details: fetch failed
+2025-11-11 18:52:53.12
+3513c314
+User
+at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+2025-11-11 18:52:53.12
+3513c314
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-11 18:52:53.12
+3513c314
+User
+at async file:///home/runner/workspace/dist/index.js:382:11
+2025-11-11 18:52:53.12
+3513c314
+User
+[iRacing Profile] Fetching yearly stats...
+2025-11-11 18:52:53.27
+3513c314
+User
+[iRacing Profile] Yearly stats link received, fetching data...
+2025-11-11 18:52:53.32
+3513c314
+User
+[iRacing Profile] Yearly stats type: object isArray: false
+2025-11-11 18:52:53.32
+3513c314
+User
+[iRacing Profile] Yearly stats preview: {"stats":[{"category_id":1,"category":"Oval","starts":1,"wins":0,"top5":0,"poles":0,"avg_start_position":6,"avg_finish_position":9,"laps":28,"laps_led":0,"avg_incidents":14,"avg_points":13,"win_percentage":0,"top5_percentage":0,"laps_led_percentage":0,"year":2025,"poles_percentage":0},{"category_id":5,"category":"Sports Car","starts":1,"wins":0,"top5":0,"poles":0,"avg_start_position":10,"avg_finish_position":11,"laps":1,"laps_led":0,"avg_incidents":2,"avg_points":3,"win_percentage":0,"top5_perce
+2025-11-11 18:52:53.32
+3513c314
+User
+[iRacing Profile] Aggregated stats from 3 categories
+2025-11-11 18:52:53.32
+3513c314
+User
+[iRacing Profile] Total stats calculated: { wins: 1, top5s: 4, starts: 13 }
+2025-11-11 18:52:53.32
+3513c314
+User
+11:52:53 PM [express] GET /api/iracing/profile 304 in 547ms :: {"iracingId":"1205974","displayName":"…
+2025-11-11 18:52:56.20
+3513c314
+User
+11:52:56 PM [express] POST /api/claim/generate-signature 503 in 1ms :: {"error":"Claim signer not con…
+2025-11-11 18:53:01.06
+3513c314
+User
+11:53:01 PM [express] POST /api/claim/generate-signature 503 in 0ms :: {"error":"Claim signer not con…

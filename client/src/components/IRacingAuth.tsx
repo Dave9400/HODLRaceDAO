@@ -357,18 +357,97 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
     return points * BASE_TOKENS_PER_POINT;
   };
 
-  if (authStatus === 'authenticated' && iracingStats) {
-    // Calculate delta stats - based on iRacing ID, not wallet
-    const deltaWins = lastClaimData ? iracingStats.careerWins - Number(lastClaimData[0]) : iracingStats.careerWins;
-    const deltaTop5s = lastClaimData ? iracingStats.careerTop5s - Number(lastClaimData[1]) : iracingStats.careerTop5s;
-    const deltaStarts = lastClaimData ? iracingStats.careerStarts - Number(lastClaimData[2]) : iracingStats.careerStarts;
-    
-    // Check if this iRacing ID has claimed before (regardless of wallet)
-    const hasPreviousClaim = lastClaimData !== undefined && 
-      (lastClaimData[0] > BigInt(0) || lastClaimData[1] > BigInt(0) || lastClaimData[2] > BigInt(0));
+  // Calculate delta stats - based on iRacing ID, not wallet
+  const deltaWins = lastClaimData && iracingStats ? iracingStats.careerWins - Number(lastClaimData[0]) : iracingStats?.careerWins || 0;
+  const deltaTop5s = lastClaimData && iracingStats ? iracingStats.careerTop5s - Number(lastClaimData[1]) : iracingStats?.careerTop5s || 0;
+  const deltaStarts = lastClaimData && iracingStats ? iracingStats.careerStarts - Number(lastClaimData[2]) : iracingStats?.careerStarts || 0;
+  
+  // Check if this iRacing ID has claimed before (regardless of wallet)
+  const hasPreviousClaim = lastClaimData !== undefined && 
+    (lastClaimData[0] > BigInt(0) || lastClaimData[1] > BigInt(0) || lastClaimData[2] > BigInt(0));
 
-    return (
-      <div className="space-y-6">
+  return (
+    <div className="space-y-6">
+      {/* Halving Progress - Show early when contract stats are loaded */}
+      {contractStats && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="w-6 h-6 text-blue-500" />
+              Halving Progress
+            </CardTitle>
+            <CardDescription>
+              Track the total claimed supply and progress towards the next halving event
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                  <div className="text-sm text-muted-foreground">Total Pool</div>
+                  <div className="text-2xl font-bold">
+                    {contractStats.totalPool.toLocaleString(undefined, { maximumFractionDigits: 0 })}M
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm text-muted-foreground">Available to Claim</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {(contractStats.totalPool - contractStats.totalClaimed).toLocaleString(undefined, { maximumFractionDigits: 0 })}M
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm text-muted-foreground">Total Claimed</div>
+                  <div className="text-2xl font-bold">
+                    {contractStats.totalClaimed.toLocaleString(undefined, { maximumFractionDigits: 0 })}M
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm text-muted-foreground">Current Multiplier</div>
+                  <div className="text-2xl font-bold">
+                    {contractStats.currentMultiplier}x
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Progress to Next Halving</span>
+                  <span className="font-medium">{contractStats.halving.progressPercent.toFixed(1)}%</span>
+                </div>
+                <Progress value={contractStats.halving.progressPercent} className="h-2" />
+                <div className="text-xs text-muted-foreground text-center">
+                  {contractStats.halving.remainingUntilHalving.toLocaleString(undefined, { maximumFractionDigits: 2 })}M tokens until rewards halve
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Wallet Balance - Show immediately when wallet is connected */}
+      {isConnected && apexBalance !== undefined && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Wallet className="w-6 h-6 text-green-500" />
+              Your APEX Balance
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center">
+              <div className="text-4xl font-bold text-primary mb-2" data-testid="text-wallet-balance">
+                {Number(formatEther(apexBalance)).toLocaleString()} APEX
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Connected wallet balance
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {authStatus === 'authenticated' && iracingStats ? (
+        <>
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -381,16 +460,6 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {apexBalance !== undefined && (
-                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <Wallet className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Wallet Balance</span>
-                  </div>
-                  <div className="font-bold">{Number(formatEther(apexBalance)).toLocaleString()} APEX</div>
-                </div>
-              )}
-
               {hasPreviousClaim && (
                 <Alert>
                   <CheckCircle className="h-4 w-4" />
@@ -543,66 +612,8 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
             </div>
           </CardContent>
         </Card>
-
-        {contractStats && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="w-6 h-6 text-blue-500" />
-                Halving Progress
-              </CardTitle>
-              <CardDescription>
-                Track the total claimed supply and progress towards the next halving event
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div>
-                    <div className="text-sm text-muted-foreground">Total Pool</div>
-                    <div className="text-2xl font-bold">
-                      {contractStats.totalPool.toLocaleString(undefined, { maximumFractionDigits: 0 })}M
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-muted-foreground">Available to Claim</div>
-                    <div className="text-2xl font-bold text-green-600">
-                      {(contractStats.totalPool - contractStats.totalClaimed).toLocaleString(undefined, { maximumFractionDigits: 0 })}M
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-muted-foreground">Total Claimed</div>
-                    <div className="text-2xl font-bold">
-                      {contractStats.totalClaimed.toLocaleString(undefined, { maximumFractionDigits: 0 })}M
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-muted-foreground">Current Multiplier</div>
-                    <div className="text-2xl font-bold">
-                      {contractStats.currentMultiplier}x
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Progress to Next Halving</span>
-                    <span className="font-medium">{contractStats.halving.progressPercent.toFixed(1)}%</span>
-                  </div>
-                  <Progress value={contractStats.halving.progressPercent} className="h-2" />
-                  <div className="text-xs text-muted-foreground text-center">
-                    {contractStats.halving.remainingUntilHalving.toLocaleString(undefined, { maximumFractionDigits: 2 })}M tokens until rewards halve
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-    );
-  }
-
-  return (
+        </>
+      ) : (
     <Card data-testid="iracing-auth-component">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
@@ -662,5 +673,7 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
         </div>
       </CardContent>
     </Card>
+      )}
+    </div>
   );
 }
