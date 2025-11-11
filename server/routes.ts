@@ -640,7 +640,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/contract/stats", async (req, res) => {
     try {
-      const CLAIM_CONTRACT_ADDRESS = process.env.VITE_CLAIM_CONTRACT_ADDRESS || "0x647d4f06acAE3Cab64B738f1fB15CE8009b067AC";
+      const CLAIM_CONTRACT_ADDRESS = process.env.VITE_CLAIM_CONTRACT_ADDRESS || "0x4Eba210B149b05f90548E51947c52586Cb6Af1A5";
       
       // Minimal ABI for reading contract data
       const claimContractABI = [
@@ -781,7 +781,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       // EIP-712 Domain Separator (must match contract)
-      const CONTRACT_ADDRESS = process.env.VITE_CLAIM_CONTRACT_ADDRESS || "0x647d4f06acAE3Cab64B738f1fB15CE8009b067AC";
+      const CONTRACT_ADDRESS = process.env.VITE_CLAIM_CONTRACT_ADDRESS || "0x4Eba210B149b05f90548E51947c52586Cb6Af1A5";
       const CHAIN_ID = 84532; // Base Sepolia
       
       const domain = {
