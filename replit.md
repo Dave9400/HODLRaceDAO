@@ -12,6 +12,15 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### November 2025 - Contract Deployment Update
+- **New Contract Addresses**: Deployed new token and claim contracts
+  - Token: 0xF525b62868B03ecc00DeDbbd3A2B94f7faf259F8
+  - Claim V2: 0x4Eba210B149b05f90548E51947c52586Cb6Af1A5
+- **Known Issue**: npm package installation broken in Replit environment
+  - Packages claim to install but don't appear in node_modules
+  - Workaround: Run app with `npx tsx server/index.ts` instead of workflow
+  - Contract addresses updated throughout codebase (contracts.ts, routes.ts, replit.md)
+
 ### November 2025 - Real Names on Leaderboard & Crypto Newbie UX
 - **iRacing Profiles Database**: Created `iracing_profiles` table to store user names
   - Columns: iracing_id (PK), display_name, first_name, last_name, last_updated
