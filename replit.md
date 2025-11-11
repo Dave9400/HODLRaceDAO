@@ -26,10 +26,7 @@ Preferred communication style: Simple, everyday language.
   - Comprehensive setup guide in GAS_SPONSORSHIP_SETUP.md
   - Requires CDP_PAYMASTER_URL secret from Coinbase Developer Platform
   - $15,000 in free gas credits available through Base Gasless Campaign
-- **Deployment Issue**: Build tools (vite, esbuild, @vitejs/plugin-react) need to move from devDependencies to dependencies
-  - See DEPLOYMENT_FIX.md for complete guide
-  - Requires rollback to restore working environment first
-- **Status**: Real names working, UI improved for beginners, gas sponsorship ready, contracts updated to new deployments
+- **Status**: Real names working, UI improved for beginners, gas sponsorship ready for user setup
 
 ### November 2025 - Leaderboard Event-Based Implementation
 - **Account Information UI**: Removed license and iRating fields from display (lines 481-489 in IRacingAuth.tsx)
