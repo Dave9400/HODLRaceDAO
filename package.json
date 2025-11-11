@@ -54,7 +54,7 @@
     "@uniswap/v4-sdk": "^1.21.4",
     "@uniswap/widgets": "^2.59.0",
     "@wagmi/connectors": "^5.11.2",
-    "@wagmi/core": "^2.21.2",
+    "@wagmi/core": "^2.22.1",
     "axios": "^1.12.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
