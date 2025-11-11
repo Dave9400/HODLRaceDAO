@@ -79,7 +79,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Leaderboard routes - fetch from blockchain claim events
   app.get("/api/leaderboard", async (req, res) => {
     try {
-      const CLAIM_CONTRACT_ADDRESS = process.env.VITE_CLAIM_CONTRACT_ADDRESS || "0x647d4f06acAE3Cab64B738f1fB15CE8009b067AC";
+      const CLAIM_CONTRACT_ADDRESS = process.env.VITE_CLAIM_CONTRACT_ADDRESS || "0x4Eba210B149b05f90548E51947c52586Cb6Af1A5";
       
       const claimContractABI = [
         "event Claimed(address indexed user, uint256 iracingId, uint256 amount, uint256 claimNumber)",
