@@ -518,13 +518,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 displayName,
                 firstName,
                 lastName,
+                lastUpdated: new Date(),
               },
             });
           
-          console.log('[iRacing Profile] Saved iRacing profile to database:', { iracingId, displayName, firstName, lastName });
+          console.log('[iRacing Profile] ✅ Saved iRacing profile to database:', { 
+            iracingId, 
+            displayName, 
+            firstName, 
+            lastName 
+          });
         } catch (dbError) {
-          console.error('[iRacing Profile] Failed to save iRacing profile:', dbError);
+          console.error('[iRacing Profile] ❌ Failed to save iRacing profile:', dbError);
+          // Re-throw to make the error visible
+          throw dbError;
         }
+      } else {
+        console.warn('[iRacing Profile] ⚠️  No iRacing ID found in profile data');
       }
       
       // Now fetch yearly stats (more reliable than career stats)
