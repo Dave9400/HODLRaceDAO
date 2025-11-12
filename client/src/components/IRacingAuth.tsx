@@ -79,7 +79,7 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
   // Paymaster support for Coinbase Smart Wallet (experimental wagmi hooks)
   const [writeContractsId, setWriteContractsId] = useState<string | undefined>();
   const { data: availableCapabilities } = useCapabilities({ account: address });
-  const { writeContracts, isPending: isWriteContractsPending } = useWriteContracts();
+  const { writeContracts, writeContractsAsync, data: writeContractsData, isPending: isWriteContractsPending } = useWriteContracts();
   
   const { data: callsStatus } = useCallsStatus({
     id: writeContractsId as `0x${string}`,
@@ -326,10 +326,10 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
       const { signature, iracingId, wins, top5s, starts } = await response.json();
       
       // Try gas-sponsored transaction first (Coinbase Smart Wallet)
-      if (paymasterCapabilities) {
+      if (paymasterCapabilities && writeContractsAsync) {
         console.log('[Claim] Using gas-sponsored transaction via paymaster');
         try {
-          const id = await writeContracts({
+          const id = await writeContractsAsync({
             contracts: [
               {
                 address: CLAIM_CONTRACT_ADDRESS,
@@ -347,29 +347,8 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
             capabilities: paymasterCapabilities,
           });
           
-          if (id) {
-            setWriteContractsId(id);
-            console.log('[Claim] Sponsored transaction submitted:', id);
-          } else {
-            // Paymaster failed to return ID, fall back to regular transaction
-            console.warn('[Claim] Paymaster failed, falling back to regular transaction');
-            toast({
-              title: "Falling back to regular transaction",
-              description: "Gas sponsorship unavailable. You'll need to pay gas fees.",
-            });
-            writeContract({
-              address: CLAIM_CONTRACT_ADDRESS,
-              abi: CLAIM_CONTRACT_ABI,
-              functionName: 'claim',
-              args: [
-                BigInt(iracingId),
-                BigInt(wins),
-                BigInt(top5s),
-                BigInt(starts),
-                signature as `0x${string}`,
-              ],
-            });
-          }
+          setWriteContractsId(id);
+          console.log('[Claim] Gas-sponsored transaction submitted:', id);
         } catch (paymasterError) {
           // Paymaster call failed, fall back to regular transaction
           console.error('[Claim] Paymaster error, falling back to regular transaction:', paymasterError);

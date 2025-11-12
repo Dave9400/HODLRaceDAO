@@ -11,7 +11,9 @@ export const config = createConfig({
     metaMask(),
     coinbaseWallet({
       appName: 'HODL Racing DAO',
-      appLogoUrl: 'https://hodlracing.io/logo.png'
+      appLogoUrl: typeof window !== 'undefined' 
+        ? `${window.location.origin}/app-icon.png`
+        : '/app-icon.png'
     }),
     // Note: WalletConnect requires a real project ID from https://cloud.reown.com
     // Using placeholder for development - replace with real project ID for production
