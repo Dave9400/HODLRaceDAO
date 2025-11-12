@@ -95,9 +95,13 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
     ? (() => {
         const capabilitiesForChain = availableCapabilities[chainId];
         if (capabilitiesForChain?.['paymasterService']?.['supported']) {
+          const paymasterUrl = typeof window !== 'undefined' 
+            ? `${window.location.origin}/api/paymaster`
+            : '/api/paymaster';
+          
           return {
             paymasterService: {
-              url: '/api/paymaster', // Backend proxy to CDP paymaster
+              url: paymasterUrl, // Absolute URL to backend proxy (keeps CDP_PAYMASTER_URL secret)
             },
           };
         }
