@@ -166,8 +166,8 @@ Preferred communication style: Simple, everyday language.
 ### Blockchain Services
 - **Base Network**: Ethereum Layer 2 network (Base Sepolia testnet) for low-cost token transactions
 - **APEX Token Contract**: Custom ERC-20 token deployed on Base (address: 0xF525b62868B03ecc00DeDbbd3A2B94f7faf259F8)
-- **Claim Contract V2**: Smart contract for distributing APEX rewards with EIP-712 signatures (address: 0x4Eba210B149b05f90548E51947c52586Cb6Af1A5)
-- **Web3 Providers**: Integration with wallet providers through Wagmi connectors
+- **Claim Contract V2**: Smart contract for distributing APEX rewards with EIP-712 signatures (address: 0xf9BAE7532985Ff541a608C4C01C222445a93B751)
+- **Web3 Providers**: Integration with wallet providers through Wagmi connectors (MetaMask, Coinbase Wallet, WalletConnect, Farcaster)
 
 ### Smart Contract Features
 - **Incremental Claims**: Users can claim rewards multiple times based on stat deltas since their last claim
