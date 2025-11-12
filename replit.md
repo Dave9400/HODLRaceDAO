@@ -12,6 +12,20 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### November 2025 - Claim Page UX Improvements
+- **Removed Manual Race Entry**: Cleaned up claim interface by removing development-only manual race entry section
+  - Removed manual entry card and modal from RaceToEarn.tsx
+  - Cleaned up unused state variables and imports (showAddRace, raceForm, etc.)
+- **Restructured IRacingAuth Component**: Improved information hierarchy and user flow
+  - **Halving Progress**: Now displays BEFORE wallet/iRacing connection (top-level, gated on contractStats)
+  - **Wallet Balance**: Shows immediately after wallet connection (doesn't wait for iRacing auth)
+  - Both metrics visible to users earlier in the flow, improving transparency
+- **Component Architecture**: Refactored to use wrapper div with conditional rendering:
+  - Halving progress card (shows when contractStats available)
+  - Wallet balance card (shows when wallet connected)
+  - Auth-gated content (claim interface when iRacing authenticated, connection prompt otherwise)
+- **Status**: Changes complete and tested via architect review, ready for deployment
+
 ### November 2025 - Contract Deployment Update
 - **New Contract Addresses**: Deployed new token and claim contracts
   - Token: 0xF525b62868B03ecc00DeDbbd3A2B94f7faf259F8
