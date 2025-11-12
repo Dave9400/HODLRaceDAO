@@ -11,6 +11,9 @@ interface WalletModalProps {
 
 const WalletIcon = ({ name }: { name: string }) => {
   switch (name) {
+    case 'Farcaster':
+    case 'Farcaster Wallet':
+      return <Circle className="w-5 h-5 text-purple-600" />;
     case 'MetaMask':
       return <Hexagon className="w-5 h-5 text-orange-500" />;
     case 'Coinbase Wallet':
@@ -81,10 +84,11 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
                     )}
                   </div>
                   <div className="text-sm text-muted-foreground">
+                    {(connector.name === 'Farcaster' || connector.name === 'Farcaster Wallet') && 'Connect with your Farcaster wallet'}
                     {connector.name === 'MetaMask' && 'Connect using MetaMask wallet'}
                     {connector.name === 'Coinbase Wallet' && 'No downloads needed - create wallet in seconds'}
                     {connector.name === 'WalletConnect' && 'Connect with WalletConnect protocol'}
-                    {!['MetaMask', 'Coinbase Wallet', 'WalletConnect'].includes(connector.name) && 'Connect with this wallet'}
+                    {!['Farcaster', 'Farcaster Wallet', 'MetaMask', 'Coinbase Wallet', 'WalletConnect'].includes(connector.name) && 'Connect with this wallet'}
                   </div>
                 </div>
                 <ExternalLink size={16} className="ml-auto opacity-50" />

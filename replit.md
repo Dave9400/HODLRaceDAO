@@ -43,10 +43,17 @@ Preferred communication style: Simple, everyday language.
   - Auth-gated content (claim interface when iRacing authenticated, connection prompt otherwise)
 - **Status**: Changes complete and tested via architect review, ready for deployment
 
+### November 2025 - Farcaster Wallet Integration
+- **Farcaster Mini App Connector**: Added native Farcaster wallet support
+  - Integrated `@farcaster/miniapp-wagmi-connector` for seamless Farcaster wallet connections
+  - Farcaster wallet automatically appears first in connector list when accessed through Farcaster
+  - Works seamlessly in regular browsers (shows all wallets) and Farcaster frames (prioritizes Farcaster wallet)
+  - No timeout issues - connector handles Farcaster context detection automatically
+- **Contract Address Update**: Updated claim contract to 0xf9BAE7532985Ff541a608C4C01C222445a93B751
+- **Status**: Farcaster integration complete, ready for testing in Farcaster client
+
 ### November 2025 - Contract Deployment Update
-- **New Contract Addresses**: Deployed new token and claim contracts
-  - Token: 0xF525b62868B03ecc00DeDbbd3A2B94f7faf259F8
-  - Claim V2: 0x4Eba210B149b05f90548E51947c52586Cb6Af1A5
+- **Token Contract**: 0xF525b62868B03ecc00DeDbbd3A2B94f7faf259F8
 - **Known Issue**: npm package installation broken in Replit environment
   - Packages claim to install but don't appear in node_modules
   - Workaround: Run app with `npx tsx server/index.ts` instead of workflow
