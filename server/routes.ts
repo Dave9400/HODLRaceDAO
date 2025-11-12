@@ -79,7 +79,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Leaderboard routes - fetch from blockchain claim events
   app.get("/api/leaderboard", async (req, res) => {
     try {
-      const CLAIM_CONTRACT_ADDRESS = process.env.VITE_CLAIM_CONTRACT_ADDRESS || "0x4Eba210B149b05f90548E51947c52586Cb6Af1A5";
+      const CLAIM_CONTRACT_ADDRESS = process.env.VITE_CLAIM_CONTRACT_ADDRESS || "0xf9BAE7532985Ff541a608C4C01C222445a93B751";
       
       const claimContractABI = [
         "event Claimed(address indexed user, uint256 iracingId, uint256 amount, uint256 claimNumber)",
@@ -640,7 +640,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/contract/stats", async (req, res) => {
     try {
-      const CLAIM_CONTRACT_ADDRESS = process.env.VITE_CLAIM_CONTRACT_ADDRESS || "0x4Eba210B149b05f90548E51947c52586Cb6Af1A5";
+      const CLAIM_CONTRACT_ADDRESS = process.env.VITE_CLAIM_CONTRACT_ADDRESS || "0xf9BAE7532985Ff541a608C4C01C222445a93B751";
       
       // Minimal ABI for reading contract data
       const claimContractABI = [
@@ -781,7 +781,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       // EIP-712 Domain Separator (must match contract)
-      const CONTRACT_ADDRESS = process.env.VITE_CLAIM_CONTRACT_ADDRESS || "0x4Eba210B149b05f90548E51947c52586Cb6Af1A5";
+      const CONTRACT_ADDRESS = process.env.VITE_CLAIM_CONTRACT_ADDRESS || "0xf9BAE7532985Ff541a608C4C01C222445a93B751";
       const CHAIN_ID = 84532; // Base Sepolia
       
       const domain = {
