@@ -86,15 +86,17 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
         // Only restore if less than 10 minutes old and for same wallet
         if (Date.now() - timestamp < 10 * 60 * 1000 && walletAddress === address) {
           console.log('[Claim] Restored pending transaction ID:', id);
-          setIsClaiming(true); // Resume claiming state
+          // Don't set isClaiming here - let useEffect handle it based on status
           return id;
         } else {
           // Clear stale data
+          console.log('[Claim] Clearing stale transaction data');
           localStorage.removeItem('pending-claim-tx');
         }
       }
     } catch (e) {
       console.error('[Claim] Failed to restore transaction ID:', e);
+      localStorage.removeItem('pending-claim-tx');
     }
     return undefined;
   });
@@ -109,6 +111,34 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
         data?.status === 'CONFIRMED' ? false : 1000,
     },
   });
+  
+  // Handle restored transaction state - only set claiming if actually pending
+  useEffect(() => {
+    if (writeContractsId && callsStatus) {
+      if (callsStatus.status === 'PENDING') {
+        setIsClaiming(true);
+        console.log('[Claim] Transaction is still pending, showing claiming UI');
+      } else if (callsStatus.status === 'CONFIRMED' || callsStatus.status === 'FAILED') {
+        // Transaction already completed - clear claiming state and localStorage
+        setIsClaiming(false);
+        setWriteContractsId(undefined);
+        localStorage.removeItem('pending-claim-tx');
+        console.log('[Claim] Restored transaction already completed:', callsStatus.status);
+      }
+    }
+  }, [writeContractsId, callsStatus?.status]);
+  
+  // Safety check: Clear claiming state if we detect claim was successful
+  useEffect(() => {
+    const stored = localStorage.getItem('pending-claim-tx');
+    if (stored && hasClaimedData && iracingStats) {
+      // User has successfully claimed - clear any stale transaction data
+      console.log('[Claim] Detected successful claim, clearing pending transaction');
+      localStorage.removeItem('pending-claim-tx');
+      setWriteContractsId(undefined);
+      setIsClaiming(false);
+    }
+  }, [hasClaimedData, iracingStats?.iracingId]);
   
   // Build paymaster capabilities if supported
   const paymasterCapabilities = availableCapabilities && chainId 
