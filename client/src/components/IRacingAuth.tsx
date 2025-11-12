@@ -77,7 +77,27 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
   });
   
   // Paymaster support for Coinbase Smart Wallet (experimental wagmi hooks)
-  const [writeContractsId, setWriteContractsId] = useState<string | undefined>();
+  const [writeContractsId, setWriteContractsId] = useState<string | undefined>(() => {
+    // Restore persisted transaction ID on mount (survives page refresh/navigation)
+    try {
+      const stored = localStorage.getItem('pending-claim-tx');
+      if (stored) {
+        const { id, timestamp, walletAddress } = JSON.parse(stored);
+        // Only restore if less than 10 minutes old and for same wallet
+        if (Date.now() - timestamp < 10 * 60 * 1000 && walletAddress === address) {
+          console.log('[Claim] Restored pending transaction ID:', id);
+          setIsClaiming(true); // Resume claiming state
+          return id;
+        } else {
+          // Clear stale data
+          localStorage.removeItem('pending-claim-tx');
+        }
+      }
+    } catch (e) {
+      console.error('[Claim] Failed to restore transaction ID:', e);
+    }
+    return undefined;
+  });
   const { data: availableCapabilities } = useCapabilities({ account: address });
   const { writeContracts, writeContractsAsync, data: writeContractsData, isPending: isWriteContractsPending } = useWriteContracts();
   
@@ -358,7 +378,17 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
           
           if (id) {
             setWriteContractsId(id);
+            // Persist ID to localStorage so it survives page refresh/navigation
+            localStorage.setItem('pending-claim-tx', JSON.stringify({
+              id,
+              timestamp: Date.now(),
+              walletAddress: address
+            }));
             console.log('[Claim] Gas-sponsored transaction submitted:', id);
+            toast({
+              title: "Transaction Submitted",
+              description: "You can safely leave this page. We'll track your transaction.",
+            });
           } else {
             console.warn('[Claim] No transaction ID returned, capabilities may be stale');
             throw new Error('No transaction ID returned from paymaster');
@@ -443,6 +473,7 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
       });
       setIsClaiming(false);
       setWriteContractsId(undefined); // Reset
+      localStorage.removeItem('pending-claim-tx'); // Clear persisted ID
       
       // Wait a moment for blockchain state to update, then refetch all data
       setTimeout(() => {
@@ -463,6 +494,7 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
       });
       setIsClaiming(false);
       setWriteContractsId(undefined); // Reset
+      localStorage.removeItem('pending-claim-tx'); // Clear persisted ID
     }
   }, [callsStatus?.status]);
   
