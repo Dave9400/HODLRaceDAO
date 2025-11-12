@@ -20,6 +20,7 @@ import {
 import { useAccount } from 'wagmi';
 import { useToast } from "@/hooks/use-toast";
 import { useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi';
+import { useWriteContracts, useCapabilities, useCallsStatus } from 'wagmi/experimental';
 import { parseEther, formatEther } from 'viem';
 import { CLAIM_CONTRACT_ADDRESS, CLAIM_CONTRACT_ABI, APEX_TOKEN_ADDRESS, APEX_TOKEN_ABI } from '@/lib/contracts';
 import { useQuery } from '@tanstack/react-query';
@@ -65,14 +66,44 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
   const [isClaiming, setIsClaiming] = useState(false);
   const [iracingAuthToken, setIracingAuthToken] = useState<string | null>(null);
   
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, chainId } = useAccount();
   const { toast } = useToast();
   
+  // Legacy hook for fallback (non-Smart Wallet users)
   const { writeContract, data: claimTxHash, isPending: isClaimPending } = useWriteContract();
   
   const { isLoading: isTxLoading, isSuccess: isTxSuccess } = useWaitForTransactionReceipt({
     hash: claimTxHash,
   });
+  
+  // Paymaster support for Coinbase Smart Wallet (experimental wagmi hooks)
+  const [writeContractsId, setWriteContractsId] = useState<string | undefined>();
+  const { data: availableCapabilities } = useCapabilities({ account: address });
+  const { writeContracts, isPending: isWriteContractsPending } = useWriteContracts();
+  
+  const { data: callsStatus } = useCallsStatus({
+    id: writeContractsId as `0x${string}`,
+    query: {
+      enabled: !!writeContractsId,
+      refetchInterval: (data) =>
+        data?.status === 'CONFIRMED' ? false : 1000,
+    },
+  });
+  
+  // Build paymaster capabilities if supported
+  const paymasterCapabilities = availableCapabilities && chainId 
+    ? (() => {
+        const capabilitiesForChain = availableCapabilities[chainId];
+        if (capabilitiesForChain?.['paymasterService']?.['supported']) {
+          return {
+            paymasterService: {
+              url: '/api/paymaster', // Backend proxy to CDP paymaster
+            },
+          };
+        }
+        return undefined;
+      })()
+    : undefined;
   
   const { data: hasClaimedData, refetch: refetchHasClaimed } = useReadContract({
     address: CLAIM_CONTRACT_ADDRESS,
@@ -290,18 +321,87 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
       
       const { signature, iracingId, wins, top5s, starts } = await response.json();
       
-      writeContract({
-        address: CLAIM_CONTRACT_ADDRESS,
-        abi: CLAIM_CONTRACT_ABI,
-        functionName: 'claim',
-        args: [
-          BigInt(iracingId),
-          BigInt(wins),
-          BigInt(top5s),
-          BigInt(starts),
-          signature as `0x${string}`,
-        ],
-      });
+      // Try gas-sponsored transaction first (Coinbase Smart Wallet)
+      if (paymasterCapabilities) {
+        console.log('[Claim] Using gas-sponsored transaction via paymaster');
+        try {
+          const id = await writeContracts({
+            contracts: [
+              {
+                address: CLAIM_CONTRACT_ADDRESS,
+                abi: CLAIM_CONTRACT_ABI,
+                functionName: 'claim',
+                args: [
+                  BigInt(iracingId),
+                  BigInt(wins),
+                  BigInt(top5s),
+                  BigInt(starts),
+                  signature as `0x${string}`,
+                ],
+              },
+            ],
+            capabilities: paymasterCapabilities,
+          });
+          
+          if (id) {
+            setWriteContractsId(id);
+            console.log('[Claim] Sponsored transaction submitted:', id);
+          } else {
+            // Paymaster failed to return ID, fall back to regular transaction
+            console.warn('[Claim] Paymaster failed, falling back to regular transaction');
+            toast({
+              title: "Falling back to regular transaction",
+              description: "Gas sponsorship unavailable. You'll need to pay gas fees.",
+            });
+            writeContract({
+              address: CLAIM_CONTRACT_ADDRESS,
+              abi: CLAIM_CONTRACT_ABI,
+              functionName: 'claim',
+              args: [
+                BigInt(iracingId),
+                BigInt(wins),
+                BigInt(top5s),
+                BigInt(starts),
+                signature as `0x${string}`,
+              ],
+            });
+          }
+        } catch (paymasterError) {
+          // Paymaster call failed, fall back to regular transaction
+          console.error('[Claim] Paymaster error, falling back to regular transaction:', paymasterError);
+          toast({
+            title: "Falling back to regular transaction",
+            description: "Gas sponsorship unavailable. You'll need to pay gas fees.",
+          });
+          writeContract({
+            address: CLAIM_CONTRACT_ADDRESS,
+            abi: CLAIM_CONTRACT_ABI,
+            functionName: 'claim',
+            args: [
+              BigInt(iracingId),
+              BigInt(wins),
+              BigInt(top5s),
+              BigInt(starts),
+              signature as `0x${string}`,
+            ],
+          });
+        }
+      } else {
+        // Fallback to regular transaction (user pays gas)
+        console.log('[Claim] No paymaster capabilities detected, using regular transaction (user pays gas)');
+        writeContract({
+          address: CLAIM_CONTRACT_ADDRESS,
+          abi: CLAIM_CONTRACT_ABI,
+          functionName: 'claim',
+          args: [
+            BigInt(iracingId),
+            BigInt(wins),
+            BigInt(top5s),
+            BigInt(starts),
+            signature as `0x${string}`,
+          ],
+        });
+      }
       
     } catch (error: any) {
       console.error('Claim error:', error);
@@ -314,6 +414,7 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
     }
   };
   
+  // Handle legacy transaction completion (non-Smart Wallet)
   useEffect(() => {
     if (isTxSuccess) {
       toast({
@@ -334,6 +435,39 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
       }, 2000); // 2 second delay
     }
   }, [isTxSuccess]);
+  
+  // Handle sponsored transaction completion (Smart Wallet with paymaster)
+  useEffect(() => {
+    if (callsStatus?.status === 'CONFIRMED') {
+      console.log('[Claim] Sponsored transaction confirmed!', callsStatus);
+      toast({
+        title: "Claim Successful! 🎉",
+        description: "APEX tokens have been sent to your wallet (gas-free!)",
+      });
+      setIsClaiming(false);
+      setWriteContractsId(undefined); // Reset
+      
+      // Wait a moment for blockchain state to update, then refetch all data
+      setTimeout(() => {
+        refetchContractStats();
+        refetchHasClaimed();
+        refetchClaimableAmount();
+        refetchUserClaimCount();
+        refetchLastClaim();
+        refetchApexBalance();
+        queryClient.invalidateQueries({ queryKey: ['/api/contract/stats'] });
+      }, 2000); // 2 second delay
+    } else if (callsStatus?.status === 'FAILED') {
+      console.error('[Claim] Sponsored transaction failed', callsStatus);
+      toast({
+        title: "Gas Sponsorship Failed",
+        description: "The gas-free transaction failed. You can try again or contact support if this persists.",
+        variant: "destructive",
+      });
+      setIsClaiming(false);
+      setWriteContractsId(undefined); // Reset
+    }
+  }, [callsStatus?.status]);
   
   const calculatePotentialRewards = () => {
     if (!iracingStats) return 0;
@@ -502,15 +636,15 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
                 <>
                   <Button
                     onClick={handleClaim}
-                    disabled={isClaiming || isClaimPending || isTxLoading}
+                    disabled={isClaiming || isClaimPending || isTxLoading || isWriteContractsPending || callsStatus?.status === 'PENDING'}
                     className="w-full gap-2"
                     size="lg"
                     data-testid="button-claim-tokens"
                   >
-                    {(isClaiming || isClaimPending || isTxLoading) ? (
+                    {(isClaiming || isClaimPending || isTxLoading || isWriteContractsPending || callsStatus?.status === 'PENDING') ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        {isTxLoading ? 'Confirming...' : 'Claiming...'}
+                        {isTxLoading || callsStatus?.status === 'PENDING' ? 'Confirming...' : 'Claiming...'}
                       </>
                     ) : (
                       <>
