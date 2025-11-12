@@ -1,0 +1,113 @@
+2025-11-12 17:52:37.24
+e08bfbea
+User
+[iRacing OAuth] Starting auth flow with PKCE: {
+
+2025-11-12 17:52:37.24
+e08bfbea
+User
+client_id: 'hodl-racing',
+2025-11-12 17:52:37.24
+e08bfbea
+User
+redirect_uri: 'https://hodlracing.fun/api/auth/callback',
+2025-11-12 17:52:37.24
+e08bfbea
+User
+walletAddress: '0x827B31e7AE5137D68C927eD73D5A4132f7484Af0',
+2025-11-12 17:52:37.24
+e08bfbea
+User
+scope: 'iracing.auth',
+2025-11-12 17:52:37.24
+e08bfbea
+User
+audience: 'data-server',
+2025-11-12 17:52:37.24
+e08bfbea
+User
+env: 'production'
+2025-11-12 17:52:37.24
+e08bfbea
+User
+}
+2025-11-12 17:52:37.24
+e08bfbea
+User
+[iRacing OAuth] Full auth URL: https://oauth.iracing.com/oauth2/authorize?response_type=code&client_id=hodl-racing&redirect_uri=https%3A%2F%2Fhodlracing.fun%2Fapi%2Fauth%2Fcallback&state=59ccbef09f6fbfbff43dd1549adcbaa8bd147f2f17d1f9f1969f9df30b10ecea&scope=iracing.auth&audience=data-server&code_challenge=a94fgecRmxYbkIE8lZjKChiquaBl17Kv88QRDItMq5U&code_challenge_method=S256
+2025-11-12 17:52:37.24
+e08bfbea
+User
+10:52:37 PM [express] POST /api/iracing/auth/start 200 in 1ms :: {"authUrl":"https://oauth.iracing.co…
+2025-11-12 17:52:43.55
+e08bfbea
+User
+[iRacing OAuth] Callback received: {
+2025-11-12 17:52:43.55
+e08bfbea
+User
+hasCode: true,
+2025-11-12 17:52:43.55
+e08bfbea
+User
+walletAddress: '0x827B31e7AE5137D68C927eD73D5A4132f7484Af0'
+2025-11-12 17:52:43.55
+e08bfbea
+User
+}
+2025-11-12 17:52:43.56
+e08bfbea
+User
+[iRacing OAuth] Exchanging code for token with client credentials in body
+2025-11-12 17:52:43.93
+e08bfbea
+User
+[iRacing OAuth] Access token received
+2025-11-12 17:52:43.93
+e08bfbea
+User
+[iRacing OAuth] Redirecting to: https://hodlracing.fun/?token=***&success=true
+2025-11-12 17:52:43.93
+e08bfbea
+User
+10:52:43 PM [express] GET /api/auth/callback 302 in 375ms
+2025-11-12 17:52:44.27
+e08bfbea
+User
+[iRacing Profile] Fetching member info...
+2025-11-12 17:52:44.27
+e08bfbea
+User
+10:52:44 PM [express] GET /api/users/wallet/0x827B31e7AE5137D68C927eD73D5A4132f7484Af0 304 in 0ms :: …
+2025-11-12 17:52:44.27
+e08bfbea
+User
+10:52:44 PM [express] GET /api/iracing/status 304 in 0ms :: {"available":true,"message":"iRacing API …
+2025-11-12 17:52:44.34
+e08bfbea
+User
+[iRacing Profile] Member info link received, fetching data...
+2025-11-12 17:52:44.38
+e08bfbea
+User
+10:52:44 PM [express] GET /api/contract/stats 304 in 118ms :: {"totalClaimed":1.53,"totalPool":500,"h…
+2025-11-12 17:52:44.53
+e08bfbea
+User
+[iRacing Profile] Member info received for: David McGrath
+2025-11-12 17:52:44.54
+e08bfbea
+User
+[iRacing Profile] ❌ Failed to save iRacing profile: Error: All attempts to open a WebSocket to connect to the database failed. Please refer to https://github.com/neondatabase/serverless/blob/main/CONFIG.md#websocketconstructor-typeof-websocket--undefined. Details: fetch failed
+2025-11-12 17:52:44.54
+e08bfbea
+User
+at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+2025-11-12 17:52:44.54
+e08bfbea
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-12 17:52:44.54
+e08bfbea
+User
+at async file:///home/runner/workspace/dist/index.js:462:11
