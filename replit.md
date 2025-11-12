@@ -12,6 +12,23 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### November 2025 - Gas Sponsorship Implementation
+- **Coinbase Paymaster Integration**: Implemented gas-free claims for Coinbase Smart Wallet users
+  - Frontend uses wagmi experimental hooks (`useWriteContracts`, `useCapabilities`, `useCallsStatus`)
+  - Automatic detection of paymaster support via wallet capabilities
+  - Graceful fallback to regular transaction if paymaster unavailable or fails
+  - Comprehensive error handling for FAILED/PENDING/CONFIRMED states
+  - User-facing toasts explain sponsorship status and fallback scenarios
+- **Dual Transaction Path**:
+  - Smart Wallet users: Gas-free claims via CDP paymaster (when configured)
+  - Non-Smart Wallet users: Regular transactions (user pays gas)
+  - Automatic fallback ensures all users can claim regardless of wallet type
+- **Production Requirements**:
+  - `CDP_PAYMASTER_URL` secret must be added to production deployment
+  - Secret should point to Coinbase Developer Platform paymaster endpoint
+  - Contract must be allowlisted in CDP dashboard
+- **Status**: Frontend implementation complete, architect reviewed. Requires CDP_PAYMASTER_URL configuration in production.
+
 ### November 2025 - Claim Page UX Improvements
 - **Removed Manual Race Entry**: Cleaned up claim interface by removing development-only manual race entry section
   - Removed manual entry card and modal from RaceToEarn.tsx
