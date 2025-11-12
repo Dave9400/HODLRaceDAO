@@ -2,7 +2,7 @@ import { parseEther, formatEther } from 'viem';
 
 // Smart contract addresses (deployed on Base Sepolia testnet)
 export const APEX_TOKEN_ADDRESS = "0xF525b62868B03ecc00DeDbbd3A2B94f7faf259F8"; // APEX token
-export const CLAIM_CONTRACT_ADDRESS = import.meta.env.VITE_CLAIM_CONTRACT_ADDRESS || "0x4Eba210B149b05f90548E51947c52586Cb6Af1A5";
+export const CLAIM_CONTRACT_ADDRESS = import.meta.env.VITE_CLAIM_CONTRACT_ADDRESS || "0xf9BAE7532985Ff541a608C4C01C222445a93B751";
 
 // Smart contract ABIs
 export const APEX_TOKEN_ABI = [

@@ -1,11 +1,13 @@
 import { createConfig, http } from 'wagmi'
 import { baseSepolia } from 'wagmi/chains'
 import { metaMask, walletConnect, coinbaseWallet } from 'wagmi/connectors'
+import { farcasterMiniApp } from '@farcaster/miniapp-wagmi-connector'
 
 // Base Sepolia testnet configuration
 export const config = createConfig({
   chains: [baseSepolia],
   connectors: [
+    farcasterMiniApp(),
     metaMask(),
     coinbaseWallet({
       appName: 'HODL Racing DAO',
