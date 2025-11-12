@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Web3Provider } from "@/lib/Web3Provider";
 import { useState, useEffect } from "react";
 import Header from "@/components/Header";
+import NetworkSwitcher from "@/components/NetworkSwitcher";
 import { Button } from "@/components/ui/button";
 import { X, Home, TrendingUp, Trophy, Info, Users } from "lucide-react";
 import NavigationHub from "@/components/NavigationHub";
@@ -70,6 +71,11 @@ function Router() {
       <Route path="/">
         <div className="min-h-screen bg-background">
           <Header onMenuClick={toggleMobileMenu} />
+          
+          {/* Network Switcher Alert */}
+          <div className="p-4">
+            <NetworkSwitcher />
+          </div>
           
           {/* Mobile Navigation Overlay */}
           {isMobileMenuOpen && (

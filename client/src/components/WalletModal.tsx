@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Wallet, ExternalLink, Sparkles, Circle, Hexagon } from "lucide-react";
+import { Wallet, ExternalLink, Sparkles, Circle, Hexagon, Network } from "lucide-react";
 import { useConnect, useAccount } from 'wagmi';
+import { getActiveChainConfig } from '@shared/chain';
 
 interface WalletModalProps {
   isOpen: boolean;
@@ -28,6 +29,9 @@ const WalletIcon = ({ name }: { name: string }) => {
 export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
   const { connect, connectors, isPending } = useConnect();
   const { isConnected } = useAccount();
+  
+  // Get the expected network
+  const expectedChain = getActiveChainConfig();
 
   const handleConnect = async (connector: any) => {
     try {
@@ -47,11 +51,21 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
             Connect Wallet
           </DialogTitle>
           <DialogDescription>
-            Choose your preferred wallet to connect to HODL Racing DAO on Base network.
+            Choose your preferred wallet to connect to HODL Racing DAO on <strong>{expectedChain.name}</strong> network.
           </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4">
+          <Alert className="bg-blue-500/10 border-blue-500/20" data-testid="alert-network-info">
+            <Network className="h-4 w-4 text-blue-500" />
+            <AlertDescription className="text-sm">
+              <strong>Expected Network: {expectedChain.name}</strong>
+              <p className="text-xs mt-1 text-muted-foreground">
+                After connecting, you may be prompted to switch networks. This is normal!
+              </p>
+            </AlertDescription>
+          </Alert>
+          
           <Alert className="bg-primary/10 border-primary/20" data-testid="alert-coinbase-recommendation">
             <Sparkles className="h-4 w-4 text-primary" />
             <AlertDescription className="text-sm">
