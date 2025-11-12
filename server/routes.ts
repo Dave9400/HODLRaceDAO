@@ -529,9 +529,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             lastName 
           });
         } catch (dbError) {
-          console.error('[iRacing Profile] ❌ Failed to save iRacing profile:', dbError);
-          // Re-throw to make the error visible
-          throw dbError;
+          console.error('[iRacing Profile] ❌ Failed to save iRacing profile (non-fatal, continuing):', dbError);
+          // Don't throw - allow authentication to complete even if DB save fails
+          // This ensures users can still claim tokens even if leaderboard names aren't cached
         }
       } else {
         console.warn('[iRacing Profile] ⚠️  No iRacing ID found in profile data');
