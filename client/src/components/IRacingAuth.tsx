@@ -326,8 +326,17 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
       const { signature, iracingId, wins, top5s, starts } = await response.json();
       
       // Try gas-sponsored transaction first (Coinbase Smart Wallet)
-      if (paymasterCapabilities && writeContractsAsync) {
-        console.log('[Claim] Using gas-sponsored transaction via paymaster');
+      // Re-derive capabilities to ensure they're fresh
+      const freshCapabilities = availableCapabilities && chainId 
+        ? availableCapabilities[chainId]?.['paymasterService']?.['supported']
+        : false;
+      
+      if (freshCapabilities && paymasterCapabilities && writeContractsAsync && chainId && address) {
+        console.log('[Claim] Using gas-sponsored transaction via paymaster', {
+          chainId,
+          hasCapabilities: !!availableCapabilities,
+          paymasterSupported: freshCapabilities
+        });
         try {
           const id = await writeContractsAsync({
             contracts: [
@@ -347,8 +356,13 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
             capabilities: paymasterCapabilities,
           });
           
-          setWriteContractsId(id);
-          console.log('[Claim] Gas-sponsored transaction submitted:', id);
+          if (id) {
+            setWriteContractsId(id);
+            console.log('[Claim] Gas-sponsored transaction submitted:', id);
+          } else {
+            console.warn('[Claim] No transaction ID returned, capabilities may be stale');
+            throw new Error('No transaction ID returned from paymaster');
+          }
         } catch (paymasterError) {
           // Paymaster call failed, fall back to regular transaction
           console.error('[Claim] Paymaster error, falling back to regular transaction:', paymasterError);
