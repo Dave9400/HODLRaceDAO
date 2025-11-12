@@ -4,6 +4,7 @@ import { useState } from "react";
 import WalletModal from "./WalletModal";
 import { useAccount, useDisconnect } from 'wagmi';
 import { shortenAddress } from '@/lib/web3';
+import { Link } from "wouter";
 import logoUrl from "@assets/b2adcc9d-c081-49ed-96cc-a20f18ef5071_1759009768831.png";
 
 interface HeaderProps {
@@ -32,13 +33,15 @@ export default function Header({ onMenuClick }: HeaderProps) {
           >
             <Menu />
           </Button>
-          <div className="flex items-center gap-3">
-            <img 
-              src={logoUrl} 
-              alt="HODL Racing DAO" 
-              className="w-16 h-16 object-contain brightness-75 saturate-50"
-            />
-          </div>
+          <Link href="/">
+            <div className="flex items-center gap-3 cursor-pointer hover-elevate active-elevate-2 rounded-md p-1 transition-all" data-testid="link-home">
+              <img 
+                src={logoUrl} 
+                alt="HODL Racing DAO" 
+                className="w-16 h-16 object-contain brightness-75 saturate-50"
+              />
+            </div>
+          </Link>
         </div>
         
         <div className="flex items-center gap-2">

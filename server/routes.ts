@@ -616,21 +616,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const paymasterUrl = process.env.CDP_PAYMASTER_URL;
       
+      console.log('[Paymaster] Request received');
+      console.log('[Paymaster] CDP_PAYMASTER_URL configured:', !!paymasterUrl);
+      console.log('[Paymaster] Environment:', process.env.NODE_ENV);
+      
       if (!paymasterUrl) {
+        console.error('[Paymaster] CDP_PAYMASTER_URL not configured');
         return res.status(503).json({ 
           error: "Gas sponsorship not configured",
           message: "Please configure CDP_PAYMASTER_URL to enable gasless transactions"
         });
       }
       
+      console.log('[Paymaster] Forwarding request to CDP');
+      
       // Proxy the request to Coinbase Paymaster
       const response = await axios.post(paymasterUrl, req.body, {
         headers: { 'Content-Type': 'application/json' }
       });
       
+      console.log('[Paymaster] CDP response received successfully');
       res.json(response.data);
     } catch (error: any) {
       console.error('[Paymaster] Error:', error.message);
+      console.error('[Paymaster] Error details:', error.response?.data || error);
       res.status(500).json({ 
         error: "Paymaster request failed",
         message: error.message 
