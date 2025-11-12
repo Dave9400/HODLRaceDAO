@@ -1,11 +1,11 @@
 import { createConfig, http } from 'wagmi'
-import { baseSepolia } from 'wagmi/chains'
+import { base, baseSepolia } from 'wagmi/chains'
 import { metaMask, walletConnect, coinbaseWallet } from 'wagmi/connectors'
 import { farcasterMiniApp } from '@farcaster/miniapp-wagmi-connector'
 
-// Base Sepolia testnet configuration
+// Multi-chain configuration supporting both Base Mainnet and Sepolia testnet
 export const config = createConfig({
-  chains: [baseSepolia],
+  chains: [base, baseSepolia],
   connectors: [
     farcasterMiniApp(),
     metaMask(),
@@ -21,6 +21,7 @@ export const config = createConfig({
     }),
   ],
   transports: {
+    [base.id]: http('https://base.drpc.org'),
     [baseSepolia.id]: http('https://sepolia.base.org'),
   },
 })

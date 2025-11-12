@@ -1,8 +1,10 @@
 import { parseEther, formatEther } from 'viem';
+import { getActiveChainConfig } from '@shared/chain';
 
-// Smart contract addresses (deployed on Base Sepolia testnet)
-export const APEX_TOKEN_ADDRESS = "0xF525b62868B03ecc00DeDbbd3A2B94f7faf259F8"; // APEX token
-export const CLAIM_CONTRACT_ADDRESS = import.meta.env.VITE_CLAIM_CONTRACT_ADDRESS || "0xf9BAE7532985Ff541a608C4C01C222445a93B751";
+// Smart contract addresses from shared chain configuration
+const chainConfig = getActiveChainConfig();
+export const APEX_TOKEN_ADDRESS = chainConfig.contracts.apex;
+export const CLAIM_CONTRACT_ADDRESS = chainConfig.contracts.claim;
 
 // Smart contract ABIs
 export const APEX_TOKEN_ABI = [

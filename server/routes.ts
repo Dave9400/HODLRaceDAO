@@ -79,7 +79,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Leaderboard routes - fetch from blockchain claim events
   app.get("/api/leaderboard", async (req, res) => {
     try {
-      const CLAIM_CONTRACT_ADDRESS = process.env.VITE_CLAIM_CONTRACT_ADDRESS || "0xf9BAE7532985Ff541a608C4C01C222445a93B751";
+      // Use shared chain configuration
+      const { getActiveChainConfig } = await import("../shared/chain");
+      const chainConfig = getActiveChainConfig();
       
       const claimContractABI = [
         "event Claimed(address indexed user, uint256 iracingId, uint256 amount, uint256 claimNumber)",
@@ -87,12 +89,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "function totalClaimed() view returns (uint256)"
       ];
       
-      const provider = new ethers.JsonRpcProvider("https://sepolia.base.org");
-      const contract = new ethers.Contract(CLAIM_CONTRACT_ADDRESS, claimContractABI, provider);
+      const provider = new ethers.JsonRpcProvider(chainConfig.rpcUrl);
+      const contract = new ethers.Contract(chainConfig.contracts.claim, claimContractABI, provider);
       
       // Fetch all Claimed events from contract deployment block
-      // Contract deployed at block 33479508 on Base Sepolia
-      const deploymentBlock = 33479508;
+      const deploymentBlock = chainConfig.deploymentBlock;
       const filter = contract.filters.Claimed();
       const events = await contract.queryFilter(filter, deploymentBlock, 'latest');
       
@@ -649,7 +650,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/contract/stats", async (req, res) => {
     try {
-      const CLAIM_CONTRACT_ADDRESS = process.env.VITE_CLAIM_CONTRACT_ADDRESS || "0xf9BAE7532985Ff541a608C4C01C222445a93B751";
+      // Use shared chain configuration
+      const { getActiveChainConfig } = await import("../shared/chain");
+      const chainConfig = getActiveChainConfig();
       
       // Minimal ABI for reading contract data
       const claimContractABI = [
@@ -659,9 +662,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "function getCurrentMultiplier() view returns (uint256)"
       ];
       
-      // Connect to Base Sepolia
-      const provider = new ethers.JsonRpcProvider("https://sepolia.base.org");
-      const contract = new ethers.Contract(CLAIM_CONTRACT_ADDRESS, claimContractABI, provider);
+      // Connect to active chain
+      const provider = new ethers.JsonRpcProvider(chainConfig.rpcUrl);
+      const contract = new ethers.Contract(chainConfig.contracts.claim, claimContractABI, provider);
       
       // Read contract state
       const [totalClaimed, totalPool, halvingInterval, currentMultiplier] = await Promise.all([
@@ -790,14 +793,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       // EIP-712 Domain Separator (must match contract)
-      const CONTRACT_ADDRESS = process.env.VITE_CLAIM_CONTRACT_ADDRESS || "0xf9BAE7532985Ff541a608C4C01C222445a93B751";
-      const CHAIN_ID = 84532; // Base Sepolia
+      // Use shared chain configuration to ensure frontend and backend match
+      const { getActiveChainConfig } = await import("../shared/chain");
+      const chainConfig = getActiveChainConfig();
       
       const domain = {
         name: "APEXClaim",
         version: "2",
-        chainId: CHAIN_ID,
-        verifyingContract: CONTRACT_ADDRESS
+        chainId: chainConfig.id,
+        verifyingContract: chainConfig.contracts.claim
       };
       
       const types = {

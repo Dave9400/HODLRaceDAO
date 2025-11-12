@@ -10,19 +10,31 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-### November 2025 - Production Debugging & UX Improvements
-- **Enhanced Paymaster Logging**: Added detailed logging to `/api/paymaster` endpoint for production debugging
-  - Logs environment, CDP_PAYMASTER_URL configuration status, request flow, and error details
-  - Helps diagnose why gas sponsorship works in dev but not production
-  - No sensitive values exposed in logs
-- **App Manifest for Wallet Apps**: Created web manifest for proper app branding in Coinbase Wallet
-  - Added `manifest.json` with app name, icons, theme colors
-  - Wallet apps now display HODL Racing logo instead of generic icon
-  - Includes PWA support for future mobile app installation
-- **Clickable Logo Navigation**: Made header logo clickable to return to home page
-  - Logo wraps in Link component navigating to "/"
-  - Added hover/active visual feedback
-  - Improves navigation UX
+### November 2025 - Production Multi-Chain Configuration & Paymaster Fixes
+- **Shared Chain Configuration**: Created centralized configuration for multi-chain support
+  - `shared/chain.ts` provides single source of truth for both frontend and backend
+  - Supports Base Mainnet (8453) and Base Sepolia (84532)
+  - Cross-environment helper works in both Node.js and browser
+  - Configuration validation ensures deployment blocks and contract addresses are set
+  - Prevents silent failures in production
+- **Multi-Chain Support**: Updated all blockchain integrations
+  - Frontend wagmi config supports both Base Mainnet and Sepolia
+  - Backend signature generation uses shared chain ID (fixes EIP-712 mismatch)
+  - Leaderboard queries correct chain with proper deployment block
+  - Contract stats endpoint uses shared configuration
+  - No hardcoded chain IDs, RPC URLs, or deployment blocks
+- **Paymaster Production Fix**: Resolved gas sponsorship failures on Base Mainnet
+  - Added fresh capability validation before paymaster calls
+  - Fixed chain ID mismatch between frontend and backend
+  - Coinbase Smart Wallet now uses `smartWalletOnly` preference
+  - Comprehensive logging for production debugging
+- **Environment Configuration**: Production requires explicit environment variables
+  - `VITE_ACTIVE_CHAIN_ID=8453` for Base Mainnet (defaults to 84532 for dev)
+  - `DEPLOYMENT_BLOCK_MAINNET` required for production leaderboard/stats
+  - `VITE_APP_LOGO_URL` configurable (defaults to hodlracing.fun)
+- **App Manifest for Wallet Apps**: Created web manifest for proper app branding
+  - Wallet apps display HODL Racing logo instead of generic icon
+- **Clickable Logo Navigation**: Made header logo clickable for better UX
 
 ## System Architecture
 
@@ -46,7 +58,8 @@ Preferred communication style: Simple, everyday language.
 - **Database**: PostgreSQL with Drizzle ORM.
 - **Session Management**: Connect-pg-simple for PostgreSQL-backed session storage.
 - **Data Layer**: Drizzle ORM for type-safe queries; Zod schemas for runtime validation.
-- **Implementations**: `/api/paymaster` proxy endpoint for secure gas sponsorship. `/api/leaderboard` endpoint fetches and aggregates blockchain claim events for leaderboard data, with optimizations for RPC limits and timestamp caching.
+- **Multi-Chain Configuration**: Shared `shared/chain.ts` configuration ensures frontend/backend chain ID synchronization, with validation to prevent misconfiguration.
+- **Implementations**: `/api/paymaster` proxy endpoint for secure gas sponsorship. `/api/leaderboard` endpoint fetches and aggregates blockchain claim events for leaderboard data, with optimizations for RPC limits and timestamp caching. All blockchain integrations use shared chain configuration.
 
 ### System Design Choices
 - **Security**: Implemented EIP-712 domain separation for claim signatures to prevent replay attacks. Signature validation includes v-range, s-value, and non-zero recovery checks. Backend signs typed structured data matching contract structure.
@@ -56,10 +69,12 @@ Preferred communication style: Simple, everyday language.
 ## External Dependencies
 
 ### Blockchain Services
-- **Base Network**: Ethereum Layer 2 network (Base Sepolia testnet).
+- **Base Network**: Ethereum Layer 2 network supporting both Base Mainnet (8453) and Base Sepolia (84532) testnet.
+  - Development defaults to Base Sepolia (84532)
+  - Production requires `VITE_ACTIVE_CHAIN_ID=8453` and `DEPLOYMENT_BLOCK_MAINNET` environment variables
 - **APEX Token Contract**: Custom ERC-20 token on Base (0xF525b62868B03ecc00DeDbbd3A2B94f7faf259F8).
 - **Claim Contract V2**: Smart contract for APEX rewards with EIP-712 signatures (0xf9BAE7532985Ff541a608C4C01C222445a93B751).
-- **Web3 Providers**: MetaMask, Coinbase Wallet, WalletConnect, Farcaster via Wagmi connectors.
+- **Web3 Providers**: MetaMask, Coinbase Wallet (Smart Wallet preferred for gas sponsorship), WalletConnect, Farcaster via Wagmi connectors.
 
 ### Database
 - **Neon Database**: Serverless PostgreSQL database.

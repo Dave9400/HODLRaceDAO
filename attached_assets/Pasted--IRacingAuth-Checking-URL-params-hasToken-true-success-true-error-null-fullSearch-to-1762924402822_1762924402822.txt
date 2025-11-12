@@ -1,0 +1,80 @@
+[IRacingAuth] Checking URL params: 
+{hasToken: true, success: 'true', error: null, fullSearch: '?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzZX…4EhmM5SjjBZ4hJ2B_xADt_3CTu2_P2XC6KU4&success=true'}
+error
+: 
+null
+fullSearch
+: 
+"?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzZXNzaW9uX2lkIjoiMjI0YTMwYzMtYTkzZi00MTdlLThlMWEtZDA2NGJkMDUzYzJkIiwiaXNzIjoiaHR0cHM6Ly9vYXV0aC5pcmFjaW5nLmNvbSIsImV4cCI6MTc2MjkyNDkyNywiYXVkIjpbImRhdGEtc2VydmVyIiwiaG9kbC1yYWNpbmciLCJvYXV0aC1hcGkiXSwic3ViIjoiOTBkZDNlZDktMzYzOC00MDE0LWIxNGMtYjY2MjA0MDgxMmJlIiwiY2xpZW50X2lkIjoiaG9kbC1yYWNpbmciLCJpYXQiOjE3NjI5MjQzMjcsImp0aSI6IjRlZmY0MzliLWNiYzMtNGY5ZC04Njk1LWY1OTM0ZGM0NDFmOSIsImF1dGhfdGltZSI6MTc2MjkyNDMyNywic2NvcGUiOiJpcmFjaW5nLmF1dGgiLCJpcmFjaW5nX2VudiI6Im1lbWJlcnMiLCJpcmFjaW5nX2N1c3RfaWQiOjI4OTA0LCJpcmFjaW5nX2dyb3VwX2lkcyI6WzFdfQ.YPM0FHU4EhmM5SjjBZ4hJ2B_xADt_3CTu2_P2XC6KU4&success=true"
+hasToken
+: 
+true
+success
+: 
+"true"
+[[Prototype]]
+: 
+Object
+index-C4ng8RyZ.js:323 [IRacingAuth] OAuth success, fetching stats...
+index-C4ng8RyZ.js:323 [IRacingAuth] Checking URL params: 
+{hasToken: false, success: null, error: null, fullSearch: ''}
+error
+: 
+null
+fullSearch
+: 
+""
+hasToken
+: 
+false
+success
+: 
+null
+[[Prototype]]
+: 
+Object
+pageProvider.js:1 eth getParams 2EHyNa1xK07KTR0hHBMnq
+index-C4ng8RyZ.js:323 [Claim] Using gas-sponsored transaction via paymaster 
+{chainId: 8453, hasCapabilities: true, paymasterSupported: true}
+chainId
+: 
+8453
+hasCapabilities
+: 
+true
+paymasterSupported
+: 
+true
+[[Prototype]]
+: 
+Object
+index-C4ng8RyZ.js:323 [Claim] Paymaster error, falling back to regular transaction: TransactionExecutionError: An error occurred.
+
+Request Arguments:
+  from:  0x827B31e7AE5137D68C927eD73D5A4132f7484Af0
+
+Details: Cannot read properties of undefined (reading 'id')
+Version: viem@2.38.6
+    at h3 (index-C4ng8RyZ.js:244:39168)
+    at bF (index-C4ng8RyZ.js:245:4889)
+    at index-C4ng8RyZ.js:238:1729
+    at ZW (index-C4ng8RyZ.js:323:553)
+    at QW (index-C4ng8RyZ.js:323:711)
+Caused by: TypeError: Cannot read properties of undefined (reading 'id')
+    at bF (index-C4ng8RyZ.js:245:3410)
+    at index-C4ng8RyZ.js:238:1729
+    at ZW (index-C4ng8RyZ.js:323:553)
+    at QW (index-C4ng8RyZ.js:323:711)
+be	@	index-C4ng8RyZ.js:323
+await in be		
+nI	@	index-C4ng8RyZ.js:38
+sI	@	index-C4ng8RyZ.js:38
+iI	@	index-C4ng8RyZ.js:38
+Bb	@	index-C4ng8RyZ.js:38
+q5	@	index-C4ng8RyZ.js:38
+(anonymous)	@	index-C4ng8RyZ.js:38
+J1	@	index-C4ng8RyZ.js:41
+y5	@	index-C4ng8RyZ.js:38
+Kp	@	index-C4ng8RyZ.js:38
+A1	@	index-C4ng8RyZ.js:38
+xI	@	index-C4ng8RyZ.js:38
