@@ -8,6 +8,22 @@ HODL Racing DAO is a Web3 racing community platform that integrates decentralize
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+
+### November 2025 - Production Debugging & UX Improvements
+- **Enhanced Paymaster Logging**: Added detailed logging to `/api/paymaster` endpoint for production debugging
+  - Logs environment, CDP_PAYMASTER_URL configuration status, request flow, and error details
+  - Helps diagnose why gas sponsorship works in dev but not production
+  - No sensitive values exposed in logs
+- **App Manifest for Wallet Apps**: Created web manifest for proper app branding in Coinbase Wallet
+  - Added `manifest.json` with app name, icons, theme colors
+  - Wallet apps now display HODL Racing logo instead of generic icon
+  - Includes PWA support for future mobile app installation
+- **Clickable Logo Navigation**: Made header logo clickable to return to home page
+  - Logo wraps in Link component navigating to "/"
+  - Added hover/active visual feedback
+  - Improves navigation UX
+
 ## System Architecture
 
 ### Frontend Architecture
