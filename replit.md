@@ -90,7 +90,9 @@ Preferred communication style: Simple, everyday language.
   - Development defaults to Base Sepolia (84532)
   - Production requires `VITE_ACTIVE_CHAIN_ID=8453` and `DEPLOYMENT_BLOCK_MAINNET` environment variables
 - **APEX Token Contract**: Custom ERC-20 token on Base (0xF525b62868B03ecc00DeDbbd3A2B94f7faf259F8).
-- **Claim Contract V2**: Smart contract for APEX rewards with EIP-712 signatures (0xf9BAE7532985Ff541a608C4C01C222445a93B751).
+- **Claim Contract V2**: Smart contract for APEX rewards with EIP-712 signatures and 50B token economics
+  - Base Sepolia: 0xDC4ba89f4AE8f0F348aBCE95a59f70b7a06dB953 (deployed block 33612762)
+  - Base Mainnet: 0xf9BAE7532985Ff541a608C4C01C222445a93B751 (old contract, needs redeployment with new economics)
 - **Web3 Providers**: MetaMask, Coinbase Wallet (Smart Wallet preferred for gas sponsorship), WalletConnect, Farcaster via Wagmi connectors.
 
 ### Database
