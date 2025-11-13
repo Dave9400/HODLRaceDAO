@@ -45,7 +45,7 @@ export const CHAIN_CONFIGS: Record<number, ChainConfig> = {
     rpcUrl: 'https://sepolia.base.org',
     blockExplorer: 'https://sepolia.basescan.org',
     contracts: {
-      apex: getEnv('APEX_TOKEN_ADDRESS_SEPOLIA') || getEnv('VITE_APEX_TOKEN_ADDRESS_SEPOLIA') || '0xF525b62868B03ecc00DeDbbd3A2B94f7faf259F8',
+      apex: getEnv('APEX_TOKEN_ADDRESS_SEPOLIA') || getEnv('VITE_APEX_TOKEN_ADDRESS_SEPOLIA') || '0x2aC8d74e75520A2A82Edada99E20291b7EC779aD',
       claim: getEnv('CLAIM_CONTRACT_ADDRESS_SEPOLIA') || getEnv('VITE_CLAIM_CONTRACT_ADDRESS_SEPOLIA') || '0xDC4ba89f4AE8f0F348aBCE95a59f70b7a06dB953',
     },
     deploymentBlock: parseInt(getEnv('DEPLOYMENT_BLOCK_SEPOLIA') || getEnv('VITE_DEPLOYMENT_BLOCK_SEPOLIA') || '33612762', 10),
