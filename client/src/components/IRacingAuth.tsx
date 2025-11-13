@@ -128,18 +128,6 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
     }
   }, [writeContractsId, callsStatus?.status]);
   
-  // Safety check: Clear claiming state if we detect claim was successful
-  useEffect(() => {
-    const stored = localStorage.getItem('pending-claim-tx');
-    if (stored && hasClaimedData && iracingStats) {
-      // User has successfully claimed - clear any stale transaction data
-      console.log('[Claim] Detected successful claim, clearing pending transaction');
-      localStorage.removeItem('pending-claim-tx');
-      setWriteContractsId(undefined);
-      setIsClaiming(false);
-    }
-  }, [hasClaimedData, iracingStats?.iracingId]);
-  
   // Build paymaster capabilities if supported
   const paymasterCapabilities = availableCapabilities && chainId 
     ? (() => {
@@ -203,6 +191,18 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
     queryKey: ['/api/contract/stats'],
     refetchInterval: 30000, // Refetch every 30 seconds
   });
+
+  // Safety check: Clear claiming state if we detect claim was successful
+  useEffect(() => {
+    const stored = localStorage.getItem('pending-claim-tx');
+    if (stored && hasClaimedData && iracingStats) {
+      // User has successfully claimed - clear any stale transaction data
+      console.log('[Claim] Detected successful claim, clearing pending transaction');
+      localStorage.removeItem('pending-claim-tx');
+      setWriteContractsId(undefined);
+      setIsClaiming(false);
+    }
+  }, [hasClaimedData, iracingStats?.iracingId]);
 
   // Update search params when URL changes
   useEffect(() => {
