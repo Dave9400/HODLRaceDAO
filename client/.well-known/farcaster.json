@@ -12,7 +12,7 @@
     "homeUrl": "https://hodlracing.fun",
     "iconUrl": "https://hodlracing.fun/icon.png",
     "imageUrl": "https://hodlracing.fun/image.png",
-    "splashImageUrl": "https://hodlracing.fun/icon.png",
+    "splashImageUrl": "https://hodlracing.fun/splash.png",
     "splashBackgroundColor": "#1a1a1a",
     "webhookUrl": "https://hodlracing.fun/api/webhook"
   }
