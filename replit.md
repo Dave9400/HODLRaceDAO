@@ -2,13 +2,30 @@
 
 ## Overview
 
-HODL Racing DAO is a Web3 racing community platform that integrates decentralized finance with competitive racing. Users can trade APEX tokens on the Base network and participate in a racing-focused DAO. The platform rewards real racing performance (via iRacing integration) with token incentives, merging motorsports with DeFi. It functions as a Farcaster Mini App, offering a mobile-first experience for token trading, race statistics, and DAO governance, inspired by Uniswap's design and Gran Turismo's aesthetics. The project aims to create a unique intersection of racing and cryptocurrency, fostering a vibrant community around shared passions.
+HODL Racing DAO is a Web3 racing community platform that integrates decentralized finance with competitive racing. Users can trade APEX tokens on the Base network and participate in a racing-focused DAO. The platform rewards real racing performance (via iRacing integration) with token incentives, merging motorsports with DeFi. It functions as a Farcaster Mini App, offering a mobile-first experience for token trading, race statistics, and DAO governance, inspired by Uniswap's design and Gran Turismo's aesthetics.
+
+**Token Economics:** 50 billion APEX token pool with 10-cycle halving schedule designed for 20-30 year contract lifespan. Rewards start at 100 tokens per point with first-claim bonus, halving every 5 billion tokens claimed across 9 halving events.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
+
+### November 2025 - Updated Contract Economics & Transaction UI Fixes
+- **Contract V2 Economics Update**: Upgraded to 50B token pool with 10-cycle halving
+  - Total pool: 50 billion APEX tokens (was 500 million)
+  - Halving interval: 5 billion tokens per cycle (was 100 million)
+  - 10 cycles total with 9 halving events (was 5 cycles)
+  - Base reward: 100 tokens per point (was 1000) for 20-30 year lifespan
+  - First-claim bonus: 1000 points to reward early adopters
+  - Multiplier range: 512x → 1x across all cycles
+- **Transaction UI Fixes**: Resolved stuck "claiming" button issues
+  - Smart restoration: Only shows "claiming" if transaction is actually pending
+  - Auto-clear on completion: Detects CONFIRMED/FAILED and clears UI state
+  - Safety checks: Monitors hasClaimed status to prevent stuck states
+  - Balance updates: Automatic APEX balance refresh after successful claims
+  - LocalStorage cleanup: 10-minute expiration with wallet address validation
 
 ### November 2025 - Production Multi-Chain Configuration & Paymaster Fixes
 - **Shared Chain Configuration**: Created centralized configuration for multi-chain support
@@ -63,7 +80,7 @@ Preferred communication style: Simple, everyday language.
 
 ### System Design Choices
 - **Security**: Implemented EIP-712 domain separation for claim signatures to prevent replay attacks. Signature validation includes v-range, s-value, and non-zero recovery checks. Backend signs typed structured data matching contract structure.
-- **Smart Contract Features**: Incremental claims based on stat deltas, claim history tracking, halving mechanics for rewards (500M total pool, halving every 100M claimed), and a points system (1000 points/win, 100/top 5, 10/start).
+- **Smart Contract Features**: Incremental claims based on stat deltas, claim history tracking, 10-cycle halving mechanics for rewards (50B total pool, halving every 5B claimed, 100 tokens per point with 1000-point first-claim bonus), and a points system (1000 points/win, 100/top 5, 10/start).
 - **Development Tools**: Vite for fast builds, ESLint and TypeScript for code quality, PostCSS with Tailwind CSS, and optimized asset handling.
 
 ## External Dependencies
