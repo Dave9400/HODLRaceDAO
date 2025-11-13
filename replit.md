@@ -12,6 +12,22 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### November 13, 2025 - Database Fix, Farcaster Assets & Mobile UX
+- **Database Connection Fix**: Resolved Neon serverless WebSocket errors preventing profile saves
+  - Configured `neonConfig.webSocketConstructor = ws` in `server/db.ts`
+  - iRacing profile data (firstName, lastName, displayName) now saves properly
+  - Leaderboard displays real names instead of "Racer [ID]" after authentication
+- **Farcaster Mini App Assets**: Complete branding setup
+  - Icon: `/icon.png` - Golden HODL Racing DAO shield badge
+  - Preview: `/image.png` - Leaderboard screenshot for app shares
+  - Splash: `/splash.png` - Logo splash screen for app loading
+  - All assets served via Express routes and configured in manifest
+- **Mobile Leaderboard UX**: Redesigned responsive layout to prevent text overlap
+  - Separate mobile and desktop layouts with proper stacking
+  - 4-row mobile structure: rank+driver, stats, racing performance, wallet+date
+  - Proper text truncation and spacing prevents overlapping content
+  - Smaller icons and optimized font sizes for mobile screens
+
 ### November 2025 - Updated Contract Economics & Transaction UI Fixes
 - **Contract V2 Economics Update**: Upgraded to 50B token pool with 10-cycle halving
   - Total pool: 50 billion APEX tokens (was 500 million)

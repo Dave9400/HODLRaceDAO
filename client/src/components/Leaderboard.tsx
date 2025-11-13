@@ -114,8 +114,9 @@ export default function Leaderboard() {
       <div className="space-y-3">
         {data.map((driver, index) => (
           <Card key={index} className="hover-elevate transition-all" data-testid={`leaderboard-entry-${index}`}>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-4">
+            <CardContent className="p-3 sm:p-4">
+              {/* Desktop Layout */}
+              <div className="hidden sm:flex items-center gap-4">
                 {/* Rank */}
                 <div className="flex-shrink-0 w-12 text-center">
                   {driver.rank <= 3 ? (
@@ -142,11 +143,11 @@ export default function Leaderboard() {
                     <div className="font-semibold text-sm truncate" data-testid={`driver-name-${index}`}>
                       {driver.name}
                     </div>
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-xs text-muted-foreground flex flex-wrap items-center gap-2">
                       <Badge variant="secondary" className="text-xs">
                         ID: {driver.iracingId}
                       </Badge>
-                      <span className="ml-2 text-xs font-mono">
+                      <span className="text-xs font-mono">
                         {driver.address.slice(0, 6)}...{driver.address.slice(-4)}
                       </span>
                     </div>
@@ -159,7 +160,7 @@ export default function Leaderboard() {
                 </div>
 
                 {/* Stats */}
-                <div className="hidden sm:flex gap-6 text-center">
+                <div className="flex gap-6 text-center">
                   <div>
                     <div className="font-bold text-lg text-primary" data-testid={`total-claimed-${index}`}>{driver.totalClaimed}</div>
                     <div className="text-xs text-muted-foreground">Total Claimed</div>
@@ -187,18 +188,86 @@ export default function Leaderboard() {
                     <span className="text-sm font-semibold" data-testid={`starts-${index}`}>{driver.starts}</span>
                   </div>
                 </div>
+              </div>
 
-                {/* Mobile Stats */}
-                <div className="sm:hidden text-right">
-                  <div className="font-bold text-primary">{driver.totalClaimed}</div>
-                  {isMonthly && (
-                    <div className="text-xs text-muted-foreground">Week: {driver.weeklyEarned}</div>
-                  )}
-                  <div className="flex items-center gap-2 justify-end mt-1 text-xs">
-                    <span>🏆 {driver.wins}</span>
-                    <span>🎯 {driver.top5s}</span>
-                    <span>🏁 {driver.starts}</span>
+              {/* Mobile Layout */}
+              <div className="flex sm:hidden flex-col gap-2">
+                {/* Rank and Driver Info Row */}
+                <div className="flex items-center gap-2">
+                  {/* Rank */}
+                  <div className="flex-shrink-0">
+                    {driver.rank <= 3 ? (
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs ${
+                        driver.rank === 1 ? 'bg-accent text-accent-foreground' :
+                        driver.rank === 2 ? 'bg-secondary text-secondary-foreground' :
+                        'bg-destructive text-destructive-foreground'
+                      }`}>
+                        {driver.rank === 1 ? <Trophy size={14} /> :
+                         driver.rank === 2 ? <Medal size={14} /> :
+                         <Award size={14} />}
+                      </div>
+                    ) : (
+                      <span className="text-lg font-bold text-muted-foreground">#{driver.rank}</span>
+                    )}
                   </div>
+
+                  {/* Driver Info */}
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <Avatar className="h-8 w-8 flex-shrink-0">
+                      <AvatarFallback className="text-xs">{driver.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-semibold text-sm truncate" data-testid={`driver-name-${index}`}>
+                        {driver.name}
+                      </div>
+                      <div className="text-xs text-muted-foreground truncate">
+                        ID: {driver.iracingId}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stats Row */}
+                <div className="flex items-center justify-between gap-2 pl-9">
+                  <div className="flex-1">
+                    <div className="font-bold text-base text-primary" data-testid={`total-claimed-${index}`}>{driver.totalClaimed}</div>
+                    <div className="text-xs text-muted-foreground">Total Claimed</div>
+                  </div>
+                  {isMonthly && (
+                    <div className="flex-1">
+                      <div className="font-bold text-sm text-accent" data-testid={`weekly-earned-${index}`}>{driver.weeklyEarned}</div>
+                      <div className="text-xs text-muted-foreground">This Week</div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Racing Stats Row */}
+                <div className="flex items-center justify-between gap-3 pl-9 text-xs">
+                  <div className="flex items-center gap-1">
+                    <Trophy className="w-3 h-3 text-yellow-500" />
+                    <span className="font-semibold" data-testid={`wins-${index}`}>{driver.wins}</span>
+                    <span className="text-muted-foreground">Wins</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Target className="w-3 h-3 text-blue-500" />
+                    <span className="font-semibold" data-testid={`top5s-${index}`}>{driver.top5s}</span>
+                    <span className="text-muted-foreground">Top5</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Car className="w-3 h-3 text-green-500" />
+                    <span className="font-semibold" data-testid={`starts-${index}`}>{driver.starts}</span>
+                    <span className="text-muted-foreground">Starts</span>
+                  </div>
+                </div>
+
+                {/* Wallet and Date Row */}
+                <div className="flex items-center justify-between gap-2 pl-9 text-xs text-muted-foreground">
+                  <span className="font-mono truncate">
+                    {driver.address.slice(0, 8)}...{driver.address.slice(-6)}
+                  </span>
+                  <span className="whitespace-nowrap" title={driver.lastClaimTime.toLocaleString()}>
+                    {driver.lastClaimTime.toLocaleDateString()}
+                  </span>
                 </div>
               </div>
             </CardContent>
