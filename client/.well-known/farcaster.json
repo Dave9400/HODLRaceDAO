@@ -1,20 +1,18 @@
 {
-  {
-    "accountAssociation": {
-      "header": "eyJmaWQiOjI0NDkxNCwidHlwZSI6ImF1dGgiLCJrZXkiOiIweDU1MzU1RjE0MjYwNGM5NjNjRmYzRjU0NEM5NTFDNzFDMjgzZjUwRjQifQ",
-      "payload": "eyJkb21haW4iOiJob2RscmFjaW5nLmZ1biJ9",
-      "signature": "Ym9A3/tLUD4hXAuZrnFzVd5TTGJJJNCbiFCQYcX4ktJTIKDUnugj+tHj9290KhLxhY4k69409YfktoM02B1dDhw="
-    }
+  "accountAssociation": {
+    "header": "eyJmaWQiOjI0NDkxNCwidHlwZSI6ImF1dGgiLCJrZXkiOiIweDU1MzU1RjE0MjYwNGM5NjNjRmYzRjU0NEM5NTFDNzFDMjgzZjUwRjQifQ",
+    "payload": "eyJkb21haW4iOiJob2RscmFjaW5nLmZ1biJ9",
+    "signature": "Ym9A3/tLUD4hXAuZrnFzVd5TTGJJJNCbiFCQYcX4ktJTIKDUnugj+tHj9290KhLxhY4k69409YfktoM02B1dDhw="
   },
   "miniapp": {
     "manifestVersion": "1",
     "name": "HODL Racing DAO",
     "version": "1.0.0",
-    "description": "Join the HODL Racing DAO community. Trade NASCORN tokens, earn racing rewards, and compete in the ultimate decentralized racing experience.",
+    "description": "Race to Earn APEX tokens! Connect your iRacing account, claim rewards based on your racing stats, and join the ultimate Web3 racing community.",
     "homeUrl": "https://hodlracing.fun",
     "iconUrl": "https://hodlracing.fun/logo.png",
     "splashImageUrl": "https://hodlracing.fun/logo.png",
-    "splashBackgroundColor": "#F4D03F",
+    "splashBackgroundColor": "#1a1a1a",
     "webhookUrl": "https://hodlracing.fun/api/webhook"
   }
 }

@@ -49,6 +49,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.sendFile(process.cwd() + "/client/.well-known/farcaster.json");
   });
 
+  // Serve logo for Farcaster mini app manifest
+  app.get("/logo.png", (req, res) => {
+    res.sendFile(process.cwd() + "/client/public/logo.png");
+  });
+
   // Health check endpoint
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", message: "HODL Racing DAO API is running" });
