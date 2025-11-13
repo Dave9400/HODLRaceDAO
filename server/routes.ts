@@ -49,8 +49,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.sendFile(process.cwd() + "/client/.well-known/farcaster.json");
   });
 
-  // Serve logo for Farcaster mini app manifest
-  app.get("/logo.png", (req, res) => {
+  // Serve icon for Farcaster mini app manifest
+  app.get("/icon.png", (req, res) => {
     res.sendFile(process.cwd() + "/client/public/logo.png");
   });
 
