@@ -15,13 +15,13 @@ contract APEXClaimV2 {
     address public immutable signer;
     bytes32 public immutable DOMAIN_SEPARATOR;
     
-    uint256 public constant TOTAL_CLAIM_POOL = 500_000_000 * 1e18;
-    uint256 public constant HALVING_INTERVAL = 100_000_000 * 1e18;
+    uint256 public constant TOTAL_CLAIM_POOL = 50_000_000_000 * 1e18;
+    uint256 public constant HALVING_INTERVAL = 5_000_000_000 * 1e18;
     
     uint256 public constant POINTS_PER_WIN = 1000;
     uint256 public constant POINTS_PER_TOP5 = 100;
     uint256 public constant POINTS_PER_START = 10;
-    uint256 public constant BASE_TOKENS_PER_POINT = 1000 * 1e18;
+    uint256 public constant BASE_TOKENS_PER_POINT = 100 * 1e18;
     
     // EIP-712 type hash for claim message
     bytes32 public constant CLAIM_TYPEHASH = keccak256(
@@ -36,6 +36,7 @@ contract APEXClaimV2 {
     
     uint256 public totalClaimed;
     mapping(uint256 => ClaimHistory) public lastClaim;
+    mapping(uint256 => bool) public hasClaimedBonus;
     mapping(address => uint256) public claimCount;
     
     event Claimed(address indexed user, uint256 iracingId, uint256 amount, uint256 claimNumber);
@@ -45,7 +46,7 @@ contract APEXClaimV2 {
     error InsufficientBalance();
     error Unauthorized();
     error StatsDecreased();
-    error NoDeltaToClaim();
+    error NoRewardToClaim();
     
     constructor(address _token, address _signer) {
         token = IERC20(_token);
@@ -93,18 +94,21 @@ contract APEXClaimV2 {
         uint256 deltaTop5s = top5s - history.top5s;
         uint256 deltaStarts = starts - history.starts;
         
-        // Reject claims with no new stats
-        if (deltaWins == 0 && deltaTop5s == 0 && deltaStarts == 0) {
-            revert NoDeltaToClaim();
-        }
+        uint256 reward = calculateDeltaReward(iracingId, deltaWins, deltaTop5s, deltaStarts);
         
-        uint256 reward = calculateDeltaReward(deltaWins, deltaTop5s, deltaStarts);
+        // Reject claims with no reward (no delta and no bonus)
+        if (reward == 0) {
+            revert NoRewardToClaim();
+        }
         
         if (token.balanceOf(address(this)) < reward) {
             revert InsufficientBalance();
         }
         
         // Update claim history BEFORE transfer (Checks-Effects-Interactions)
+        if (!hasClaimedBonus[iracingId]) {
+            hasClaimedBonus[iracingId] = true;
+        }
         history.wins = wins;
         history.top5s = top5s;
         history.starts = starts;
@@ -184,6 +188,7 @@ contract APEXClaimV2 {
     }
     
     function calculateDeltaReward(
+        uint256 iracingId,
         uint256 deltaWins,
         uint256 deltaTop5s,
         uint256 deltaStarts
@@ -191,6 +196,11 @@ contract APEXClaimV2 {
         uint256 points = (deltaWins * POINTS_PER_WIN) + 
                         (deltaTop5s * POINTS_PER_TOP5) + 
                         (deltaStarts * POINTS_PER_START);
+        
+        // Add bonus points if first claim (halved with multiplier)
+        if (!hasClaimedBonus[iracingId]) {
+            points += POINTS_PER_WIN;
+        }
         
         uint256 reward = calculateRewardWithHalving(points * BASE_TOKENS_PER_POINT);
         
@@ -203,7 +213,7 @@ contract APEXClaimV2 {
     
     function calculateRewardWithHalving(uint256 baseReward) internal view returns (uint256) {
         uint256 multiplier = getCurrentMultiplier();
-        uint256 reward = (baseReward * multiplier) / 100;
+        uint256 reward = (baseReward * multiplier) / 512;
         
         uint256 remainingInPool = TOTAL_CLAIM_POOL > totalClaimed 
             ? TOTAL_CLAIM_POOL - totalClaimed 
@@ -214,12 +224,8 @@ contract APEXClaimV2 {
     
     function getCurrentMultiplier() public view returns (uint256) {
         uint256 halvings = totalClaimed / HALVING_INTERVAL;
-        if (halvings >= 5) return 3;
-        if (halvings == 4) return 6;
-        if (halvings == 3) return 12;
-        if (halvings == 2) return 25;
-        if (halvings == 1) return 50;
-        return 100;
+        if (halvings > 9) return 1;
+        return 512 >> halvings;
     }
     
     /// @notice Emergency function to withdraw all tokens (owner only)
@@ -251,14 +257,14 @@ contract APEXClaimV2 {
         uint256 deltaTop5s = top5s - history.top5s;
         uint256 deltaStarts = starts - history.starts;
         
-        // No delta = no reward
-        if (deltaWins == 0 && deltaTop5s == 0 && deltaStarts == 0) {
-            return 0;
-        }
-        
         uint256 points = (deltaWins * POINTS_PER_WIN) + 
                         (deltaTop5s * POINTS_PER_TOP5) + 
                         (deltaStarts * POINTS_PER_START);
+        
+        // Add bonus points if first claim (halved with multiplier)
+        if (!hasClaimedBonus[iracingId]) {
+            points += POINTS_PER_WIN;
+        }
         
         uint256 baseReward = points * BASE_TOKENS_PER_POINT;
         uint256 reward = calculateRewardWithHalving(baseReward);

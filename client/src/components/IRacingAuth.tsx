@@ -540,7 +540,7 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
     const POINTS_PER_WIN = 1000;
     const POINTS_PER_TOP5 = 100;
     const POINTS_PER_START = 10;
-    const BASE_TOKENS_PER_POINT = 1000;
+    const BASE_TOKENS_PER_POINT = 100; // Updated to match new contract (was 1000)
     
     const points = 
       (iracingStats.careerWins * POINTS_PER_WIN) +

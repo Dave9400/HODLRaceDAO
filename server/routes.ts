@@ -718,17 +718,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Return default values if contract read fails (e.g., RPC issues or initialization)
       res.json({
         totalClaimed: 0,
-        totalPool: 500,
-        halvingInterval: 100,
-        currentMultiplier: "100",
+        totalPool: 50000, // Updated to 50B tokens (was 500M)
+        halvingInterval: 5000, // Updated to 5B tokens per cycle (was 100M)
+        currentMultiplier: "512", // Updated to match new contract (was "100")
         halving: {
           currentTier: 0,
           tierStart: 0,
-          tierEnd: 100,
+          tierEnd: 5000, // Updated to match new halving interval
           progressInCurrentTier: 0,
           progressPercent: 0,
-          nextHalvingAt: 100,
-          remainingUntilHalving: 100
+          nextHalvingAt: 5000, // Updated to match new halving interval
+          remainingUntilHalving: 5000 // Updated to match new halving interval
         },
         note: "Using default values - contract data may not be available yet"
       });
