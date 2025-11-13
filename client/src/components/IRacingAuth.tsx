@@ -677,6 +677,71 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
                 </div>
               </div>
 
+              {/* Points Breakdown */}
+              {calculatePotentialRewards() > 0 && (
+                <div className="border rounded-lg p-4 bg-muted/50 space-y-3">
+                  <div className="font-semibold text-sm">Rewards Breakdown</div>
+                  <div className="space-y-2 text-sm">
+                    {/* Racing Stats Points */}
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Racing Stats Points:</span>
+                      <span className="font-medium">
+                        {(deltaWins * 1000 + deltaTop5s * 100 + deltaStarts * 10).toLocaleString()} pts
+                      </span>
+                    </div>
+                    <div className="pl-4 space-y-1 text-xs text-muted-foreground">
+                      <div className="flex justify-between">
+                        <span>{deltaWins} {deltaWins === 1 ? 'win' : 'wins'} × 1,000 pts</span>
+                        <span>{(deltaWins * 1000).toLocaleString()} pts</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>{deltaTop5s} top 5{deltaTop5s === 1 ? '' : 's'} × 100 pts</span>
+                        <span>{(deltaTop5s * 100).toLocaleString()} pts</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>{deltaStarts} {deltaStarts === 1 ? 'start' : 'starts'} × 10 pts</span>
+                        <span>{(deltaStarts * 10).toLocaleString()} pts</span>
+                      </div>
+                    </div>
+                    
+                    {/* First-Time Bonus */}
+                    {!hasPreviousClaim && (
+                      <>
+                        <div className="flex justify-between text-green-600">
+                          <span className="flex items-center gap-1">
+                            <Trophy className="w-3 h-3" />
+                            First-Time Sign-On Bonus:
+                          </span>
+                          <span className="font-medium">+1,000 pts</span>
+                        </div>
+                      </>
+                    )}
+                    
+                    {/* Total Points */}
+                    <div className="flex justify-between pt-2 border-t">
+                      <span className="font-medium">Total Points:</span>
+                      <span className="font-bold">
+                        {(deltaWins * 1000 + deltaTop5s * 100 + deltaStarts * 10 + (!hasPreviousClaim ? 1000 : 0)).toLocaleString()} pts
+                      </span>
+                    </div>
+                    
+                    {/* Multiplier */}
+                    {contractStats && (
+                      <div className="flex justify-between text-blue-600">
+                        <span>Current Multiplier:</span>
+                        <span className="font-medium">{contractStats.currentMultiplier}x</span>
+                      </div>
+                    )}
+                    
+                    {/* Base Reward Rate */}
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Base Rate:</span>
+                      <span>100 APEX per point</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {!CLAIM_CONTRACT_ADDRESS ? (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
