@@ -26,6 +26,7 @@ import { CLAIM_CONTRACT_ADDRESS, CLAIM_CONTRACT_ABI, APEX_TOKEN_ADDRESS, APEX_TO
 import { useQuery } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
 import ShareClaimDialog from './ShareClaimDialog';
+import { SiFarcaster, SiX } from 'react-icons/si';
 
 interface IRacingStats {
   iracingId: string;
@@ -805,6 +806,58 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
                     </AlertDescription>
                   </Alert>
                 </>
+              )}
+              
+              {/* Career Share Buttons - Show when user has already claimed */}
+              {hasPreviousClaim && (
+                <div className="border-t pt-4 mt-4">
+                  <div className="text-sm font-medium mb-3 text-center">
+                    Share your racing achievements! 🏎️💨
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => {
+                        const shareText = encodeURIComponent(
+                          `Check out my career earnings from the HODL Racing DAO! 🏁\n\n` +
+                          `My iRacing stats:\n` +
+                          `🏆 ${iracingStats.careerWins} wins\n` +
+                          `🎯 ${iracingStats.careerTop5s} top 5 finishes\n` +
+                          `🏁 ${iracingStats.careerStarts} races\n\n` +
+                          `Earned: ${Number(formatEther(apexBalance)).toLocaleString()} APEX tokens! 💰\n\n` +
+                          `Join the racing revolution at hodlracing.fun`
+                        );
+                        window.open(`https://warpcast.com/~/compose?text=${shareText}`, '_blank');
+                      }}
+                      variant="outline"
+                      className="flex-1 gap-2"
+                      data-testid="button-share-farcaster-career"
+                    >
+                      <SiFarcaster className="w-4 h-4" />
+                      Share on Farcaster
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        const shareText = encodeURIComponent(
+                          `Check out my career earnings from the HODL Racing DAO! 🏁\n\n` +
+                          `My iRacing stats:\n` +
+                          `🏆 ${iracingStats.careerWins} wins\n` +
+                          `🎯 ${iracingStats.careerTop5s} top 5 finishes\n` +
+                          `🏁 ${iracingStats.careerStarts} races\n\n` +
+                          `Earned: ${Number(formatEther(apexBalance)).toLocaleString()} APEX tokens! 💰\n\n` +
+                          `Join the racing revolution at hodlracing.fun`
+                        );
+                        const hashtags = 'APEX,iRacing,Web3Gaming,RaceToEarn';
+                        window.open(`https://twitter.com/intent/tweet?text=${shareText}&hashtags=${hashtags}`, '_blank');
+                      }}
+                      variant="outline"
+                      className="flex-1 gap-2"
+                      data-testid="button-share-twitter-career"
+                    >
+                      <SiX className="w-4 h-4" />
+                      Share on X
+                    </Button>
+                  </div>
+                </div>
               )}
             </div>
           </CardContent>
