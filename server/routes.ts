@@ -110,7 +110,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Fetch all Claimed events from contract deployment block
       const deploymentBlock = chainConfig.deploymentBlock;
       const filter = contract.filters.Claimed();
-      const events = await contract.queryFilter(filter, deploymentBlock, 'latest');
+      
+      // Query in chunks to avoid RPC limits (max 100k blocks per query)
+      const currentBlock = await provider.getBlockNumber();
+      const CHUNK_SIZE = 99999; // Slightly under 100k to be safe
+      const allEvents: ethers.EventLog[] = [];
+      
+      for (let fromBlock = deploymentBlock; fromBlock <= currentBlock; fromBlock += CHUNK_SIZE) {
+        const toBlock = Math.min(fromBlock + CHUNK_SIZE - 1, currentBlock);
+        console.log(`[Leaderboard] Fetching events from block ${fromBlock} to ${toBlock}`);
+        
+        // Retry logic with exponential backoff
+        const MAX_RETRIES = 3;
+        let lastError: Error | null = null;
+        
+        for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+          try {
+            const chunkEvents = await contract.queryFilter(filter, fromBlock, toBlock);
+            
+            // Validate events are EventLogs before adding
+            const validEvents = chunkEvents.filter(
+              (event): event is ethers.EventLog => 
+                event instanceof ethers.EventLog && 'args' in event
+            );
+            
+            allEvents.push(...validEvents);
+            lastError = null;
+            break; // Success, exit retry loop
+          } catch (error) {
+            lastError = error instanceof Error ? error : new Error(String(error));
+            console.error(
+              `[Leaderboard] Attempt ${attempt + 1}/${MAX_RETRIES} failed for chunk ${fromBlock}-${toBlock}:`, 
+              error
+            );
+            
+            // Exponential backoff: wait 1s, 2s, 4s
+            if (attempt < MAX_RETRIES - 1) {
+              await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+            }
+          }
+        }
+        
+        // If all retries failed, throw error to prevent showing incomplete data
+        if (lastError) {
+          throw new Error(
+            `Failed to fetch events for block range ${fromBlock}-${toBlock} after ${MAX_RETRIES} attempts: ${lastError.message}`
+          );
+        }
+      }
+      
+      const events = allEvents;
+      console.log(`[Leaderboard] Fetched ${events.length} total claim events`);
       
       // Cache block timestamps to avoid duplicate RPC calls
       const blockTimestamps = new Map<number, number>();

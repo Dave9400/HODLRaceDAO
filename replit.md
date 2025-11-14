@@ -12,6 +12,15 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### November 14, 2025 - Leaderboard RPC Fix
+- **Block Range Pagination**: Fixed leaderboard blank issue caused by RPC limits
+  - Queries now fetch events in 99,999 block chunks to avoid 100k limit
+  - Retry logic with exponential backoff (3 attempts: 1s, 2s, 4s delays)
+  - Type-safe event filtering using type guards
+  - Error propagation prevents showing incomplete leaderboard data
+  - Leaderboard successfully displays all historical claims
+  - Error: "query exceeds max block range 100000" resolved
+
 ### November 13, 2025 - Database Fix, Farcaster Assets & Mobile UX
 - **Database Connection Fix**: Resolved Neon serverless WebSocket errors preventing profile saves
   - Configured `neonConfig.webSocketConstructor = ws` in `server/db.ts`
