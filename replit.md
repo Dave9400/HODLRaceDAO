@@ -27,6 +27,13 @@ Preferred communication style: Simple, everyday language.
   - 4-row mobile structure: rank+driver, stats, racing performance, wallet+date
   - Proper text truncation and spacing prevents overlapping content
   - Smaller icons and optimized font sizes for mobile screens
+- **Social Share Dialog**: Post-claim share buttons for Farcaster and X (Twitter)
+  - Share dialog appears automatically after successful claim
+  - Pre-populated posts with racing stats (wins, top 5s, starts) and APEX earned
+  - Encouragement message: "Share and help grow the HODL Racing community!"
+  - Warpcast compose URL for Farcaster shares
+  - Twitter/X intent URL with hashtags (#APEX, #iRacing, #Web3Gaming, #RaceToEarn)
+  - Stats display in dialog before sharing
 
 ### November 2025 - Updated Contract Economics & Transaction UI Fixes
 - **Contract V2 Economics Update**: Upgraded to 50B token pool with 10-cycle halving

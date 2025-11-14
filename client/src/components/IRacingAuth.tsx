@@ -25,6 +25,7 @@ import { parseEther, formatEther } from 'viem';
 import { CLAIM_CONTRACT_ADDRESS, CLAIM_CONTRACT_ABI, APEX_TOKEN_ADDRESS, APEX_TOKEN_ABI } from '@/lib/contracts';
 import { useQuery } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
+import ShareClaimDialog from './ShareClaimDialog';
 
 interface IRacingStats {
   iracingId: string;
@@ -65,6 +66,11 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
   const [searchParams, setSearchParams] = useState(window.location.search);
   const [isClaiming, setIsClaiming] = useState(false);
   const [iracingAuthToken, setIracingAuthToken] = useState<string | null>(null);
+  
+  // Share dialog state
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [claimedStats, setClaimedStats] = useState<{ wins: number; top5s: number; starts: number } | null>(null);
+  const [claimedAmount, setClaimedAmount] = useState<string>("0");
   
   const { address, isConnected, chainId } = useAccount();
   const { toast } = useToast();
@@ -355,6 +361,16 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
       return;
     }
     
+    // Store stats and amount before claiming for share dialog
+    setClaimedStats({
+      wins: iracingStats.careerWins,
+      top5s: iracingStats.careerTop5s,
+      starts: iracingStats.careerStarts
+    });
+    if (claimableAmount) {
+      setClaimedAmount(claimableAmount.toString());
+    }
+    
     setIsClaiming(true);
     
     try {
@@ -480,6 +496,11 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
       });
       setIsClaiming(false);
       
+      // Show share dialog
+      if (claimedStats && claimedAmount !== "0") {
+        setShowShareDialog(true);
+      }
+      
       // Wait a moment for blockchain state to update, then refetch all data
       setTimeout(() => {
         refetchContractStats();
@@ -504,6 +525,11 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
       setIsClaiming(false);
       setWriteContractsId(undefined); // Reset
       localStorage.removeItem('pending-claim-tx'); // Clear persisted ID
+      
+      // Show share dialog
+      if (claimedStats && claimedAmount !== "0") {
+        setShowShareDialog(true);
+      }
       
       // Wait a moment for blockchain state to update, then refetch all data
       setTimeout(() => {
@@ -925,6 +951,16 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
         </div>
       </CardContent>
     </Card>
+      )}
+      
+      {/* Share Claim Dialog */}
+      {claimedStats && (
+        <ShareClaimDialog
+          open={showShareDialog}
+          onOpenChange={setShowShareDialog}
+          stats={claimedStats}
+          rewardAmount={claimedAmount}
+        />
       )}
     </div>
   );
