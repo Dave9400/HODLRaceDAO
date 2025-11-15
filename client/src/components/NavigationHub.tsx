@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, Trophy, Info, Medal, ArrowRight } from "lucide-react";
+import { TrendingUp, Trophy, Info, Medal, Wallet, ArrowRight } from "lucide-react";
 
 interface NavigationHubProps {
   onNavigate: (page: string) => void;
@@ -25,20 +25,28 @@ export default function NavigationHub({ onNavigate }: NavigationHubProps) {
       textColor: "text-destructive-foreground"
     },
     {
-      id: "about",
-      title: "About DAO",
-      description: "Learn about our racing roadmap and community",
-      icon: Info,
-      color: "bg-secondary",
-      textColor: "text-secondary-foreground"
-    },
-    {
       id: "leaderboard",
       title: "Leaderboard",
       description: "View top drivers and racing statistics",
       icon: Medal,
       color: "bg-accent",
       textColor: "text-accent-foreground"
+    },
+    {
+      id: "dao",
+      title: "DAO Treasury",
+      description: "View treasury balance and participate in governance",
+      icon: Wallet,
+      color: "bg-blue-600",
+      textColor: "text-white"
+    },
+    {
+      id: "about",
+      title: "About DAO",
+      description: "Learn about our racing roadmap and community",
+      icon: Info,
+      color: "bg-secondary",
+      textColor: "text-secondary-foreground"
     }
   ];
 

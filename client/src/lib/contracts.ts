@@ -6,6 +6,9 @@ const chainConfig = getActiveChainConfig();
 export const APEX_TOKEN_ADDRESS = chainConfig.contracts.apex;
 export const CLAIM_CONTRACT_ADDRESS = chainConfig.contracts.claim;
 
+// DAO Treasury address (will hold 20B of 100B total APEX supply)
+export const DAO_TREASURY_ADDRESS = '0xb3f2be71995f178c0988737d9482eb8a6392776d' as const;
+
 // Smart contract ABIs
 export const APEX_TOKEN_ABI = [
   {

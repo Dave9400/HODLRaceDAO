@@ -8,12 +8,13 @@ import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import NetworkSwitcher from "@/components/NetworkSwitcher";
 import { Button } from "@/components/ui/button";
-import { X, Home, TrendingUp, Trophy, Info, Users } from "lucide-react";
+import { X, Home, TrendingUp, Trophy, Info, Users, Wallet } from "lucide-react";
 import NavigationHub from "@/components/NavigationHub";
 import TradingInterface from "@/components/TradingInterface";
 import RaceToEarn from "@/components/RaceToEarn";
 import AboutPage from "@/components/AboutPage";
 import Leaderboard from "@/components/Leaderboard";
+import DAOTreasury from "@/components/DAOTreasury";
 import NotFound from "@/pages/not-found";
 import { sdk } from "@farcaster/miniapp-sdk";
 
@@ -26,6 +27,7 @@ function Router() {
     { id: "trade", label: "Trade APEX", icon: TrendingUp },
     { id: "race", label: "Race to Earn", icon: Trophy },
     { id: "leaderboard", label: "Leaderboard", icon: Users },
+    { id: "dao", label: "DAO Treasury", icon: Wallet },
     { id: "about", label: "About DAO", icon: Info },
   ];
 
@@ -61,6 +63,8 @@ function Router() {
         return <AboutPage />;
       case "leaderboard":
         return <Leaderboard />;
+      case "dao":
+        return <DAOTreasury />;
       default:
         return <NavigationHub onNavigate={setCurrentPage} />;
     }
