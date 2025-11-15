@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Wallet, TrendingUp, Users, AlertCircle, ExternalLink } from "lucide-react";
+import { Wallet, TrendingUp, Users, AlertCircle, ExternalLink, FileText, Vote } from "lucide-react";
 import { useReadContract } from 'wagmi';
 import { formatEther } from 'viem';
 import { APEX_TOKEN_ADDRESS, APEX_TOKEN_ABI, DAO_TREASURY_ADDRESS } from '@/lib/contracts';
@@ -10,19 +10,21 @@ import { getActiveChainConfig } from '@shared/chain';
 export default function DAOTreasury() {
   const chainConfig = getActiveChainConfig();
   
-  // Fetch DAO treasury balance
+  // Fetch DAO treasury balance (with live updates)
   const { data: treasuryBalance, isLoading: isLoadingBalance } = useReadContract({
     address: APEX_TOKEN_ADDRESS,
     abi: APEX_TOKEN_ABI,
     functionName: 'balanceOf',
     args: [DAO_TREASURY_ADDRESS],
+    watch: true,
   });
 
-  // Fetch total supply for comparison
+  // Fetch total supply for comparison (with live updates)
   const { data: totalSupply } = useReadContract({
     address: APEX_TOKEN_ADDRESS,
     abi: APEX_TOKEN_ABI,
     functionName: 'totalSupply',
+    watch: true,
   });
 
   const formatBalance = (balance: bigint | undefined) => {
@@ -157,12 +159,12 @@ export default function DAOTreasury() {
           {/* Placeholder for future governance features */}
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="border rounded-lg p-6 text-center opacity-50">
-              <div className="text-4xl mb-2">📝</div>
+              <FileText className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
               <div className="font-semibold mb-1">Create Proposal</div>
               <div className="text-sm text-muted-foreground">Submit governance proposals</div>
             </div>
             <div className="border rounded-lg p-6 text-center opacity-50">
-              <div className="text-4xl mb-2">🗳️</div>
+              <Vote className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
               <div className="font-semibold mb-1">Vote</div>
               <div className="text-sm text-muted-foreground">Participate in active votes</div>
             </div>
