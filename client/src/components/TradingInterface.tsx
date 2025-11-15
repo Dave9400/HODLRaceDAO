@@ -5,7 +5,8 @@ import {
   DollarSign,
   BarChart3,
   ExternalLink,
-  Copy
+  Copy,
+  Trophy
 } from "lucide-react";
 import { useAccount } from "wagmi";
 
@@ -39,100 +40,39 @@ export default function TradingInterface() {
 
   return (
     <div className="space-y-6 pb-24">
-      {/* Uniswap Trading Interface */}
-      <Card>
+      {/* Testnet Notice */}
+      <Card className="border-yellow-500 bg-yellow-50 dark:bg-yellow-950">
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-blue-600" />
-              Trade APEX
-            </div>
-            <a 
-              href={uniswapUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
-              data-testid="link-uniswap-external"
-            >
-              Open in new tab
-              <ExternalLink className="h-3 w-3" />
-            </a>
+          <CardTitle className="flex items-center gap-2 text-yellow-900 dark:text-yellow-100">
+            <DollarSign className="h-5 w-5" />
+            Trade APEX - Coming to Mainnet Soon
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="relative">
-            <iframe
-              src={uniswapUrl}
-              height="660px"
-              width="100%"
-              style={{ 
-                border: 0, 
-                borderRadius: '10px', 
-                overflow: 'hidden',
-                minHeight: '660px'
-              }}
-              title="Uniswap APEX Trading"
-              data-testid="iframe-uniswap-trading"
-            />
-          </div>
-          
-          {!isConnected && (
-            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-700 text-center">
-                Connect your wallet in the Uniswap interface above to start trading APEX tokens on Base network
-              </p>
+        <CardContent className="space-y-4">
+          <div className="space-y-3">
+            <p className="text-yellow-900 dark:text-yellow-100 font-medium">
+              We're currently running on Base Sepolia testnet for development and testing.
+            </p>
+            <p className="text-yellow-800 dark:text-yellow-200">
+              Please do not attempt to purchase APEX tokens at this time. The trading interface will be enabled once we launch to Base mainnet.
+            </p>
+            <div className="pt-4 border-t border-yellow-300 dark:border-yellow-700">
+              <h4 className="font-semibold text-yellow-900 dark:text-yellow-100 mb-2">What you can do now:</h4>
+              <ul className="space-y-2 text-sm text-yellow-800 dark:text-yellow-200">
+                <li className="flex items-start gap-2">
+                  <Trophy className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <span>Connect your iRacing account and start claiming APEX rewards based on your racing performance</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Trophy className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <span>Check out the leaderboard to see how you rank against other drivers</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Trophy className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <span>Join our community and help shape the future of HODL Racing DAO</span>
+                </li>
+              </ul>
             </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* GeckoTerminal Chart */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-blue-600" />
-              APEX Price Chart
-            </div>
-            <div className="flex gap-2">
-              <a 
-                href={clankerUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
-                data-testid="link-clanker-external"
-              >
-                View on Clanker
-                <ExternalLink className="h-3 w-3" />
-              </a>
-              <a 
-                href={geckoterminalUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
-                data-testid="link-geckoterminal-external"
-              >
-                View on GeckoTerminal
-                <ExternalLink className="h-3 w-3" />
-              </a>
-            </div>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="relative">
-            <iframe
-              src={`${geckoterminalUrl}?embed=true&info=0&swaps=0`}
-              height="500px"
-              width="100%"
-              style={{ 
-                border: 0, 
-                borderRadius: '10px', 
-                overflow: 'hidden',
-                minHeight: '500px'
-              }}
-              title="APEX Price Chart"
-              data-testid="iframe-price-chart"
-            />
           </div>
         </CardContent>
       </Card>

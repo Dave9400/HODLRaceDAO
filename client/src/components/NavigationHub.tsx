@@ -85,7 +85,7 @@ export default function NavigationHub({ onNavigate }: NavigationHubProps) {
       <div className="mt-12 text-center">
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-muted rounded-lg">
           <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-          <span className="text-sm font-medium">Base Network Active</span>
+          <span className="text-sm font-medium">Base Sepolia Network Active</span>
         </div>
       </div>
     </div>

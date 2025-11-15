@@ -12,6 +12,19 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### November 15, 2025 - Testnet Messaging & Trading Interface Updates
+- **Network Status Clarity**: Updated network indicator to show "Base Sepolia Network Active" instead of "Base Network Active"
+  - Prevents confusion about mainnet vs testnet deployment
+  - Visible on home page navigation hub with animated pulse indicator
+- **Trade APEX Page Updates**: Replaced trading interface with testnet notice
+  - Removed Uniswap trading iframe (will be restored on mainnet launch)
+  - Removed GeckoTerminal price chart iframe (will be restored on mainnet launch)
+  - Added prominent yellow warning card explaining testnet status
+  - Clear messaging: "Please do not attempt to purchase APEX tokens at this time"
+  - Helpful suggestions directing users to claim rewards, view leaderboard, and join community
+  - Contract information section remains visible with APEX token address
+  - Trading interface will be re-enabled upon Base mainnet deployment
+
 ### November 15, 2025 - Farcaster Profile Integration
 - **Farcaster Profile Pictures & Usernames**: Integrated Neynar API to display Farcaster profiles on leaderboard
   - **Automatic FID Linking**: Captures Farcaster FID from Mini App SDK context during iRacing OAuth
