@@ -1,4 +1,4 @@
-import { NeynarAPIClient } from "@neynar/nodejs-sdk";
+import { NeynarAPIClient, Configuration } from "@neynar/nodejs-sdk";
 
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY;
 
@@ -6,8 +6,9 @@ if (!NEYNAR_API_KEY) {
   console.warn('[Farcaster] NEYNAR_API_KEY not set - Farcaster features will be disabled');
 }
 
+// Initialize Neynar client with Configuration object (v2 SDK)
 export const neynarClient = NEYNAR_API_KEY 
-  ? new NeynarAPIClient(NEYNAR_API_KEY)
+  ? new NeynarAPIClient(new Configuration({ apiKey: NEYNAR_API_KEY }))
   : null;
 
 export interface FarcasterUser {

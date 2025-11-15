@@ -7,6 +7,13 @@ import { Trophy, Medal, Award, Calendar, Filter, Loader2, Coins, Car, Target } f
 import { useQuery } from "@tanstack/react-query";
 import { formatEther } from "viem";
 
+interface FarcasterProfile {
+  fid: number;
+  username: string;
+  displayName: string;
+  pfpUrl: string | null;
+}
+
 interface LeaderboardEntry {
   iracingId: string;
   walletAddress: string;
@@ -18,6 +25,7 @@ interface LeaderboardEntry {
   top5s: string;
   starts: string;
   displayName: string;
+  farcaster: FarcasterProfile | null;
 }
 
 interface DisplayLeaderboardEntry {
@@ -31,6 +39,7 @@ interface DisplayLeaderboardEntry {
   wins: number;
   top5s: number;
   starts: number;
+  farcaster: FarcasterProfile | null;
 }
 
 interface LeaderboardResponse {
@@ -60,7 +69,8 @@ export default function Leaderboard() {
       lastClaimTime: new Date(Number(entry.lastClaimTime) * 1000),
       wins: Number(entry.wins),
       top5s: Number(entry.top5s),
-      starts: Number(entry.starts)
+      starts: Number(entry.starts),
+      farcaster: entry.farcaster
     }));
   };
 
@@ -137,6 +147,9 @@ export default function Leaderboard() {
                 {/* Driver Info */}
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   <Avatar className="h-10 w-10">
+                    {driver.farcaster?.pfpUrl && (
+                      <AvatarImage src={driver.farcaster.pfpUrl} alt={driver.farcaster.username} />
+                    )}
                     <AvatarFallback>{driver.name.slice(0, 2).toUpperCase()}</AvatarFallback>
                   </Avatar>
                   <div className="min-w-0 flex-1">
@@ -144,9 +157,15 @@ export default function Leaderboard() {
                       {driver.name}
                     </div>
                     <div className="text-xs text-muted-foreground flex flex-wrap items-center gap-2">
-                      <Badge variant="secondary" className="text-xs">
-                        ID: {driver.iracingId}
-                      </Badge>
+                      {driver.farcaster ? (
+                        <Badge variant="secondary" className="text-xs">
+                          @{driver.farcaster.username}
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="text-xs">
+                          ID: {driver.iracingId}
+                        </Badge>
+                      )}
                       <span className="text-xs font-mono">
                         {driver.address.slice(0, 6)}...{driver.address.slice(-4)}
                       </span>
@@ -214,6 +233,9 @@ export default function Leaderboard() {
                   {/* Driver Info */}
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     <Avatar className="h-8 w-8 flex-shrink-0">
+                      {driver.farcaster?.pfpUrl && (
+                        <AvatarImage src={driver.farcaster.pfpUrl} alt={driver.farcaster.username} />
+                      )}
                       <AvatarFallback className="text-xs">{driver.name.slice(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0 flex-1">
@@ -221,7 +243,7 @@ export default function Leaderboard() {
                         {driver.name}
                       </div>
                       <div className="text-xs text-muted-foreground truncate">
-                        ID: {driver.iracingId}
+                        {driver.farcaster ? `@${driver.farcaster.username}` : `ID: ${driver.iracingId}`}
                       </div>
                     </div>
                   </div>
