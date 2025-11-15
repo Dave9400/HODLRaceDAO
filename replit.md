@@ -12,6 +12,22 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### November 15, 2025 - Farcaster Profile Integration
+- **Farcaster Profile Pictures & Usernames**: Integrated Neynar API to display Farcaster profiles on leaderboard
+  - **Automatic FID Linking**: Captures Farcaster FID from Mini App SDK context during iRacing OAuth
+  - **Profile Display**: Shows Farcaster profile pictures and @usernames on leaderboard
+  - **Graceful Fallback**: Falls back to initials avatar and iRacing ID when no Farcaster profile linked
+  - **Stable Mapping**: Maps by iRacing ID (not wallet) so profiles persist across wallet changes
+  - **Database Schema**: Created `farcaster_profiles` table (iRacing ID, FID, username, display name, PFP URL, bio, follower count)
+  - **Neynar Integration**: Using @neynar/nodejs-sdk v2 with Configuration API
+  - **Backend Endpoints**: 
+    - `POST /api/farcaster/link` - Saves FID mapping and fetches profile from Neynar
+    - `GET /api/leaderboard` - Enriched with Farcaster profile data
+  - **24h Profile Cache**: Reduces Neynar API calls with timestamp-based cache
+  - **Batch Lookups**: Efficiently fetches up to 100 profiles per request
+  - **Mobile & Desktop UI**: Both layouts display Farcaster avatars and @username badges
+  - **Latest Match Logic**: Updates FID mapping if user logs in with different Farcaster account
+
 ### November 15, 2025 - DAO Treasury Page
 - **DAO Treasury Feature**: Added new page to view treasury balance and governance (coming soon)
   - Live APEX balance display for DAO treasury address (0xb3f2be71995f178c0988737d9482eb8a6392776d)

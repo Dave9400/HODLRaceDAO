@@ -727,11 +727,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`[Farcaster] Linking iRacing ID ${iracingId} to FID ${fid}`);
       
+      // Check if Neynar client is configured
+      if (!process.env.NEYNAR_API_KEY) {
+        console.error('[Farcaster] NEYNAR_API_KEY not configured');
+        return res.status(503).json({ 
+          error: "Farcaster integration not configured",
+          message: "NEYNAR_API_KEY environment variable is not set"
+        });
+      }
+      
       // Fetch Farcaster profile from Neynar
       const farcasterUser = await getFarcasterUserByFid(Number(fid));
       
       if (!farcasterUser) {
-        return res.status(404).json({ error: "Farcaster user not found" });
+        console.warn(`[Farcaster] Neynar lookup failed for FID ${fid}`);
+        return res.status(404).json({ 
+          error: "Farcaster user not found",
+          message: "Could not fetch Farcaster profile from Neynar API"
+        });
       }
       
       // Save or update mapping
@@ -758,7 +771,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           },
         });
       
-      console.log(`[Farcaster] ✅ Linked iRacing ${iracingId} to @${farcasterUser.username}`);
+      console.log(`[Farcaster] ✅ Successfully linked iRacing ${iracingId} to @${farcasterUser.username}`);
       
       res.json({ 
         success: true, 
@@ -771,7 +784,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error: any) {
       console.error('[Farcaster] Error linking account:', error);
-      res.status(500).json({ error: "Failed to link Farcaster account" });
+      res.status(500).json({ error: "Failed to link Farcaster account", message: error.message });
     }
   });
   
