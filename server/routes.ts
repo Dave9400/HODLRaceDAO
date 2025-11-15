@@ -6,6 +6,7 @@ import crypto from "crypto";
 import { ethers } from "ethers";
 import { db, schema } from "./db";
 import { eq, inArray } from "drizzle-orm";
+import { getFarcasterUserByFid, getFarcasterUsersByFids } from "./farcaster";
 
 // Temporary in-memory store for OAuth state with PKCE (use Redis in production)
 const oauthStates = new Map<string, { 
@@ -244,6 +245,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Fetch iRacing profiles from database
       const iracingIds = leaderboard.map(entry => entry.iracingId);
       let profilesMap = new Map<string, { firstName: string | null; lastName: string | null; displayName: string }>();
+      let farcasterMap = new Map<string, { fid: number; username: string; displayName: string; pfpUrl: string | null }>();
       
       if (iracingIds.length > 0) {
         try {
@@ -263,11 +265,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } catch (dbError) {
           console.error('[Leaderboard] Failed to fetch iRacing profiles:', dbError);
         }
+        
+        // Fetch Farcaster profiles
+        try {
+          const farcasterProfiles = await db.select()
+            .from(schema.farcasterProfiles)
+            .where(inArray(schema.farcasterProfiles.iracingId, iracingIds));
+          
+          farcasterProfiles.forEach(profile => {
+            farcasterMap.set(profile.iracingId, {
+              fid: profile.fid,
+              username: profile.username,
+              displayName: profile.displayName,
+              pfpUrl: profile.pfpUrl
+            });
+          });
+          
+          console.log(`[Leaderboard] Fetched ${farcasterProfiles.length} Farcaster profiles from database`);
+        } catch (dbError) {
+          console.error('[Leaderboard] Failed to fetch Farcaster profiles:', dbError);
+        }
       }
       
-      // Enrich leaderboard with real names from iRacing profiles
+      // Enrich leaderboard with real names from iRacing profiles and Farcaster data
       const enrichedLeaderboard = leaderboard.map(entry => {
         const profile = profilesMap.get(entry.iracingId);
+        const farcaster = farcasterMap.get(entry.iracingId);
+        
         let displayName = `Racer ${entry.iracingId}`;
         
         if (profile) {
@@ -280,7 +304,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         return {
           ...entry,
-          displayName
+          displayName,
+          farcaster: farcaster ? {
+            fid: farcaster.fid,
+            username: farcaster.username,
+            displayName: farcaster.displayName,
+            pfpUrl: farcaster.pfpUrl
+          } : null
         };
       });
       
@@ -683,6 +713,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error syncing stats:', error);
       res.status(500).json({ error: "Failed to sync stats" });
+    }
+  });
+  
+  // Save Farcaster FID mapping for iRacing account
+  app.post("/api/farcaster/link", async (req, res) => {
+    try {
+      const { iracingId, fid } = req.body;
+      
+      if (!iracingId || !fid) {
+        return res.status(400).json({ error: "iracingId and fid are required" });
+      }
+      
+      console.log(`[Farcaster] Linking iRacing ID ${iracingId} to FID ${fid}`);
+      
+      // Fetch Farcaster profile from Neynar
+      const farcasterUser = await getFarcasterUserByFid(Number(fid));
+      
+      if (!farcasterUser) {
+        return res.status(404).json({ error: "Farcaster user not found" });
+      }
+      
+      // Save or update mapping
+      await db.insert(schema.farcasterProfiles)
+        .values({
+          iracingId,
+          fid: farcasterUser.fid,
+          username: farcasterUser.username,
+          displayName: farcasterUser.displayName,
+          pfpUrl: farcasterUser.pfpUrl || null,
+          bio: farcasterUser.bio || null,
+          followerCount: farcasterUser.followerCount || null,
+        })
+        .onConflictDoUpdate({
+          target: schema.farcasterProfiles.iracingId,
+          set: {
+            fid: farcasterUser.fid,
+            username: farcasterUser.username,
+            displayName: farcasterUser.displayName,
+            pfpUrl: farcasterUser.pfpUrl || null,
+            bio: farcasterUser.bio || null,
+            followerCount: farcasterUser.followerCount || null,
+            lastSyncedAt: new Date(),
+          },
+        });
+      
+      console.log(`[Farcaster] ✅ Linked iRacing ${iracingId} to @${farcasterUser.username}`);
+      
+      res.json({ 
+        success: true, 
+        farcasterUser: {
+          fid: farcasterUser.fid,
+          username: farcasterUser.username,
+          displayName: farcasterUser.displayName,
+          pfpUrl: farcasterUser.pfpUrl,
+        }
+      });
+    } catch (error: any) {
+      console.error('[Farcaster] Error linking account:', error);
+      res.status(500).json({ error: "Failed to link Farcaster account" });
     }
   });
   

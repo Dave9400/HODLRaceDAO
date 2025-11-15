@@ -329,6 +329,35 @@ export default function IRacingAuth({ onAuthSuccess, onAuthStatusChange }: IRaci
       const stats = await response.json();
       setIracingStats(stats);
       
+      // Link Farcaster profile if available
+      try {
+        const { sdk } = await import('@farcaster/miniapp-sdk');
+        const farcasterContext = sdk.context;
+        
+        if (farcasterContext?.user?.fid) {
+          console.log(`[Farcaster] Linking FID ${farcasterContext.user.fid} to iRacing ID ${stats.iracingId}`);
+          
+          // Save the mapping to backend
+          await fetch('/api/farcaster/link', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              iracingId: stats.iracingId,
+              fid: farcasterContext.user.fid,
+            }),
+          });
+          
+          console.log('[Farcaster] Successfully linked profile');
+        } else {
+          console.log('[Farcaster] Not running in Farcaster context or no user FID available');
+        }
+      } catch (farcasterError) {
+        // Non-fatal - continue even if Farcaster linking fails
+        console.warn('[Farcaster] Failed to link profile (non-fatal):', farcasterError);
+      }
+      
       // Notify parent component of successful authentication
       if (onAuthSuccess) {
         // Use the token parameter directly instead of stale authToken state
