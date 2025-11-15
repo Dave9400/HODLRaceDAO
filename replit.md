@@ -12,6 +12,16 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### November 15, 2025 - DAO Treasury Page
+- **DAO Treasury Feature**: Added new page to view treasury balance and governance (coming soon)
+  - Live APEX balance display for DAO treasury address (0xb3f2be71995f178c0988737d9482eb8a6392776d)
+  - Shows percentage of total supply held in treasury
+  - Treasury address display with link to block explorer
+  - Initial allocation info: 20B APEX (20% of 100B total supply)
+  - Placeholder sections for future governance features (OpenZeppelin Governor)
+  - Added "DAO Treasury" navigation button with Wallet icon
+  - Accessible from home page navigation hub and mobile menu
+
 ### November 14, 2025 - Leaderboard RPC Fix
 - **Block Range Pagination**: Fixed leaderboard blank issue caused by RPC limits
   - Queries now fetch events in 99,999 block chunks to avoid 100k limit
